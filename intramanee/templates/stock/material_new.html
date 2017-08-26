@@ -1,0 +1,1191 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading tab-bg-dark-navy-blue tab-header-withtools">
+            <div class="row">
+                <div class="col-xs-8">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#basic" aria-expanded="true">{% trans 'T_BASIC' %}</a></li>
+                        <li><a data-toggle="tab" href="#mrp" aria-expanded="false">{% trans 'T_MRP' %}</a></li>
+                        <li><a data-toggle="tab" href="#inventory" aria-expanded="false">{% trans 'T_INVENTORY' %}</a></li>
+                    </ul>
+                </div>
+                <div class="col-xs-4 text-right">
+                    <a class="btn btn-default" id="viewLogButton" href="javascript:;" style="margin-right:1.5em;">{% trans 'BUTTON_VIEW_HISTORY' %}</a>
+                    <a class="btn btn-success" id="saveMaterialButton" href="javascript:;"><i class="fa fa-save"></i><span class="hidden-xs"> {% trans 'BUTTON_SAVE' %}</span></a>
+                </div>
+            </div>
+        </header>
+        <div class="panel-body">
+            <div class="tab-content">
+                <div id="basic" class="tab-pane active">
+                    <div class="row">
+                        <div class="col-md-5 form-horizontal">
+                            <div class="form-group">
+                                <label for="matCode" class="col-sm-3 control-label">{% trans 'T_CODE' %}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control req" id="matCode" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matDesc" class="col-sm-3 control-label">{% trans 'T_DESCRIPTION' %}</label>
+                                <div class="col-sm-9">
+                                    <input id="matDesc" type="text" class="form-control" maxlength="40" data-attribute="description" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7 form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans 'T_LAST_MODIFIED' %}</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static" id="matLastModified">&nbsp;</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matBaseUOM" class="col-sm-3 control-label">{% trans 'T_BASE_UOM' %}</label>
+                                <div class="col-sm-3">
+                                    <select id="matBaseUOM" class="form-control req" data-attribute="uom">
+                                    </select>
+                                </div>
+                                <label for="matPlantStatus" class="col-sm-2 control-label">{% trans 'T_PLANT_STATUS' %}</label>
+                                <div class="col-sm-4">
+                                    <select id="matPlantStatus" class="form-control" data-attribute="plantStatus">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matGrossWeight" class="col-sm-3 control-label">{% trans 'T_GROSS_WEIGHT' %} (g)</label>
+                                <div class="col-sm-3">
+                                    <input id="matGrossWeight" type="number" min="0" step="0.01" class="form-control" data-attribute="grossWeight" />
+                                </div>
+
+                                <label for="matNetWeight" class="col-sm-3 control-label">{% trans 'T_NET_WEIGHT' %} (g)</label>
+                                <div class="col-sm-3">
+                                    <input id="matNetWeight" type="number" min="0" step="0.01" class="form-control" data-attribute="netWeight" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matStorageLocation" class="col-sm-offset-6 col-sm-2 control-label col-sm-zeropadleft">{% trans 'T_STORAGE_LOCATION' %}</label>
+                                <div class="col-sm-4">
+                                    <select id="matStorageLocation" class="form-control req" data-attribute="location">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mrp" class="tab-pane">
+                    <div class="row">
+                        <div class="col-md-5 form-horizontal">
+                            <div class="form-group">
+                                <label for="matMRPType" class="col-sm-6 control-label">{% trans 'T_MRP_TYPE' %}</label>
+                                <div class="col-sm-4">
+                                    <select class="form-control" id="matMRPType" data-attribute="mrpType"></select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matReorderPoint" class="col-sm-6 control-label">{% trans 'T_REORDER_POINT' %}</label>
+                                <div class="col-sm-4">
+                                    <input type="number" min="0" class="form-control text-center" id="matReorderPoint" data-attribute="reorderPoint" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matTimeFence" class="col-sm-6 control-label">{% trans 'T_PLANNING_TIME_FENCE' %}</label>
+                                <div class="col-sm-4">
+                                    <input type="number" min="0" step="1" class="form-control text-center" id="matTimeFence" data-attribute="planningTimeFence" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matGRProcessingTime" class="col-sm-6 control-label">{% trans 'T_GR_PROCESSING_TIME' %}</label>
+                                <div class="col-sm-4">
+                                    <input type="number" min="0" step="1" class="form-control text-center" id="matGR" data-attribute="grProcessingTime" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matPlannedDeliveryTime" class="col-sm-6 control-label">{% trans 'T_PLANNED_DELIVERY_TIME' %}</label>
+                                <div class="col-sm-4">
+                                    <input type="number" min="0" step="1" class="form-control text-center" id="matPlannedDeliveryTime" data-attribute="plannedDeliveryTime" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7 form-horizontal">
+                            <div class="form-group">
+                                <label for="matProcurementType" class="col-sm-3 control-label">{% trans 'T_PROCUREMENT_TYPE' %}</label>
+                                <div class="col-sm-3">
+                                    <select class="form-control" id="matProcurementType" data-attribute="procurementType"></select>
+                                </div>
+                                <label for="matSafetyStock" class="col-sm-3 control-label">{% trans 'T_SAFETY_STOCK' %}</label>
+                                <div class="col-sm-3">
+                                    <input type="number" min="0" class="text-center form-control" id="matSafetyStock" data-attribute="safetyStock" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matLotSize" class="col-sm-3 control-label">{% trans 'T_LOT_SIZE' %}</label>
+                                <div class="col-sm-3">
+                                    <select class="form-control req" id="matLotSize" data-attribute="lotSize">
+                                        <option value=""></option>
+                                        <option value="EX">{% trans 'T_FIXED_LOT_SIZE' %}</option>
+                                        <option value="DL">{% trans 'T_DAILY_LOT_SIZE' %}</option>
+                                        <option value="WL">{% trans 'T_WEEKLY_LOT_SIZE' %}</option>
+                                    </select>
+                                </div>
+                                <label for="matLotSizeArg" class="col-sm-3 control-label">{% trans 'T_LOT_SIZE_ARG' %}</label>
+                                <div class="col-sm-3">
+                                    <input type="number" min="0" class="text-center form-control" id="matLotSizeArg" data-attribute="lotSizeArg" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matMinLotSize" class="col-sm-3 control-label">{% trans 'T_MIN_LOT_SIZE' %}</label>
+                                <div class="col-sm-3">
+                                    <input type="number" min="0" class="text-center form-control" id="matMinLotSize" data-attribute="lotSizeMin" />
+                                </div>
+                                <label for="matMaxLotSize" class="col-sm-3 control-label">{% trans 'T_MAX_LOT_SIZE' %}</label>
+                                <div class="col-sm-3">
+                                    <input type="number" min="0" class="text-center form-control" id="matMaxLotSize" data-attribute="lotSizeMax" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matDeprecatedDate" class="col-sm-3 control-label">{% trans 'T_DEPRECATED_DATE' %}</label>
+                                <div class="col-sm-3">
+                                    <input type="text" class="text-center form-control" id="matDeprecatedDate" />
+                                </div>
+                                <label for="matScrapPercentage" class="col-sm-3 control-label">{% trans 'T_SCRAP_PERCENTAGE' %}</label>
+                                <div class="col-sm-3">
+                                    <input type="number" min="0" max="100" step="1" class="text-center form-control" id="matScrapPercentage" data-attribute="scrapPercentage" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matReplacement" class="col-sm-3 control-label">{% trans 'T_DEPRECATED_REPLACEMENT' %}</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control" id="matReplacement" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- end mrp tab -->
+
+                <div id="inventory" class="tab-pane">
+                    <div class="row">
+                        <div class="col-md-6 form-horizontal">
+                            <div class="form-group">
+                                <label for="matCycleCounting" class="col-sm-5 control-label">{% trans 'T_ENABLE_CYCLING_COUNTING' %}</label>
+                                <div class="col-sm-3 icheck">
+                                    <div class="square-green single-row">
+                                        <div class="checkbox">
+                                            <input id="matCycleCounting" type="checkbox" data-attribute="enableCycleCounting" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="matABCIndicator" class="col-sm-5 control-label">{% trans 'T_ABC_INDICATOR' %}</label>
+                                <div class="col-sm-3">
+                                    <select class="form-control" id="matABCIndicator" data-attribute="abcIndicator"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row removeonnew" style="margin-top:20px;">
+                        <div class="col-lg-10 col-lg-offset-1">
+                            <table id="inventoryContentTable" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'TH_MATERIAL' %}</th>
+                                        <th class="text-right">{% trans 'TH_QUANTITY' %}</th>
+                                        <th class="text-center">{% trans 'TH_COUNTER' %}</th>
+                                        <th class="text-right">{% trans 'TH_WEIGHT' %}</th>
+                                        <th class="text-right">{% trans 'TH_UNIT_PRICE' %}</th>
+                                        <th class="text-right">{% trans 'TH_VALUE' %}</th>
+                                        <th>{% trans 'TH_LOCATION' %}</th>
+                                        <th>{% trans 'TH_BATCH' %}</th>
+                                        <th>{% trans 'TH_REF_DOC' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+
+                            <p class="text-center"><a id="viewMovementHistoryButton" href="javascript:;" class="btn btn-primary">{% trans 'BUTTON_VIEW_MOVEMENT_HISTORY' %}</a></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <header class="panel-heading text-right" style="padding: 7px;">&nbsp;
+            <label for="matRevision" style="display: inline-block; text-transform: none;">{% trans 'T_REVISION' %}</label>
+            <select class="form-control input-sm skipchecking" id="matRevision" style="display: inline-block; width:auto;"></select>
+            &nbsp;&nbsp;
+            <label for="activeSizeSwitcher" class="size-switcher-control" style="display: none; text-transform: none;">{% trans 'T_VIEW_ON_SIZE' %}</label>
+            <select id="activeSizeSwitcher" class="form-control size-switcher-control input-sm skipchecking" style="margin-right:1em; display:none; width:auto;"></select>
+            <div class="btn-group btn-group-sm" data-toggle="buttons">
+                <label class="btn btn-default active">
+                    <input type="radio" name="view" id="tableView" value="table" checked="checked" class="skipchecking" /> {% trans 'T_TABLE' %}
+                </label>
+                <label class="btn btn-default">
+                    <input type="radio" name="view" id="ganttView" value="gantt" class="skipchecking" /> {% trans 'T_GANTT' %}
+                </label>
+            </div>
+        </header>
+        <div class="panel-body">
+            <div id="tableViewContainer" style="display: none;">
+            </div>
+
+            <div id="ganttViewContainer" style="display: none;">
+                <div id="gantt"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row hidden">
+        <div class="col-sm-6">
+            <section class="panel">
+                <header class="panel-heading">{% trans 'PANEL_TITLE_BOM' %}</header>
+                <div class="panel-body">
+                    <div id="bom" class="tree tree-solid-line">
+                        <div class = "tree-folder" style="display:none;">
+                            <div class="tree-folder-header">
+                                <i class="fa fa-folder"></i>
+                                <div class="tree-folder-name"></div>
+                            </div>
+                            <div class="tree-folder-content"></div>
+                            <div class="tree-loader" style="display:none;"></div>
+                        </div>
+                        <div class="tree-item" style="display:none;">
+                            <i class="tree-dot"></i>
+                            <div class="tree-item-name"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-sm-6">
+            <section class="panel">
+                <header class="panel-heading">{% trans 'PANEL_TITLE_ROUTING' %}</header>
+                <div class="panel-body">
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.full.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.number-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.tokenizer-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-tokenfield/bootstrap-tokenfield.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/component-tokenizer-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxgantt.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/gantt_locale_th.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/fuelux/js/tree.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/material.js' %}"></script>
+    <script type="text/javascript">
+        var materialId = '{{ material_id }}';
+        var material = new Material();
+        var choices = {% choices 'grouped_uom' 'mrp_type' 'lot_size' 'procurement_type' 'abc_indicator' 'plant_status' 'location' %};
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }};
+
+        var Header = {
+
+            activeSize : null,
+            codeSelector : null,
+            eventLogViewer : null,
+
+            // IMPORTANT Header.init()
+            init : function() {
+                var o = this;
+                $('#matCode').keydown(function(e) {
+                    e.preventDefault();
+                    o.codeSelector.show(material.code);
+                }).click(function() {
+                    o.codeSelector.show(material.code);
+                });
+
+                $('#basic').find('input[data-attribute]').bind('keyup change', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    if($(this).is('[type="number"]')) {
+                        val = parseFloat(val);
+                        if(isNaN(val)) {
+                            val = 0;
+                        }
+                    }
+                    material[att] = val;
+                });
+
+                $('#basic').find('select[data-attribute]').change(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    material[att] = val;
+                });
+
+                this.codeSelector = new ComponentTokenizerSelector({
+                    id : 'codeSelector',
+                    preCode : 'stock-',
+                    onSelect : function(item) {
+                        material.code = item;
+                        Header.renderFromModel();
+                    },
+                    onClose : function() {
+                        $('#matCode').focus();
+                    }
+                });
+
+                this.eventLogViewer = new EventLogViewer({
+                    model : 'material-master',
+                    objectId : materialId
+                });
+
+                $('#viewLogButton').click(function() {
+                    Header.eventLogViewer.show();
+                });
+
+                $('#matRevision').change(function() {
+                    Header.onRevisionChange($(this).find('option:selected').data('context'));
+                });
+
+                // IMPORTANT save event
+                $('#saveMaterialButton').click(function() {
+                    Header.doSave();
+                });
+            },
+
+            onRevisionChange : function(revEntry) {
+                console.log(revEntry);
+                api.crud.single(api.common.C.MODELS.MATERIAL_SCHEMATIC, revEntry.schematic_id, {}, function(success, data) {
+                    if(success) {
+                        material.schematic = data;
+                        Header.activeSize = null;
+                        Header.renderSizeSwitcher();
+                        if(Table.handsontable) {
+                            Table.commit();
+                            Table.renderFromModel();
+                        } else {
+                            Gantt.renderFromModel();
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            renderSizeSwitcher : function() {
+                if(common.isEmpty(material.schematic)) {
+                    $('#activeSizeSwitcher').closest('section').remove();
+                    return;
+                }
+
+                if(material.schematic.conf_size && material.schematic.conf_size.length > 0) {
+                    $('#activeSizeSwitcher option').remove();
+                    material.schematic.conf_size.forEach(function(sizeItem) {
+                        $('#activeSizeSwitcher').append(Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, sizeItem));
+                    });
+                    if(!common.isEmpty(Header.activeSize)) {
+                        $('#activeSizeSwitcher').val(Header.activeSize);
+                    }
+                    $('.size-switcher-control').show();
+                } else {
+                    $('.size-switcher-control').hide();
+                }
+            },
+
+            // IMPORTANT save logic
+            doSave : function() {
+                common.blockUI($('#main-content'));
+
+                material.save(function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        var operation = 'saved';
+                        if(!material.id) {
+                            operation = 'created';
+                            var newUrl = URL.stock_material_edit(data);
+                            Front.unblockBackButton();
+                            window.location = common.addParam(newUrl, 'op', operation);
+                        } else {
+                            Front.notify('success', '{% trans 'NOTI_MATERIAL_SAVED' %}', '');
+                            Front.unblockBackButton();
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            // IMPORTANT Header.renderFromModel()
+            renderFromModel : function() {
+                if(!common.isEmpty(material.id)) {
+                    $('#matId').val(material.id);
+                } else {
+                    $('#matId').val('');
+                }
+
+                if(!common.isEmpty(material.code)) {
+                    $('#matCode').val(material.code.substr('stock-'.length));
+                } else {
+                    $('#matCode').val('');
+                }
+
+                $('#basic').find('[data-attribute]').each(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    if(common.isEmpty(material[att])) {
+                        if($(this).is('[type="number"]')) {
+                            $(this).val(0);
+                        } else {
+                            $(this).val('');
+                        }
+                    } else {
+                        $(this).val(material[att]);
+                    }
+                });
+
+                if(!common.isEmpty(materialId)) {
+                    $('#matRevision option').remove();
+                    api.helper.material_revisions(material.code, function(success, data) {
+                        if(success) {
+                            console.log(data);
+
+                            data.sort(function(a, b) {
+                                return b.rev_id - a.rev_id;
+                            });
+
+                            data.forEach(function(revEntry) {
+                                var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                                if(revEntry.default) {
+                                    $opt.attr('selected', 'selected');
+                                }
+                                $opt.data('context', revEntry);
+                                $('#matRevision').append($opt);
+                            });
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                }
+
+                this.lastModifiedObserver();
+                this.renderSizeSwitcher();
+            },
+
+            lastModifiedObserver : function() {
+                if(material.lastEdited) {
+                    var editBy = displayName(material.lastEdited.who.first_name, material.lastEdited.who.last_name);
+                    var editWhen = moment(material.lastEdited.when).format('YYYY-MM-DD HH:mm');
+                    $('#matLastModified').html(editWhen + ' {% trans 'T_BY' %} ' + editBy);
+                    $('#matLastModified').closest('.form-group').show();
+                } else {
+                    $('#matLastModified').closest('.form-group').hide();
+                }
+            }
+        };
+
+        var MRP = {
+            init : function() {
+                var o = this;
+
+                $('#mrp').find('input[data-attribute]').bind('keyup change', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    if($(this).is('[type="number"]')) {
+                        val = parseFloat(val);
+                        if(isNaN(val)) {
+                            val = 0;
+                        }
+                        if(att == 'scrapPercentage') {
+                            val = parseFloat((val / 100).toFixed(2));
+                        }
+                    }
+                    material[att] = val;
+                });
+
+                $('#mrp').find('select[data-attribute]').change(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    material[att] = val;
+                });
+
+                $('#matDeprecatedDate').datepicker({
+                    format : 'yyyy-mm-dd',
+                    autoclose : true,
+                    language : '{% trans 'DATEPICKER_LOCALE' %}'
+                }).on('changeDate', function(e) {
+                    if(e.date) {
+                        material.deprecatedDate = e.date;
+                        o.deprecatedDateObserver(true);
+                    }
+                });
+            },
+
+            // IMPORTANT MRP.renderFromModel()
+            renderFromModel : function() {
+                $('#mrp').find('[data-attribute]').each(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    if(common.isEmpty(material[att])) {
+                        if($(this).is('[type="number"]')) {
+                            $(this).val(0);
+                        } else {
+                            $(this).val('');
+                        }
+                    } else {
+                        if(att == 'scrapPercentage') {
+                            $(this).val(material[att] * 100);
+                        } else {
+                            $(this).val(material[att]);
+                        }
+                    }
+                });
+
+                this.deprecatedDateObserver();
+            },
+
+            deprecatedDateObserver : function(renderOnly) {
+                if(material.deprecatedDate) {
+                    if(!renderOnly) {
+                        $('#matDeprecatedDate').datepicker('setDate', material.deprecatedDate);
+                    }
+
+                    $('#matReplacement').removeAttr('disabled');
+                } else {
+                    if(!renderOnly) {
+                        $('#matDeprecatedDate').datepicker('setDate', '');
+                    }
+                    $('#matReplacement').attr('disabled', 'disabled');
+                }
+            }
+        };
+
+        var Inventory = {
+
+            init : function() {
+                $('#inventory').find('input[data-attribute]').bind('keyup change', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    if($(this).is('[type="number"]')) {
+                        val = parseFloat(val);
+                        if(isNaN(val)) {
+                            val = 0;
+                        }
+                    }
+                    material[att] = val;
+                });
+
+                $('#inventory').find('select[data-attribute]').change(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    material[att] = val;
+                });
+
+                $('#inventory').find('[type="checkbox"][data-attribute]').on('ifChecked', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    material[att] = true;
+                }).on('ifUnchecked', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    material[att] = false;
+                });
+
+                // TODO view movement history
+                //$('#viewMovementHistoryButton');
+            },
+
+            // IMPORTANT query inventory content
+            queryInventoryContent : function() {
+                api.inventory.content({ material : material.code, quantity : { '$ne' : 0 } }, function(success, data) {
+                    if(success) {
+                        $('#inventoryContentTable').data('queried', true);
+
+                        var uomLabel = $('#matBaseUOM option:selected').text();
+                        var totalQuantity = 0;
+                        var totalValue = 0;
+                        var totalWeight = 0;
+
+                        console.log(data);
+
+                        data.forEach(function(inv) {
+                            var locationLabel = inv.location;
+                            for(var i = 0; i < choices.location.length; i++) {
+                                if(choices.location[i].value == inv.location) {
+                                    locationLabel = choices.location[i].label;
+                                    break;
+                                }
+                            }
+
+                            var materialCode = inv.material.substr('stock-'.length);
+
+                            totalQuantity = totalQuantity + inv.quantity;
+                            totalValue = totalValue + inv.value;
+                            totalWeight = totalWeight + inv.weight;
+                            var unitPrice = 0;
+                            if(inv.quantity != 0) {
+                                unitPrice = inv.value / inv.quantity;
+                            }
+
+                            var $tr = $('<tr>\
+                                <td>' + materialCode + '</td>\
+                                <td class="text-right">' + (inv.quantity || 0).formatMoney(2) + '</td>\
+                                <td class="text-center">' + uomLabel + '</td>\
+                                <td class="text-right">' + (inv.weight || 0).formatMoney(2) + '</td>\
+                                <td class="text-right">' + unitPrice.formatMoney(2) + '</td>\
+                                <td class="text-right">' + (inv.value || 0).formatMoney(2) + '</td>\
+                                <td>' + locationLabel + '</td>\
+                                <td>' + inv.batch + '</td>\
+                                <td><a href="javascript:;" class="refdoc"></a></td>\
+                            </tr>');
+
+                            $('#inventoryContentTable tbody').append($tr);
+
+                            Resolver.anyDoc($tr.find('a.refdoc'), inv.ref_doc, true);
+                        });
+
+                        var $tr = $('<tr>\
+                            <td class="text-right"><strong>{% trans 'T_TOTAL' %}</strong></td>\
+                            <td class="text-right"><strong>' + totalQuantity.formatMoney(2) + '</strong></td>\
+                            <td class="text-center">' + uomLabel + '</td>\
+                            <td class="text-right"><strong>' + totalWeight.formatMoney(2) + '</strong></td>\
+                            <td class="text-right"><strong>' + (totalValue / totalQuantity).formatMoney(2) + '</strong></td>\
+                            <td class="text-right"><strong>' + totalValue.formatMoney(2) + '</strong></td>\
+                            <td colspan="3">&nbsp;</td>\
+                        </tr>');
+                        $('#inventoryContentTable tbody').append($tr);
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            // IMPORTANT Inventory.renderFromModel()
+            renderFromModel : function() {
+                if($('#inventoryContentTable').length == 1 && $('#inventoryContentTable').data('queried') != true) {
+                    this.queryInventoryContent();
+                }
+
+                $('#inventory').find('[data-attribute]').each(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    if($(this).is('[type="checkbox"]')) {
+                        if(material[att]) {
+                            $(this).iCheck('check');
+                        } else {
+                            $(this).iCheck('uncheck');
+                        }
+                    } else {
+                        if(common.isEmpty(material[att])) {
+                            $(this).val('');
+                        } else {
+                            $(this).val(material[att]);
+                        }
+                    }
+                });
+            }
+        };
+
+        var Table = {
+            handsontable : null,
+            tempData : null,
+
+            init : function() {
+
+            },
+
+            recalculateStepNo : function() {
+                var counter = 1;
+                for(var i = 0; i < this.tempData.length; i++) {
+                    var row = this.tempData[i];
+                    var stepNo = '';
+                    if(!common.isEmpty(row.process)) { // a process row
+                        stepNo = counter;
+                        counter++;
+                    }
+
+                    row.stepNo = stepNo;
+                }
+            },
+
+            // IMPORTANT Table.renderFromModel
+            renderFromModel : function() {
+                var o = this;
+
+                // IMPORTANT size switcher event for table
+                $('#activeSizeSwitcher').unbind('change').change(function() {
+                    Header.activeSize = $(this).val();
+                    o.handsontable.render();
+                });
+
+                if(material.schematic == null) {
+                    return;
+                }
+
+                this.tempData = material.toHandson(material.schematic.schematic);
+                this.recalculateStepNo();
+
+                var $table = $('<div id="handsontable"></div>').appendTo($('#tableViewContainer'));
+                var columnHeaders = [
+                    '{% trans 'TH_STEP_NO' %}',
+                    '{% trans 'TH_PROCESS' %}',
+                    ' ',
+                    '{% trans 'TH_MATERIALS' %}',
+                    '{% trans 'TH_IS_CONFIGURABLE' %}',
+                    '{% trans 'TH_QUANTITY' %}',
+                    '{% trans 'TH_COUNTER' %}',
+                    '{% trans 'TH_PREVIOUS_STEPS' %}',
+                    '{% trans 'TH_STAGING_TIME' %}',
+                    '{% trans 'TH_STANDARD_TIME' %}',
+                    '{% trans 'TH_REMARK' %}'
+                ];
+                var columns = [
+                    {
+                        data : 'stepNo',
+                        className : 'htCenter htGrey',
+                        renderer : o.stepNoRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'process',
+                        renderer : o.processRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'cp',
+                        className : 'htCenter',
+                        renderer : o.cpRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'material',
+                        renderer : o.materialRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'isConfigurable',
+                        className : 'htCenter',
+                        renderer : o.configurableRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'quantity',
+                        className : 'htCenter',
+                        renderer : o.configDependantRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'counter',
+                        className : 'htCenter',
+                        readOnly : true
+                    },
+                    {
+                        data : 'source',
+                        className : 'htCenter htGrey',
+                        renderer : o.sourceRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'stagingTime',
+                        className : 'htCenter',
+                        renderer : o.configDependantRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'duration',
+                        className : 'htCenter',
+                        renderer : o.configDependantRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'remark'
+                    }
+                ];
+
+                // FIXME still untested
+                if(material.schematic.conf_size.length < 2) {
+                    columnHeaders.splice(4, 1);
+                    columns.splice(4, 1);
+                }
+
+                this.handsontable = $table.handsontable({
+                    data : this.tempData,
+                    colHeaders : columnHeaders,
+                    columns : columns,
+                    rowHeaders : false,
+                    manualRowMove : false,
+                    contextMenu : false,
+                    stretchH : 'all'
+                }).handsontable('getInstance');
+
+                this.handsontable.updateSettings({ width : '100%' });
+            },
+
+            stepNoRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                if(common.isEmpty(instance.getData()[row].process)) {
+                    $(td).html('');
+                } else {
+                    $(td).html(value);
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            processRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    var task = Front.getTask(value);
+                    if(task) {
+                        $(td).html('<strong>' + task.code + '</strong> ' + task.label);
+                    } else {
+                        $(td).html('<span class="text-danger">' + value + '</span>');
+                    }
+                }
+                return $(td).get(0);
+            },
+
+            cpRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('').removeClass('producefield consumefield');
+                if(value == 'produce') {
+                    $(td).html('{% trans 'T_PRODUCE' %}').addClass('producefield');
+                } else if(value == 'consume') {
+                    $(td).html('{% trans 'T_CONSUME' %}').addClass('consumefield');
+                } else if(value == 'borrow') {
+                    $(td).html('{% trans 'T_BORROW' %}').addClass('borrowfield');
+                } else {
+                    $(td).html(value);
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            configurableRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('').addClass(cellProperties.className);
+                if(value) {
+                    $(td).append('<i class="fa fa-check"></i>');
+                }
+                return $(td).get(0);
+            },
+
+            materialRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    var stripedVal = value.substr('stock-'.length);
+                    $(td).append('<a href="javascript:;" class="interact" data-type="materialcode" data-from="material_new" data-unique="' + stripedVal + '">' + stripedVal + '</a>');
+                }
+                return $(td).get(0);
+            },
+
+            sourceRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                if(common.isEmpty(instance.getData()[row].process)) {
+                    $(td).html('');
+                } else if(!value || value.length == 0) {
+                    $(td).html('');
+                } else {
+                    var labels = [];
+                    var data = instance.getData();
+                    value.forEach(function(id) {
+                        var entry = data.filter(function(obj) {
+                            return obj.id == id;
+                        });
+                        if(entry.length > 0) {
+                            labels.push(entry[0].stepNo);
+                        }
+                    });
+                    $(td).html(labels.join(', '));
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            configDependantRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    var rowData = instance.getData()[row];
+                    var index = 0;
+                    if(rowData.isConfigurable) {
+                        if (!common.isEmpty(Header.activeSize)) {
+                            index = material.schematic.conf_size.indexOf(Header.activeSize);
+                            if(index == -1 || index >= value.length) {
+                                index = 0;
+                            }
+                        }
+                    }
+                    if(prop == 'quantity') {
+                        $(td).html(Math.abs(parseFloat(value[index])));
+                    } else {
+                        $(td).html(value[index]);
+                    }
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            commit : function() {
+                if(this.handsontable) {
+                    this.handsontable.destroy();
+                }
+                this.handsontable = null;
+                $('#handsontable').remove();
+            }
+        };
+
+        var Gantt = {
+            data : null,
+
+            init : function() {
+                Front.configGanttForBOM();
+                gantt.config.readonly = true;
+                gantt.init('gantt');
+            },
+
+            // IMPORTANT Gantt.renderFromModel
+            renderFromModel : function() {
+                var activeSizeIndex = 0;
+                if(!common.isEmpty(Header.activeSize)) {
+                    activeSizeIndex = material.schematic.conf_size.indexOf(Header.activeSize);
+                    if (activeSizeIndex == -1) {
+                        activeSizeIndex = 0;
+                    }
+                }
+
+                this.data = material.toGantt(material.schematic.schematic, activeSizeIndex);
+
+                console.log('gantt data', this.data);
+
+                $('#ganttViewContainer .alert').remove();
+
+                if(this.data.data.length == 0) {
+                    $('#gantt').hide();
+                    $('#ganttViewContainer').prepend('<div class="alert alert-warning fade in text-center">{% trans 'T_NOT_ENOUGH_TO_DISPLAY' %}</div>');
+                } else {
+                    // IMPORTANT size switcher event for gantt
+                    $('#activeSizeSwitcher').unbind('change').change(function() {
+                        Header.activeSize = $(this).val();
+                        Gantt.renderFromModel();
+                    });
+
+                    this.data.data.forEach(function (obj, index) {
+                        obj.order = index;
+                    });
+
+                    this.data.data.filter(function(obj) {
+                        return obj.hasOwnProperty('start_date');
+                    }).forEach(function (obj) {
+                        obj.duration = obj.duration / gantt.config.duration_step;
+                        if(obj.materials && obj.materials.length > 0) {
+                            var items = [];
+                            for(var i = 0; i < obj.materials.length; i++) {
+                                var matCode = obj.materials[i].code;
+                                var lineItem = '<span class="labelize" data-type="' + api.common.C.TRANS.TYPED_CODES + '" data-code="' + matCode + '" data-pattern="{label}">' + matCode + '</span>';
+                                if(obj.materials[i].quantity && obj.materials[i].quantity.constructor === Array) {
+                                    var materialQuantityIndex = 0;
+                                    if(obj.materials[i].is_configurable) {
+                                        materialQuantityIndex = activeSizeIndex;
+                                    }
+                                    var qtyText = obj.materials[i].quantity[materialQuantityIndex];
+                                    if(!common.isEmpty(obj.materials[i].counter)) {
+                                        qtyText = qtyText + ' ' + obj.materials[i].counter;
+                                    }
+                                    lineItem = lineItem + ' (' + qtyText + ')';
+                                }
+                                items.push(lineItem);
+                            }
+                            obj.tooltip = {
+                                title : items.join('<br/>'),
+                                delay : { show : 400, hide : 0 }
+                            };
+                        }
+                    });
+
+                    $('#gantt').show();
+
+                    gantt.clearAll();
+                    gantt.parse(this.data);
+                    gantt.render();
+                    gantt.sort();
+                }
+            }
+        };
+
+        var BOM = {
+
+            init : function() {
+
+            },
+
+            getDataSource : function() {
+                var source = new BOMTreeDataSource({
+                    'as123142' : {
+                        materialId : 'bvcs21123sadadsd',
+                        qty : 1,
+                        uom : 'pieces'
+                    },
+                    'vcx123a761a' : {
+                        materialId : 'cvb1m1456a1',
+                        qty : 2,
+                        uom : ''
+                    }
+                });
+
+                return source;
+            },
+
+            renderFromModel : function() {
+                $('#bom').tree({
+                    selectable : false,
+                    dataSource : this.getDataSource()
+                });
+            }
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                $('#matBaseUOM > *').remove();
+                for(group in choices.grouped_uom) {
+                    if(!choices.grouped_uom.hasOwnProperty(group)) continue;
+                    var $optgroup = $('<optgroup label="' + group + '"></optgroup>');
+                    choices.grouped_uom[group].forEach(function(uomItem) {
+                        $optgroup.append('<option value="' + uomItem.code + '">' + uomItem.label + '</option>');
+                    });
+                    $('#matBaseUOM').append($optgroup);
+                }
+                Front.buildOptions('matMRPType', choices.mrp_type);
+                Front.buildOptions('matLotSize', choices.lot_size);
+                Front.buildOptions('matProcurementType', choices.procurement_type);
+                Front.buildOptions('matABCIndicator', choices.abc_indicator);
+                Front.buildOptions('matPlantStatus', choices.plant_status);
+                Front.buildOptions('matStorageLocation', choices.location);
+
+                // view switcher
+                $('input[name="view"]').change(function() {
+                    var view = $(this).val();
+                    if(view == 'gantt') {
+                        $('#tableViewContainer').hide();
+                        $('#ganttViewContainer').show();
+                        Table.commit();
+                        Gantt.renderFromModel();
+                    } else if(view == 'table') {
+                        $('#ganttViewContainer').hide();
+                        $('#tableViewContainer').show();
+                        Table.renderFromModel();
+                    }
+                });
+
+                Header.init();
+                MRP.init();
+                Inventory.init();
+                Table.init();
+                Gantt.init();
+                BOM.init();
+
+                if(!common.isEmpty(materialId)) {
+                    var operation = common.getParam(window.location.href, 'op');
+                    var view = common.getParam(window.location.href, 'view');
+                    Front.removeParamFromAddressBar();
+                    if(operation == 'created') {
+                        Front.notify('success', '{% trans 'NOTI_MATERIAL_CREATED' %}', '');
+                    } else if(operation == 'updated') {
+                        Front.notify('success', '{% trans 'NOTI_MATERIAL_SAVED' %}', '');
+                    }
+                    material.load(materialId, function(success, data) {
+                        if(success) {
+                            prepareInititalData();
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+
+                    if(view == 'inventory') {
+                        $('a[href="#inventory"]').trigger('click');
+                    }
+                } else {
+                    prepareInititalData();
+                }
+            });
+
+            function prepareInititalData() {
+                var codes = [];
+                if(material.schematic) {
+                    material.schematic.schematic.forEach(function(process) {
+                        codes.push(process.process);
+                    });
+                }
+                Resolver.prefetch(api.common.C.TRANS.TYPED_CODES, codes);
+
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                /**
+                 * New Material
+                 * */
+                if(common.isEmpty(materialId)) {
+                    $('#viewLogButton').remove();
+                    $('.removeonnew').remove();
+                }
+
+                if(!common.isEmpty(material.code)) {
+                    $('#matCode').attr('readonly', 'readonly');
+                    Header.codeSelector.setReadOnly(true);
+                }
+
+                Header.renderFromModel();
+                MRP.renderFromModel();
+                Inventory.renderFromModel();
+                BOM.renderFromModel();
+
+                $('input[name="view"]:checked').trigger('change');
+
+                // PERMISSION cannot write
+                if(!Front.userCan('material_master+write')) {
+                    $('#saveMaterialButton').remove();
+                    $('input[type="text"], input[type="number"], select, textarea').attr('readonly', 'readonly');
+                } else {
+                    Front.enableInputChangesChecking();
+                }
+
+                common.unblockUI($('#main-content'));
+            }
+
+        })(jQuery);
+    </script>
+{% endblock %}

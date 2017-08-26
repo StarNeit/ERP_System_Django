@@ -1,0 +1,308 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+{% block page %}
+    <section class="panel">
+        <div class="panel-body">
+            <div class="position-center" style="padding-top:30px; padding-bottom: 30px;">
+                <div id="ready" class="position-center">
+                    <p class="text-center">
+                        <select id="options" class="form-control text-center req">
+                            <option value="">{% trans 'OPT_SELECT_MRP_OPTION' %}</option>
+                            <option value="all">{% trans 'OPT_RUN_ALL_MATERIALS' %}</option>
+                            <option value="specific">{% trans 'OPT_RUN_ONE_MATERIAL' %}</option>
+                        </select>
+                    </p>
+                    <div id="materialControls" class="row" style="display: none;">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="orderMaterial" class="control-label">{% trans 'T_MATERIAL' %}</label>
+                                <input type="text" class="form-control req" id="material" />
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="orderMaterialRevision" class="control-label">{% trans 'T_REVISION' %}</label>
+                                <select class="form-control req" id="revision"></select>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="orderMaterialSize" class="control-label">{% trans 'T_SIZE' %}</label>
+                                <select class="form-control" id="size" disabled="disabled"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="runMRPButton" type="button" class="btn btn-primary btn-lg btn-block">{% trans 'BUTTON_START_MRP' %}</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-body">
+            <table id="sessionTable" class="table table-hover general-table">
+                <thead>
+                    <tr>
+                        <th>{% trans 'TH_STARTED' %}</th>
+                        <th>{% trans 'TH_ENDED' %}</th>
+                        <th>{% trans 'TH_MRP_OPTION' %}</th>
+                        <th>{% trans 'TH_STATUS' %}</th>
+                        <th>{% trans 'TH_REMARK' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript">
+        var MRP = {
+            context : { material : null, size : null, revision : null },
+
+            init : function() {
+                var o = this;
+
+                $('#runMRPButton').click(function() {
+                    var validate = common.autoValidate($('#options'));
+                    if(!validate) return;
+
+                    if($('#options').val() == 'specific') {
+                        validate = common.autoValidate($('#materialControls .req'));
+                        if(!validate) return;
+                        this.doRun(['stock-' + this.context.material.value, this.context.revision, this.context.size]);
+                    } else {
+                        this.doRun([]);
+                    }
+                }.bind(this));
+
+                $('#options').change(function() {
+                    var val = $(this).val();
+                    if(val == 'specific') {
+                        $('#materialControls').stop(true, false).slideDown('fast', function() {
+                            $('#material').focus();
+                        });
+                    } else {
+                        $('#materialControls').stop(true, false).slideUp('fast');
+                    }
+                });
+
+                $('#material').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                                console.log(data);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        $(this).val(ui.item.label);
+                        o.context.material = ui.item;
+                        o.onMaterialChange();
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('');
+                            o.context.material = null;
+                            o.onMaterialChange();
+                        }
+                    }
+                });
+
+                $('#revision').change(function() {
+                    this.onRevisionChange();
+                }.bind(this));
+
+                $('#size').change(function() {
+                    var val = $(this).val();
+                    if(common.isEmpty(val)) {
+                        o.context.size = null;
+                    } else {
+                        o.context.size = val;
+                    }
+                });
+            },
+
+            // IMPORTANT MRP.onMaterialChange
+            onMaterialChange : function() {
+                this.doQueryRevision($('#material').val());
+            },
+
+            // IMPORTANT MRP.onRevisionChange
+            onRevisionChange : function() {
+                var revision = $('#revision').val();
+
+                $('#size option').remove();
+
+                if(common.isEmpty(revision)) {
+                    this.context.revision = null;
+                } else {
+                    this.context.revision = revision;
+
+                    var revEntry = $('#revision option:selected').data('context');
+                    if(!revEntry) return;
+
+                    revEntry.conf_size.forEach(function(size) {
+                        $('#size').append('<option value="' + size + '">' + size + '</option>');
+                    });
+                    if(revEntry.conf_size.length > 0) {
+                        $('#size').addClass('req').removeAttr('disabled');
+                    } else {
+                        $('#size').removeClass('req').attr('disabled', 'disabled');
+                    }
+                }
+                $('#size').trigger('change');
+            },
+
+            // IMPORTANT MRP.doQueryRevision
+            doQueryRevision : function(matCode) {
+                var o = this;
+                $('#revision option').remove();
+                if(common.isEmpty(matCode)) {
+                    $('#revision').trigger('change');
+                    return;
+                }
+
+                api.helper.material_revisions('stock-' + matCode, function(success, data) {
+                    if(success) {
+                        data.sort(function(a, b) {
+                            return b.rev_id - a.rev_id;
+                        });
+
+                        data.forEach(function(revEntry) {
+                            var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                            $opt.data('context', revEntry);
+                            $('#revision').append($opt);
+                        });
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                    $('#revision').trigger('change');
+                });
+            },
+
+            // IMPORTANT MRP.doRun
+            doRun : function(param) {
+                common.blockUI($('#main-content'));
+                api.bot.run(param, function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        this.check();
+                    } else {
+                        Front.handleAjaxError(success);
+                    }
+                }.bind(this));
+            },
+
+            check : function() {
+                api.bot.list(function(success, data) {
+                    if(success) {
+                        console.log(data);
+                        $('#sessionTable tbody > *').remove();
+                        for(var i = 0; i < data.length; i++) {
+                            var $tr = this.buildEntry(data[i]);
+                            $('#sessionTable tbody').append($tr);
+                        }
+                    } else {
+                        Front.handleAjaxError(success);
+                    }
+                }.bind(this));
+            },
+
+            buildEntry : function(data) {
+                var isEnded = false;
+                if(data.end) {
+                    isEnded = true;
+                }
+
+                var $tr = $('<tr></tr>');
+                $tr.append('<td>' + moment(new Date(data.start * 1000)).format('YYYY-MM-DD HH:mm:ss') + '</td>');
+                if(isEnded) {
+                    $tr.append('<td>' + moment(new Date(data.end * 1000)).format('YYYY-MM-DD HH:mm:ss') + '</td>');
+                } else {
+                    $tr.append('<td>-</td>');
+                }
+                if(data.target_materials.length == 0) {
+                    $tr.append('<td>{% trans 'T_ALL_MATERIALS' %}</td>');
+                } else {
+                    var matStrings = [];
+                    for(var i = 0; i < data.target_materials.length; i++) {
+                        var matStr = data.target_materials[i][0].substr('stock-'.length);
+                        if(!common.isEmpty(data.target_materials[i][1])) {
+                            matStr = matStr + ' rev' + data.target_materials[i][1];
+                        }
+                        if(!common.isEmpty(data.target_materials[i][2])) {
+                            matStr = matStr + ' [' + data.target_materials[i][2] + ']';
+                        }
+                        matStrings.push(matStr);
+                    }
+                    $tr.append('<td>' + matStrings.join('<br/>') + '</td>');
+                }
+                if(!isEnded) {
+                    $tr.append('<td><span class="label label-warning">{% trans 'T_MRP_SESSION_STATUS_RUNNING' %}</span></td>');
+                } else {
+                    if(data.errors.length > 0) {
+                        $tr.append('<td><span class="label label-danger">{% trans 'T_MRP_SESSION_STATUS_ERROR' %}</span></td>');
+                    } else {
+                        $tr.append('<td><span class="label label-success">{% trans 'T_MRP_SESSION_STATUS_FINISHED' %}</span></td>');
+                    }
+                }
+
+                if(data.errors.length > 0) {
+                    $tr.append('<td>' + data.errors.join('<br/>') + '</td>');
+                } else {
+                    $tr.append('<td>&nbsp;</td>');
+                }
+                return $tr;
+            },
+
+            onReady : function() {
+                this.check();
+
+                setInterval(this.check.bind(this), 10000);
+            }
+        };
+
+        var Lister = {
+            init : function() {
+
+            }
+        };
+
+        (function($) {
+            $(document).ready(function () {
+                common.blockUI($('#main-content'));
+
+                MRP.init();
+                Lister.init();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                onReadyToUse();
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                MRP.onReady();
+
+                common.unblockUI($('#main-content'));
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

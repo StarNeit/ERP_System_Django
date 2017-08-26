@@ -1,0 +1,151 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+        </header>
+        <div class="panel-body">
+
+            <table id="prTable" class="table table-hover general-table">
+                <thead>
+                <tr>
+                    <th>{% trans 'TH_DOC_NO' %}</th>
+                    <th>{% trans 'TH_TYPE' %}</th>
+                    <th class="text-right">{% trans 'TH_TOTAL_PRICE' %}</th>
+                    <th>{% trans 'TH_STATUS' %}</th>
+                    <th>{% trans 'TH_LAST_MODIFIED' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <div class="text-right paginationblock">
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/models/pr.js' %}"></script>
+    <script type="text/javascript">
+        var List = {
+
+            PAGE_SIZE : 20,
+            pageIndex : 0,
+
+            init : function() {
+                var o = this;
+                $(document).on('click', '.pagination li a', function() {
+                    var index = $(this).data('index');
+                    if(index == o.pageIndex) return;
+                    o.pageIndex = index;
+                    $('.pagination li.active').removeClass('active');
+                    $('.paginationblock .pagination').each(function() {
+                        $(this).find('li').eq(o.pageIndex).addClass('active');
+                    });
+                    o.query();
+                });
+            },
+
+            query : function() {
+                var o  = this;
+                common.blockUI($('#prTable').closest('.panel-body'));
+                api.crud.read('purchase_requisition', null, this.PAGE_SIZE, this.pageIndex, function(success, data) {
+                    $('#prTable tbody > *').remove();
+                    common.unblockUI($('#prTable').closest('.panel-body'));
+                    if(success) {
+                        data.forEach(function(obj) {
+                            var $renderer = o.renderEntry(obj);
+                            $('#prTable tbody').append($renderer);
+                        });
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            queryTotal : function() {
+                var o = this;
+                api.crud.count('purchase_requisition', null, function(success, data) {
+                    if(success) {
+                        $('.paginationblock').empty();
+                        if(data == 0) return;
+                        var pageCount = Math.ceil(data / o.PAGE_SIZE);
+                        if(pageCount > 1) {
+                            $('.paginationblock').append('<ul class="pagination"></ul>');
+                            for (var i = 1; i <= pageCount; i++) {
+                                $('.paginationblock .pagination').append('<li><a href="javascript:;" data-index="' + (i -1) + '">' + i + '</a></li>');
+                            }
+                            $('.paginationblock .pagination').each(function() {
+                                $(this).find('li').eq(o.pageIndex).addClass('active');
+                            });
+                        }
+                    } else {
+                        console.log(data);
+                    }
+                });
+            },
+
+            renderEntry : function(obj) {
+                var url = URL.pr_view(obj._id);
+                var statusClass = 'primary';
+                var statusText = gettext('PR_STATUS_' + obj.status);
+                console.log(obj);
+
+                var editBy = '';
+                var editWhen = '';
+                if(obj.last_edited) {
+                    editBy = displayName(obj.last_edited.who.first_name, obj.last_edited.who.last_name);
+                    editWhen = moment(obj.last_edited.when * 1000).format('YYYY-MM-DD HH:mm');
+                }
+
+                switch(obj.status) {
+                    case 1: // approved
+                        statusClass = 'success';
+                        break;
+                    case 2: // partial converted
+                    case 3: // converted
+                        statusClass = 'warning';
+                        break;
+                    case 4: // cancelled
+                        statusClass = 'danger';
+                        break;
+                    case 0: // open
+                    default:
+                        statusClass = 'info';
+                }
+
+                var totalPrice = 0;
+                for(var i = 0; i < obj.items.length; i++) {
+                    var netPrice = parseFloat(obj.items[i].net_price);
+                    if(isNaN(netPrice)) {
+                        netPrice = 0;
+                    }
+                    totalPrice = totalPrice + netPrice;
+                }
+
+                var $r = $('<tr>\
+                    <td><a href="' + url + '">' + obj.doc_no + '</a></td>\
+                    <td>' + gettext('PR_TYPE_' + obj.type) + '</td>\
+                    <td class="text-right">' + totalPrice.formatMoney(2) + '</td>\
+                    <td><span class="label label-' + statusClass + '">' + statusText + '</span></td>\
+                    <td>' + editWhen + ' {% trans 'T_BY' %} ' + editBy + '</td>\
+                </tr>');
+
+                return $r;
+            }
+
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                List.init();
+                List.query();
+                List.queryTotal();
+            });
+        })(jQuery);
+    </script>
+{% endblock %}

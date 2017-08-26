@@ -1,0 +1,575 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-06-30 17:37+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: templates/static/js/custom.js:5
+msgid "NOTI_ERROR_500"
+msgstr "Internal Server Error"
+
+#: templates/static/js/custom.js:6
+msgid "NOTI_ERROR_403"
+msgstr "Validation Error"
+
+#: templates/static/js/custom.js:7
+msgid "NOTI_ERROR_404"
+msgstr "Access Error"
+
+#: templates/static/js/custom.js:9
+msgid "PERMISSION_inv_movement"
+msgstr "Material Movement"
+
+#: templates/static/js/custom.js:10
+msgid "PERMISSION_inv_content"
+msgstr "Inventory Content"
+
+#: templates/static/js/custom.js:11
+msgid "PERMISSION_design"
+msgstr "Design"
+
+#: templates/static/js/custom.js:12
+msgid "PERMISSION_material"
+msgstr "Material"
+
+#: templates/static/js/custom.js:13
+msgid "PERMISSION_sales"
+msgstr "Sales"
+
+#: templates/static/js/custom.js:14
+msgid "PERMISSION_production_order"
+msgstr "Production Order"
+
+#: templates/static/js/custom.js:23
+msgid "PRODUCTION_ORDER_STATUS_0"
+msgstr "Open"
+
+#: templates/static/js/custom.js:24
+msgid "PRODUCTION_ORDER_STATUS_1"
+msgstr "Planned"
+
+#: templates/static/js/custom.js:25
+msgid "PRODUCTION_ORDER_STATUS_2"
+msgstr "Released"
+
+#: templates/static/js/custom.js:26
+msgid "PRODUCTION_ORDER_STATUS_3"
+msgstr "Confirmed"
+
+#: templates/static/js/custom.js:27
+msgid "PRODUCTION_ORDER_STATUS_4"
+msgstr "Closed"
+
+#: templates/static/js/custom.js:28
+msgid "PRODUCTION_ORDER_STATUS_5"
+msgstr "Cancelled"
+
+#: templates/static/js/custom.js:43
+msgid "OP_STATUS_0"
+msgstr "Open"
+
+#: templates/static/js/custom.js:44
+msgid "OP_STATUS_1"
+msgstr "Released"
+
+#: templates/static/js/custom.js:45
+msgid "OP_STATUS_2"
+msgstr "Ready"
+
+#: templates/static/js/custom.js:46
+msgid "OP_STATUS_3"
+msgstr "Started"
+
+#: templates/static/js/custom.js:47
+msgid "OP_STATUS_4"
+msgstr "Partially Confirmed"
+
+#: templates/static/js/custom.js:48
+msgid "OP_STATUS_5"
+msgstr "Confirmed"
+
+#: templates/static/js/custom.js:49
+msgid "OP_STATUS_6"
+msgstr "Delivered"
+
+#: templates/static/js/custom.js:50
+msgid "OP_STATUS_10"
+msgstr "Cancelled"
+
+#: templates/static/js/custom.js:57
+msgid "GROUP_STATUS_0"
+msgstr "Open"
+
+#: templates/static/js/custom.js:58
+msgid "GROUP_STATUS_1"
+msgstr "Partially Confirmed"
+
+#: templates/static/js/custom.js:59
+msgid "GROUP_STATUS_2"
+msgstr "Confirmed"
+
+#: templates/static/js/custom.js:60
+msgid "GROUP_STATUS_3"
+msgstr "Cancelled"
+
+#: templates/static/js/custom.js:62
+msgid "PO_TYPE_0"
+msgstr "Standard"
+
+#: templates/static/js/custom.js:63
+msgid "PO_TYPE_1"
+msgstr "Rework"
+
+#: templates/static/js/custom.js:100
+msgid "MOMENT_LOCALE"
+msgstr "th_TH"
+
+#: templates/static/js/custom.js:232
+msgid "MODAL_TITLE_COMMON_ALERT"
+msgstr "System Message"
+
+#: templates/static/js/custom.js:248
+msgid "T_CONFIRM_DIALOG_DEFAULT_MESSAGE"
+msgstr "Are you sure?"
+
+#: templates/static/js/custom.js:251
+msgid "BUTTON_OK"
+msgstr "Ok"
+
+#: templates/static/js/custom.js:254
+msgid "BUTTON_CANCEL"
+msgstr "Cancel"
+
+#: templates/static/js/custom.js:345
+msgid "NOTI_ERROR_"
+msgstr "Error"
+
+#: templates/static/js/custom.js:404
+msgid "T_BACK_WARNING"
+msgstr "Your unsaved data will be lost."
+
+#: templates/static/js/custom.js:458
+msgid "T_GANTT_PROCESS"
+msgstr "Process"
+
+#: templates/static/js/custom.js:469
+msgid "T_GANTT_START"
+msgstr "Start"
+
+#: templates/static/js/custom.js:472
+msgid "T_GANTT_DURATION"
+msgstr "Duration"
+
+#: templates/static/js/custom.js:956
+msgid "OP_STATUS_"
+msgstr "Open"
+
+#: templates/static/js/interact.js:42
+msgid "NOTI_ERROR"
+msgstr "Error"
+
+#: templates/static/js/interact.js:42
+msgid "NOTI_MATERIAL_NOT_FOUND_MESSAGE"
+msgstr "Material not found"
+
+#: templates/static/js/jquery.id-lookup-helper.js:96
+msgid "IDLOOKUP_NO_RESULT"
+msgstr "No components found."
+
+#: templates/static/js/op-action.js:72
+msgid "BUTTON_REQUEST_EXTRA_MATERIALS"
+msgstr "Request Extra Materials"
+
+#: templates/static/js/op-action.js:75
+msgid "BUTTON_START"
+msgstr "Start"
+
+#: templates/static/js/op-action.js:76
+msgid "BUTTON_RESUME"
+msgstr "Resume"
+
+#: templates/static/js/op-action.js:79
+msgid "BUTTON_PAUSE"
+msgstr "Pause"
+
+#: templates/static/js/op-action.js:82
+msgid "BUTTON_FINISH"
+msgstr "Finish"
+
+#: templates/static/js/op-action.js:94
+#: templates/static/js/tool-validators.js:21
+#: templates/static/js/tool-validators.js:66
+#: templates/static/js/tool-validators.js:125
+msgid "T_PLANNED_START"
+msgstr "Planned Start"
+
+#: templates/static/js/op-action.js:95
+msgid "T_PLANNED_END"
+msgstr "Planned End"
+
+#: templates/static/js/op-action.js:98
+msgid "T_STATUS"
+msgstr "Status"
+
+#: templates/static/js/op-action.js:99
+msgid "T_DURATION"
+msgstr "Duration"
+
+#: templates/static/js/op-action.js:101
+msgid "T_ASSIGNEE"
+msgstr "Assignee"
+
+#: templates/static/js/op-action.js:108
+msgid "T_STARTED"
+msgstr "Started"
+
+#: templates/static/js/op-action.js:109
+msgid "T_ENDED"
+msgstr "Ended"
+
+#: templates/static/js/op-action.js:112 templates/static/js/op-action.js:550
+msgid "T_YIELD"
+msgstr "Yield"
+
+#: templates/static/js/op-action.js:113 templates/static/js/op-action.js:556
+msgid "T_SCRAP"
+msgstr "Scrap"
+
+#: templates/static/js/op-action.js:114 templates/static/js/op-action.js:564
+msgid "T_WEIGHT"
+msgstr "Weight"
+
+#: templates/static/js/op-action.js:120 templates/static/js/op-action.js:575
+#: templates/static/js/components/configurable-setter.js:31
+msgid "TH_MATERIAL"
+msgstr "Material"
+
+#: templates/static/js/op-action.js:122 templates/static/js/op-action.js:577
+#: templates/static/js/components/configurable-setter.js:124
+msgid "TH_QUANTITY"
+msgstr "Quantity"
+
+#: templates/static/js/op-action.js:123 templates/static/js/op-action.js:579
+msgid "TH_COUNTER"
+msgstr "Counter"
+
+#: templates/static/js/op-action.js:151
+msgid "BARCODE_ASSIGN_TO_USER_ID"
+msgstr "Assign to user"
+
+#: templates/static/js/op-action.js:152
+msgid "PLACEHOLDER_USER_ID"
+msgstr "USER ID"
+
+#: templates/static/js/op-action.js:226
+msgid "T_ACTUAL_DURATION"
+msgstr "Actual Duration"
+
+#: templates/static/js/op-action.js:244 templates/static/js/op-action.js:659
+msgid "T_CONSUME"
+msgstr "Take"
+
+#: templates/static/js/op-action.js:246 templates/static/js/op-action.js:662
+#: templates/static/js/op-action.js:707
+msgid "T_PRODUCE"
+msgstr "Make"
+
+#: templates/static/js/op-action.js:443
+msgid "T_PRESS_ENTER_TO_SUBMIT"
+msgstr "Press 'ENTER' to submit"
+
+#: templates/static/js/op-action.js:507
+msgid "T_CONFIRMATION"
+msgstr "Confirmation"
+
+#: templates/static/js/op-action.js:571
+msgid "T_MATERIALS"
+msgstr "Materials"
+
+#: templates/static/js/op-action.js:578
+msgid "TH_REMAINING"
+msgstr "Remaining"
+
+#: templates/static/js/op-action.js:587
+msgid "BUTTON_NEW_LINE"
+msgstr "New Line"
+
+#: templates/static/js/op-action.js:590
+msgid "BUTTON_CONFIRM"
+msgstr "CONFIRM"
+
+#: templates/static/js/op-action.js:711
+msgid "T_DELETE_ROW"
+msgstr "Delete Row"
+
+#: templates/static/js/op-action.js:900
+msgid "T_AUTHENTICATION_REQUIRED"
+msgstr "Authentication Required"
+
+#: templates/static/js/op-action.js:920
+msgid "T_YOU_HAVE_NO_PERMISSION"
+msgstr "You don't have permission for"
+
+#: templates/static/js/op-action.js:920
+msgid "T_PLEASE_GRANT_TO_PERFORM"
+msgstr "Please have higher level user grant this action."
+
+#: templates/static/js/op-action.js:921
+msgid "USER_FIELD_USERNAME"
+msgstr "User"
+
+#: templates/static/js/op-action.js:922
+msgid "USER_FIELD_PASSWORD"
+msgstr "Password"
+
+#: templates/static/js/op-action.js:923
+msgid "BUTTON_GRANT"
+msgstr "Grant"
+
+#: templates/static/js/tool-validators.js:21
+msgid "ERROR_OPERATION_OVERLAP"
+msgstr "Overlapping operation"
+
+#: templates/static/js/tool-validators.js:21
+msgid "T_OF"
+msgstr "of"
+
+#: templates/static/js/tool-validators.js:21
+msgid "T_FROM"
+msgstr "from"
+
+#: templates/static/js/tool-validators.js:66
+msgid "ERROR_OPERATION_IN_GROUP_OUT_OF_SYNC"
+msgstr "Out-of-sync operation"
+
+#: templates/static/js/tool-validators.js:125
+msgid "ERROR_OPERATION_OVERLAP_IN_ASSIGNEE"
+msgstr "Overlapping operation in resource"
+
+#: templates/static/js/components/component-selector.js:13
+#: templates/static/js/components/component-tokenizer-selector.js:10
+#: templates/static/js/components/id-lookup-selector.js:8
+#: templates/static/js/components/size-selector.js:8
+#: templates/static/js/components/stamping-selector.js:11
+msgid "T_TYPE_HERE"
+msgstr "Type here..."
+
+#: templates/static/js/components/component-selector.js:19
+msgid "T_ADD_$"
+msgstr "Add '$'"
+
+#: templates/static/js/components/component-selector.js:36
+msgid "T_UPLOAD"
+msgstr "Upload"
+
+#: templates/static/js/components/component-selector.js:122
+msgid "T_ERROR"
+msgstr "Error"
+
+#: templates/static/js/components/component-selector.js:122
+msgid "ERROR_UPLOADING_FAILED"
+msgstr "Uploading failed.<br/>Please contact administrator."
+
+#: templates/static/js/components/component-tokenizer-selector.js:33
+#: templates/static/js/components/configurable-setter.js:42
+msgid "T_OK"
+msgstr "Ok"
+
+#: templates/static/js/components/component-tokenizer-selector.js:40
+#: templates/static/js/components/component-tokenizer-selector.js:124
+msgid "T_ADD"
+msgstr "Add"
+
+#: templates/static/js/components/component-tokenizer-selector.js:43
+#: templates/static/js/components/configurable-setter.js:45
+msgid "T_CANCEL"
+msgstr "Cancel"
+
+#: templates/static/js/components/component-tokenizer-selector.js:255
+msgid "T_DIGITS"
+msgstr "digits"
+
+#: templates/static/js/components/configurable-setter.js:25
+msgid "TH_PROCESS"
+msgstr "Process"
+
+#: templates/static/js/components/configurable-setter.js:123
+msgid "TH_SIZE"
+msgstr "Size"
+
+#: templates/static/js/components/configurable-setter.js:125
+msgid "TH_STAGING_TIME"
+msgstr "Staging Time"
+
+#: templates/static/js/components/configurable-setter.js:126
+msgid "TH_STANDARD_TIME"
+msgstr "Standard Time"
+
+#: templates/static/js/components/event-log-viewer.js:4
+msgid "EVENT_WHAT_N"
+msgstr "Created"
+
+#: templates/static/js/components/event-log-viewer.js:5
+msgid "EVENT_WHAT_U"
+msgstr "Updated"
+
+#: templates/static/js/components/event-log-viewer.js:6
+msgid "EVENT_WHAT_D"
+msgstr "Deleted"
+
+#: templates/static/js/components/event-log-viewer.js:7
+msgid "EVENT_WHAT_S"
+msgstr "Submitted for Approval"
+
+#: templates/static/js/components/event-log-viewer.js:8
+msgid "EVENT_WHAT_R"
+msgstr "Rejected"
+
+#: templates/static/js/components/event-log-viewer.js:9
+msgid "EVENT_WHAT_A"
+msgstr "Approved"
+
+#: templates/static/js/components/event-log-viewer.js:10
+msgid "EVENT_WHAT_?"
+msgstr "Unknown Action"
+
+#: templates/static/js/components/event-log-viewer.js:15
+msgid "T_EVENT_LOG"
+msgstr "History"
+
+#: templates/static/js/components/event-log-viewer.js:41
+msgid "BUTTON_VIEW_MORE"
+msgstr "View more"
+
+#: templates/static/js/components/event-log-viewer.js:93
+msgid "EVENT_WHAT_"
+msgstr ""
+
+#: templates/static/js/components/event-log-viewer.js:94
+msgid "T_BY"
+msgstr "by"
+
+#: templates/static/js/components/event-log-viewer.js:96
+msgid "T_DETAILS"
+msgstr "details"
+
+#: templates/static/js/components/size-selector.js:10
+#: templates/static/js/components/stamping-selector.js:17
+msgid "T_USE_$"
+msgstr "Use '$'"
+
+#: templates/static/js/dhtmlx/gantt_locale_th.js:32
+msgid "T_GANTT_LINK"
+msgstr "Link"
+
+#: templates/static/js/dhtmlx/gantt_locale_th.js:33
+msgid "T_GANTT_WILL_BE_DELETED"
+msgstr "will be deleted."
+
+#: templates/static/js/dhtmlx/gantt_locale_th.js:34
+msgid "T_GANTT_LINK_START"
+msgstr "start"
+
+#: templates/static/js/dhtmlx/gantt_locale_th.js:35
+msgid "T_GANTT_LINK_END"
+msgstr "end"
+
+#: templates/static/js/dhtmlx/scheduler_locale_th.js:20
+msgid "BUTTON_SCHEDULER_TODAY"
+msgstr "Today"
+
+#: templates/static/js/models/design.js:5
+msgid "DESIGN_STATUS_N"
+msgstr "New"
+
+#: templates/static/js/models/design.js:6
+msgid "DESIGN_STATUS_W"
+msgstr "Pending"
+
+#: templates/static/js/models/design.js:7
+msgid "DESIGN_STATUS_A"
+msgstr "Approved"
+
+#: templates/static/js/models/design.js:8
+msgid "DESIGN_STATUS_R"
+msgstr "Rejected"
+
+#: templates/static/js/models/design.js:9
+msgid "DESIGN_STATUS_E"
+msgstr "Edited"
+
+#: templates/static/js/models/design.js:11
+msgid "DESIGN_PROGRESS_drawing"
+msgstr "Drawing"
+
+#: templates/static/js/models/design.js:12
+msgid "DESIGN_PROGRESS_masterModeling"
+msgstr "Master Modeling"
+
+#: templates/static/js/models/design.js:13
+msgid "DESIGN_PROGRESS_production"
+msgstr "Production"
+
+#: templates/static/js/models/design.js:14
+msgid "DESIGN_PROGRESS_pricing"
+msgstr "Pricing"
+
+#: templates/static/js/models/design.js:456
+#: templates/static/js/models/design.js:495
+#: templates/static/js/models/design.js:617
+msgid "T_MASTER_MODELING"
+msgstr "Master Modeling"
+
+#: templates/static/js/models/design.js:462
+#: templates/static/js/models/design.js:498
+#: templates/static/js/models/design.js:628
+msgid "T_SAMPLE_CREATION"
+msgstr "Production"
+
+#: templates/static/js/models/pr.js:4
+msgid "PR_STATUS_0"
+msgstr "Open"
+
+#: templates/static/js/models/pr.js:5
+msgid "PR_STATUS_1"
+msgstr "Approved"
+
+#: templates/static/js/models/pr.js:6
+msgid "PR_STATUS_2"
+msgstr "Partially Converted"
+
+#: templates/static/js/models/pr.js:7
+msgid "PR_STATUS_3"
+msgstr "Converted"
+
+#: templates/static/js/models/pr.js:8
+msgid "PR_STATUS_4"
+msgstr "Cancelled"
+
+#: templates/static/js/models/pr.js:10
+msgid "PR_TYPE_0"
+msgstr "MRP"
+
+#: templates/static/js/models/pr.js:11
+msgid "PR_TYPE_1"
+msgstr "Manual"
+
+#: templates/static/js/models/sales-order.js:5
+msgid "SALES_ORDER_STATUS_OPEN"
+msgstr "Open"
+
+#: templates/static/js/models/sales-order.js:6
+msgid "SALES_ORDER_STATUS_CLOSED"
+msgstr "Closed"

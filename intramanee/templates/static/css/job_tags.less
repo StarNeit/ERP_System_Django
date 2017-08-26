@@ -1,0 +1,117 @@
+@page {
+  size: A5 portrait;
+  margin: 0cm;
+}
+
+body {
+  background: rgb(204,204,204);
+  font-size: 11px;
+}
+
+page {
+  background: white;
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 0.5cm;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+  page-break-after: always;
+
+  &[size="A4"] {
+    width: 21cm;
+    /*height: 29.7cm;*/
+  }
+
+  &[size="A5"] {
+    width: 14.8cm;
+    /*height: 21cm;*/
+    overflow: hidden;
+  }
+}
+
+@media print {
+  body, page {
+    margin: 0;
+    box-shadow: 0;
+  }
+
+  page[size="A5"] {
+    height: 20.9cm;
+  }
+}
+
+h1 {
+  margin: 0px 0px 0.3em 0px;
+  font-size: 14px;
+}
+
+.job-tag {
+  padding: 15px 0px;
+
+  .thumb {
+    background-color: #efefef;
+    width: 100%;
+    height: 0px;
+    padding-top: 100%;
+  }
+
+  .doc_no {
+    margin-bottom: 0.1em;
+  }
+
+  .remark {
+    display: -webkit-box;
+	-webkit-box-orient: vertical;
+    line-height: 1.2em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    -webkit-line-clamp: 4;
+    height: 4.8em;
+  }
+
+  p {
+    line-height: 1.2em;
+    margin-bottom: 0.4em;
+  }
+
+  table.operations {
+    margin-top: 10px;
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      border: 1px solid black;
+      padding: 0px 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: top;
+      font-size: 10px;
+      line-height: 13px;
+    }
+
+    .num {
+      width: 5%;
+      padding: 0px 0px;
+      text-align: center;
+    }
+    .prev {
+      width: 9%;
+      padding: 0px 0px;
+      text-align: center;
+    }
+    .duration {
+      width: 11%;
+      padding: 0px 0px;
+      text-align: center;
+    }
+    .task {
+      width: 8%;
+      text-align: center;
+    }
+    .materials {
+      width: 37%;
+    }
+  }
+}

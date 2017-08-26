@@ -1,0 +1,1333 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section id="basic" class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right">
+                <a class="btn btn-danger" id="cancelMovementButton" href="javascript:;" tabindex="-1" style="display:none;"><i class="fa fa-times"></i><span class="hidden-xs"> {% trans 'BUTTON_CANCEL_THIS_DOC' %}</span></a>
+                <a class="btn btn-success" id="saveMovementButton" href="javascript:;" tabindex="-1"><i class="fa fa-check"></i><span class="hidden-xs"> {% trans 'BUTTON_SUBMIT' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+
+            <div class="row">
+                <div class="col-md-7 form-horizontal">
+                    <div class="form-group docno-parent">
+                        <label for="mmNo" class="col-sm-3 control-label">{% trans 'T_DOC_NO' %}</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control" id="mmNo" readonly="readonly" data-attribute="docNo" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mmType" class="col-sm-3 control-label">{% trans 'T_TYPE' %}</label>
+                        <div class="col-sm-4">
+                            <select class="form-control req" id="mmType">
+                            </select>
+                        </div>
+                        <div class="col-sm-5 internal-ref-parent">
+                            <input type="text" class="form-control req" id="mmInternalRef" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mmPostingDate" class="col-sm-3 control-label">{% trans 'T_POSTING_DATE' %}</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control" id="mmPostingDate" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5 form-horizontal">
+                    <div class="form-group created-parent">
+                        <label class="col-sm-3 control-label">{% trans 'T_CREATED' %}</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-static" id="mmCreated">&nbsp;</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mmExternalRef" class="col-sm-3 control-label">{% trans 'T_REF' %}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control req" id="mmExternalRef" data-attribute="refExt" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section class="panel" id="listPanel">
+        <div class="panel-body">
+            <p class="text-right additem-parent"><a class="btn btn-default btn-sm additem" href="javascript:;"><i class="fa fa-plus"></i> {% trans 'BUTTON_ADD_ROW' %}</a></p>
+
+            <table id="listTable" class="table table-bordered inline">
+                <thead>
+                    <tr>
+                        <th class="text-center minimized-padding" width="55">#</th>
+                        <th>{% trans 'TH_MATERIAL' %}</th>
+                        <th class="text-right" width="120">{% trans 'TH_QUANTITY' %}</th>
+                        <th class="text-center">{% trans 'TH_COUNTER' %}</th>
+                        <th class="text-right">{% trans 'TH_WEIGHT' %}</th>
+                        <th class="text-right">{% trans 'TH_UNIT_PRICE' %}</th>
+                        <th class="text-right">{% trans 'TH_VALUE' %}</th>
+                        <th>{% trans 'TH_LOCATION' %}</th>
+                        <th>{% trans 'TH_BATCH' %}</th>
+                        <th>{% trans 'TH_REASON' %}</th>
+                        <th class="text-center">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p class="text-right additem-parent"><a class="btn btn-default btn-sm additem" href="javascript:;"><i class="fa fa-plus"></i> {% trans 'BUTTON_ADD_ROW' %}</a></p>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/inventory.js' %}"></script>
+    <script type="text/javascript">
+        var GRPP = '103';
+        var GRBP = '531';
+        var GRPO = '101';
+        var GRLO = '107';
+        var GIPP = '261';
+        var GISO = '601';
+        var GISC = '231';
+        var GICC = '201';
+        var STL = '311';
+        var STLP = '312';
+        var STPL = '313';
+        var STLO = '314';
+        var STM = '309';
+        var SA = '711';
+
+        var docId = '{{ doc_id }}';
+        var movement = new InventoryMovement();
+        var parentDoc = null;
+        var cancelDoc = null;
+        var choices = {% choices 'uom' 'inv-movement_type' 'location' %};
+        var delayStartTimer = null;
+
+        var Header = {
+
+            // IMPORTANT Header.init()
+            init : function() {
+                var o = this;
+
+                if(common.isEmpty(docId)) {
+                    $('#mmPostingDate').datepicker({
+                        format : 'yyyy-mm-dd',
+                        endDate : new Date(),
+                        autoclose : true,
+                        language : '{% trans 'DATEPICKER_LOCALE' %}'
+                    }).on('changeDate', function(e) {
+                        if(e.date) {
+                            movement.postingDate = e.date;
+                        }
+                    });
+                }
+
+                $('#basic').find('input[data-attribute]').change('keyup change', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    if($(this).is('[type="number"]')) {
+                        val = parseFloat(val);
+                        if(isNaN(val)) {
+                            val = 0;
+                        }
+                    }
+                    movement[att] = val;
+                });
+
+                $('#basic').find('select[data-attribute]').change(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    movement[att] = val;
+                });
+
+                $('#mmType').change(function() {
+                    o.doCheckTypeSwitching($(this).val());
+                });
+
+                // IMPORTANT save button
+                $('#saveMovementButton').click(function() {
+                    if(!Header.doValidate()) return;
+                    List.commit();
+                    Header.doSave();
+                });
+
+                // IMPORTANT cancel button
+                $('#cancelMovementButton').click(function() {
+                    o.openCancelModal();
+                });
+            },
+
+            // IMPORTANT cancel modal
+            initCancelModal : function() {
+                var o = this;
+                var $modal = $('<div id="cancelMovementModal" class="modal fade cancel-movement-modal">\
+                    <div class="modal-dialog modal-sm">\
+                        <div class="modal-content">\
+                            <div class="modal-body">\
+                                <div class="modal-body text-center">\
+                                    <p>{% trans 'T_CANCEL_MOVEMENT_MESSAGE' %}</p>\
+                                    <p><input type="text" name="cancelreason" class="form-control req" /></p>\
+                                </div>\
+                                <div class="modal-footer" style="text-align: center;">\
+                                    <button type="button" class="btn btn-danger okbutton">{% trans 'BUTTON_PROCEED' %}</button>\
+                                    <button type="button" data-dismiss="modal" class="btn cancelbutton">{% trans 'BUTTON_CANCEL' %}</button>\
+                                </div>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>');
+
+                $modal.appendTo('body');
+
+                $modal.find('[name="cancelreason"]').autocomplete({
+                    autoFocus : true,
+                    minLength : 0,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'inv-movement-reason', function(success, data) {
+                            console.log(data);
+                            if(success) {
+                                if(data.length == 0) {
+                                    response([
+                                        {
+                                            label : "{% trans 'T_USE_$' %}".replace('$', request.term),
+                                            value : request.term,
+                                            needAdding : true
+                                        }
+                                    ]);
+                                } else {
+                                    response(data);
+                                }
+                            } else {
+                                response([]);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5'},
+                    select : function(event, ui) {
+                        console.log('select reason', ui.item);
+                        if(ui.item.needAdding) {
+                            api.common.add_lov('inv-movement-reason', ui.item.value, ui.item.value, null, function(success, data) {
+                                if(!success) {
+                                    Front.handleAjaxError(data);
+                                }
+                            });
+                        }
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('');
+                        }
+                    }
+                });
+
+                $modal.find('.okbutton').click(function() {
+                    if(common.autoValidate($modal.find('[name="cancelreason"]'))) {
+                        o.doCancel($modal.find('[name="cancelreason"]').val());
+                    }
+                });
+
+                $modal.on('shown.bs.modal', function() {
+                    $modal.find('[name="cancelreason"]').val('').focus();
+                });
+            },
+
+            openCancelModal : function() {
+                $('#cancelMovementModal').modal('show');
+            },
+
+            // IMPORTANT validate header
+            doValidate : function() {
+                Front.clearNotifications([403]);
+                common.resetValidate($('.invalid'));
+
+                var errors = [];
+
+                // required posting date
+                var postingDate = $('#mmPostingDate').datepicker('getDate');
+                if(isNaN(postingDate)) {
+                    errors.push('{% trans 'ERROR_EMPTY_POSTING_DATE' %}');
+                    common.setInvalid($('#mmPostingDate'));
+                }
+                if(!common.autoValidate($('#mmType'))) {
+                    errors.push('{% trans 'ERROR_EMPTY_TYPE' %}');
+                } else {
+                    movement.type = $('#mmType').val();
+                }
+
+                // If not scrap, transfer loc, transfer mat, adjust
+                if(!common.isEmpty(movement.type) && movement.type != GISC && movement.type != STL && movement.type != STM && movement.type != SA && movement.type != STLP && movement.type != STPL && movement.type != STLO) {
+                    if(!common.autoValidate($('#mmInternalRef'))) {
+                        errors.push('{% trans 'ERROR_EMPTY_DOC_REF' %}');
+                    }
+                }
+
+                errors = errors.concat(List.doValidate());
+
+                if(errors.length > 0) {
+                    var param = { status : 403, content : common.unique(errors).join('<br/>') };
+                    Front.handleAjaxError(param);
+                }
+                return errors.length == 0;
+            },
+
+            // IMPORTANT Header.renderFromModel()
+            renderFromModel : function() {
+                $('#basic').find('[data-attribute]').each(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    if(common.isEmpty(movement[att])) {
+                        $(this).val('');
+                    } else {
+                        $(this).val(movement[att]);
+                    }
+                });
+
+                if(common.isEmpty(docId)) {
+                    if(!movement.postingDate) {
+                        movement.postingDate = moment().startOf('day').toDate();
+                    }
+
+                    if(common.isEmpty(movement.type)) {
+                        movement.type = GRPP;
+                    }
+                } else {
+
+                    if(movement.refDoc && movement.refDoc.length > 0) {
+                        $('#mmInternalRef').val(movement.refDoc);
+                        api.crud.single(movement.refDoc[1], movement.refDoc[0], {}, function(success, data) {
+                            if(success) {
+                                $('#mmInternalRef').val(data.doc_no);
+                            } else {
+                                Front.handleAjaxError(data);
+                            }
+                        });
+                    }
+                }
+
+                this.typeObserver();
+                this.createdObserver();
+                this.postingDateObserver();
+            },
+
+            createdObserver : function() {
+                if(movement.lastEdited) {
+                    var editBy = displayName(movement.lastEdited.who.first_name, movement.lastEdited.who.last_name);
+                    var editWhen = moment(movement.lastEdited.when).format('YYYY-MM-DD HH:mm');
+                    $('#mmCreated').html(editWhen + ' {% trans 'T_BY' %} ' + editBy);
+                }
+            },
+
+            postingDateObserver : function() {
+                if(movement.postingDate) {
+                    if(Header.isReadOnly()) {
+                        $('#mmPostingDate').val(moment(movement.postingDate).format('YYYY-MM-DD'));
+                    } else {
+                        $('#mmPostingDate').datepicker('setDate', movement.postingDate);
+                    }
+                } else {
+                    if(Header.isReadOnly()) {
+                        $('#mmPostingDate').val('');
+                    } else {
+                        $('#mmPostingDate').datepicker('setDate', '');
+                    }
+                }
+            },
+
+            doCheckTypeSwitching : function(newType) {
+                var group = [
+                    [ GRPP, GRBP, GRPO, GRLO ],
+                    [ GIPP, GISO, GISC, GICC ],
+                    [ STL, STLP, STPL, STLO ],
+                    [ STM ],
+                    [ SA ]
+                ];
+
+                var originalGroup = -1;
+                var newGroup = -1;
+                for(var i = 0; i < group.length; i++) {
+                    if(group[i].indexOf(movement.type) != -1) {
+                        originalGroup = i;
+                    }
+                    if(group[i].indexOf(newType) != -1) {
+                        newGroup = i;
+                    }
+                }
+
+                // if group is changed
+                console.log(newType, movement.type, newGroup, originalGroup);
+                if(newGroup != originalGroup) {
+                    // see if there is already typed item in list
+                    if(!List.isEmpty()) {
+                        Front.confirm('{% trans 'T_ITEMS_WILL_BE_CLEARED' %}',
+                                '{% trans 'BUTTON_OK' %}', '{% trans 'BUTTON_CANCEL' %}',
+                                function() {
+                                    Header.doSwitchToType(newType);
+                                }, function() {
+                                    $('#mmType').val(movement.type);
+                                });
+                        return;
+                    } else {
+                        Header.doSwitchToType(newType);
+                    }
+                } else {
+                    $('#listTable [name="location"]').val('');
+                    $('#listTable [name="batch"]').attr('disabled', 'disabled').find('option').remove();
+
+                    movement.type = newType;
+
+                    // FIXME need to check first if it changes to different source or not
+                    $('#mmInternalRef, #mmExternalRef').val('');
+                    movement.refDoc = null;
+                    movement.refExt = null;
+
+                    this.typeObserver();
+                }
+            },
+
+            doSwitchToType : function(newType) {
+                List.empty();
+
+                movement.type = newType;
+
+                if(movement.type == STL || movement.type == STM || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                    for(var i = 0; i < 3; i++) {
+                        List.appendSequenceList();
+                    }
+                } else {
+                    for(var i = 0; i < 5; i++) {
+                        List.appendList();
+                    }
+                }
+
+                // FIXME need to check first if it changes to different source or not
+                $('#mmInternalRef, #mmExternalRef').val('');
+                movement.refDoc = null;
+                movement.refExt = null;
+
+                this.typeObserver();
+            },
+
+            typeObserver : function() {
+                if(!common.isEmpty(movement.type)) {
+                    $('#mmType').val(movement.type);
+                }
+
+                if($('#mmInternalRef').data('autocomplete')) {
+                    $('#mmInternalRef').autocomplete('destroy');
+                }
+                $('#mmInternalRef').removeClass('production sales department purchase');
+
+                if(movement.type == GRPP || movement.type == GRBP || movement.type == GIPP || movement.type == GRLO) { // GR production, GR By Product, GI production, GR Lost & Found
+                    $('#mmInternalRef').attr('placeholder', '{% trans 'T_PRODUCTION_ORDER' %}').addClass('production');
+                    $('.internal-ref-parent').show();
+                } else if(movement.type == GRPO) { // GR purchase
+                    $('#mmInternalRef').attr('placeholder', '{% trans 'T_PURCHASE_REQUISITION' %}').addClass('purchase');
+                    $('.internal-ref-parent').show();
+                } else if(movement.type == GISO) { // GI Sales
+                    $('#mmInternalRef').attr('placeholder', '{% trans 'T_SALES_ORDER' %}').addClass('sales');
+                    $('.internal-ref-parent').show();
+                } else if(movement.type == GICC) { // Cost Center
+                    // TODO set source to Cost Center #mmInternalRef
+                    $('#mmInternalRef').attr('placeholder', '{% trans 'T_DEPARTMENT' %}').addClass('department');
+                    $('.internal-ref-parent').show();
+                } else if(movement.type == STLP || movement.type == STPL || movement.type == STLO) { // transfer loc to production, production to loc
+                    $('#mmInternalRef').attr('placeholder', '{% trans 'T_PRODUCTION_ORDER' %}').addClass('production');
+                    $('.internal-ref-parent').show();
+                } else if(movement.type == STL || movement.type == STM || movement.type == GISC || movement.type == SA) { // Scrap, Adjust, transfer mat, transfer loc
+                    $('#mmInternalRef').removeAttr('placeholder');
+                    $('.internal-ref-parent').hide();
+                }
+
+                if($('#mmInternalRef').is('.sales')) {
+                    $('#mmInternalRef').autocomplete({
+                        autoFocus : true,
+                        minLength : 0,
+                        source : function(request, response) {
+                            api.common.idLookup(request.term, 'sales_order', function(success, data) {
+                                if(success) {
+                                    response(data);
+                                } else {
+                                    response([]);
+                                    console.log(data);
+                                }
+                            });
+                        },
+                        position : { my : 'left top', at : 'left bottom+5' },
+                        select : function(event, ui) {
+                            $(this).val(ui.item.label);
+                            movement.refDoc = [ ui.item.fullCode, 'sales_order' ];
+                        },
+                        change : function(event, ui) {
+                            if(!ui.item) {
+                                $(this).val('');
+                                movement.refDoc = null;
+                            }
+                        }
+                    }).autocomplete('instance')._renderItem = function(ul, item) {
+                        var $li = $('<li style="line-height:1.2em;"></li>');
+                        $li.append(item.label + '<br/><small style="color:#777;"></small>');
+                        $li.find('small').append(Resolver.labelize(api.common.C.TRANS.TYPED_CODES, item.info.customer, '<span>{label}</span>'));
+                        return $li.appendTo(ul);
+                    };
+                } else if($('#mmInternalRef').is('.production')) {
+                    $('#mmInternalRef').autocomplete({
+                        autoFocus : true,
+                        minLength : 0,
+                        source : function(request, response) {
+                            api.common.idLookup(request.term, 'production_order', function(success, data) {
+                                if(success) {
+                                    response(data);
+                                } else {
+                                    response([]);
+                                    console.log(data);
+                                }
+                            });
+                        },
+                        position : { my : 'left top', at : 'left bottom+5' },
+                        select : function(event, ui) {
+                            $(this).val(ui.item.label);
+                            movement.refDoc = [ ui.item.fullCode, 'production_order' ];
+                        },
+                        change : function(event, ui) {
+                            if(!ui.item) {
+                                $(this).val('');
+                                movement.refDoc = null;
+                            }
+                        }
+                    }).autocomplete('instance')._renderItem = function(ul, item) {
+                        var $li = $('<li style="line-height:1.2em;"></li>');
+                        $li.append(item.label);
+                        return $li.appendTo(ul);
+                    };
+                } else if($('#mmInternalRef').is('.purchase')) {
+                    // TODO for this version we use PR instead of PO
+                    $('#mmInternalRef').autocomplete({
+                        autoFocus : true,
+                        minLength : 0,
+                        source : function(request, response) {
+                            api.common.idLookup(request.term, 'purchase_requisition', function(success, data) {
+                                if(success) {
+                                    console.log(data);
+                                    response(data);
+                                } else {
+                                    response([]);
+                                    console.log(data);
+                                }
+                            });
+                        },
+                        position : { my : 'left top', at : 'left bottom+5' },
+                        select : function(event, ui) {
+                            $(this).val(ui.item.label);
+                            movement.refDoc = [ ui.item.fullCode, 'purchase_requisition' ];
+                        },
+                        change : function(event, ui) {
+                            if(!ui.item) {
+                                $(this).val('');
+                                movement.refDoc = null;
+                            }
+                        }
+                    }).autocomplete('instance')._renderItem = function(ul, item) {
+                        var $li = $('<li style="line-height:1.2em;"></li>');
+                        $li.append(item.label);
+                        return $li.appendTo(ul);
+                    };
+                }
+
+                Front.clearNotifications([403]);
+                common.resetValidate($('.invalid'));
+            },
+
+            isReadOnly : function() {
+                return !common.isEmpty(docId);
+            },
+
+            // IMPORTANT save logic
+            doSave : function() {
+                common.blockUI($('#main-content'));
+
+                if(movement.type == GISC || movement.type == SA || movement.type == STL || movement.type == STM) { // Scrap, Adjust
+                    movement.refDoc = null;
+                }
+
+                movement.save(function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        var operation = 'created';
+                        var newUrl = '{% url 'stock:movement_detail' 'sylli' %}'.replace('sylli', data);
+                        Front.unblockBackButton();
+                        window.location = common.addParam(newUrl, 'op', operation);
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            // IMPORTANT cancel logic
+            doCancel : function(reason) {
+                common.blockUI($('#cancelMovementModal'));
+
+                var currentId = movement.id;
+                var currentDocNo = movement.docNo;
+                var currentPostingDate = movement.postingDate;
+                var currentItems = movement.items;
+
+                movement.cancel = currentId;
+                movement.id = null;
+                movement.docNo = null;
+                movement.postingDate = moment().startOf('day').toDate();
+                movement.items = [];
+                currentItems.forEach(function(item) {
+                    var newItem = $.extend({}, item);
+                    newItem.quantity = newItem.quantity * -1;
+                    newItem.weight = newItem.weight * -1;
+                    newItem.value = newItem.value * -1;
+                    newItem.reason = reason;
+                    movement.items.push(newItem);
+                });
+
+                console.log(JSON.stringify(movement));
+
+                movement.save(function(success, data) {
+                    common.unblockUI($('#cancelMovementModal'));
+                    if(success) {
+                        var operation = 'created';
+                        var newUrl = '{% url 'stock:movement_detail' 'sylli' %}'.replace('sylli', data);
+                        Front.unblockBackButton();
+                        window.location = common.addParam(newUrl, 'op', operation);
+                    } else {
+                        movement.id = currentId;
+                        movement.docNo = currentDocNo;
+                        movement.postingDate = currentPostingDate;
+                        movement.items = currentItems;
+
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+        };
+
+        var List = {
+            // IMPORTANT List.init()
+            init : function() {
+                var o = this;
+
+                $(document).on('click', '#listPanel .additem', function() {
+                    if(movement.type == STL || movement.type == STM || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                        o.appendSequenceList();
+                    } else {
+                        o.appendList();
+                    }
+                });
+                $(document).on('click', '#listTable .deleteitem', function() {
+                    var $row = $(this).closest('tr');
+                    if(movement.type == STL || movement.type == STM || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                        $row.next().remove();
+                    }
+                    $row.remove();
+                    o.recalculateItemNumbers();
+                });
+
+                $(document).on('keyup change', '#listTable [name="quantity"], #listTable [name="value"]', function() {
+                    var $tr = $(this).closest('tr');
+                    o.setUnitPriceForRow($tr);
+                    if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                        var $nextTr = $tr.next();
+                        $nextTr.find('[name="' + $(this).attr('name') + '"]').val($(this).val());
+                        o.setUnitPriceForRow($nextTr);
+                    } else if(movement.type == SA && $(this).is('[name="quantity"]')) {
+                        o.setWeightForRow($tr);
+                        var value = parseFloat($(this).val());
+                        if(!isNaN(value) && value < 0) {
+                            $(this).removeClass('plus').addClass('minus');
+                        } else {
+                            $(this).removeClass('minus').addClass('plus');
+                        }
+                    }
+                });
+
+                $(document).on('change', '#listTable [name="location"]', function() {
+                    var $tr = $(this).closest('tr');
+                    o.onLocationChange($tr, $(this).val());
+                });
+
+                $(document).on('change', '#listTable [name="batch"]', function() {
+                    var $tr = $(this).closest('tr');
+                    o.onBatchChange($tr, $(this).val());
+                });
+
+                $(document).on('change', '#listTable [name="weight"]', function() {
+                    var $tr = $(this).closest('tr');
+                    if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                        $tr.next().find('[name="weight"]').val($(this).val());
+                    }
+                });
+            },
+
+            onMaterialChange : function($tr, mat) {
+                // material + location are required to query batch
+                if(movement.type == GIPP || movement.type == GISO || movement.type == GISC || movement.type == GICC || movement.type == SA) {
+                    this.onLocationChange($tr, $tr.find('[name="location"]').val());
+                }
+            },
+
+            onLocationChange : function($tr, loc) {
+                var o = this;
+                var $batch = $tr.find('[name="batch"]');
+                var material = $tr.find('[name="materialcode"]').val();
+
+                if((movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) && $tr.find('[name="materialcode"][disabled]').length == 1) {
+                    return;
+                }
+
+                if(common.isEmpty(loc)) {
+                    $batch.attr('disabled', 'disabled').find('option').remove();
+                } else {
+                    if(movement.type == GRPP || movement.type == GRBP || movement.type == GRPO || movement.type == GRLO) {
+                        $batch.find('option').remove();
+                        $batch.append('<option value="">{% trans 'T_NEW_BATCH' %}</option>');
+                    } else if(movement.type == GIPP || movement.type == GISO || movement.type == GISC || movement.type == GICC || movement.type == SA || movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                        // material + location are required to query batch
+                        if(common.isEmpty(material)) {
+                            $batch.attr('disabled', 'disabled').find('option').remove();
+                            return;
+                        } else {
+                            o.doQueryBatchToElement($batch, { material : material, location : loc });
+                        }
+                    } else if(movement.type == STM) {
+                        if($tr.find('[name="quantity"]').is('.minus')) {
+                            o.doQueryBatchToElement($batch, { material : material, location : loc });
+                        } else {
+                            $batch.find('option').remove();
+                            $batch.append('<option value="">{% trans 'T_NEW_BATCH' %}</option>');
+                        }
+                    }
+
+                    $batch.removeAttr('disabled');
+                }
+            },
+
+            onBatchChange : function($tr, batch) {
+                if($tr.find('[name="value"]').is('[disabled]')) {
+                    if(common.isEmpty(batch)) {
+                        $tr.find('td').eq(5).html('');
+                        if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                            $tr.next().find('[name="batch"] option').remove();
+                            $tr.next().find('td').eq(5).html('');
+                        }
+                    } else {
+                        var batchItem = $tr.find('[name="batch"] option[value="' + batch + '"]').data('context');
+                        if(common.isEmpty(batchItem)) return;
+                        var unitPrice = batchItem.value / batchItem.quantity;
+                        $tr.find('td').eq(5).html('<span class="unitprice">' + unitPrice.formatMoney(2) + '</span>');
+                        if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                            var $opt = $('<option value="' + batchItem.batch + '">' + batchItem.batch + ' (' + batchItem.quantity.formatMoney(2) + ')</option>');
+                            $tr.next().find('[name="batch"] option').remove();
+                            $tr.next().find('[name="batch"]').append($opt);
+                            $tr.next().find('td').eq(5).html('<span class="unitprice">' + unitPrice.formatMoney(2) + '</span>');
+                        }
+                    }
+                    $tr.find('[name="quantity"]').trigger('change');
+                }
+            },
+
+            doQueryBatchToElement : function($batch, param) {
+                var o = this;
+                console.log('query batch', param);
+                api.inventory.content(param, function(success, data) {
+                    if(success) {
+                        console.log('batch queried', data);
+                        $batch.find('option').remove();
+                        data.forEach(function(item) {
+                            var $opt = $('<option value="' + item.batch + '">' + item.batch + ' (' + item.quantity.formatMoney(2) + ')</option>');
+                            $opt.data('context', item);
+                            $batch.append($opt);
+                        });
+                        $batch.trigger('change');
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            appendSequenceList : function() {
+                var $tr = this.appendList();
+                $tr.find('[name="quantity"]').removeClass('plus').addClass('minus');
+
+                $tr = this.appendList();
+                if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                    $tr.find('[name="materialcode"]').autocomplete('disable');
+                    $tr.find('[name="materialcode"], [name="quantity"], [name="weight"], [name="value"], [name="batch"], [name="reason"]').attr('disabled', 'disabled');
+                    $tr.find('[name="reason"]').hide();
+                    $tr.find('td').eq(3).addClass('disabled');
+                    $tr.find('td').eq(5).addClass('disabled');
+                    $tr.find('td').eq(9).addClass('disabled');
+                    $tr.find('td').last().addClass('disabled');
+                    $tr.find('.deleteitem').remove();
+                } else if(movement.type == STM) {
+                    $tr.find('[name="value"]').removeAttr('disabled');
+                    $tr.find('[name="batch"], [name="reason"]').attr('disabled', 'disabled');
+                    $tr.find('[name="reason"]').hide();
+                    $tr.find('td').eq(9).addClass('disabled');
+                    $tr.find('td').last().addClass('disabled');
+                    $tr.find('.deleteitem').remove();
+                }
+            },
+
+            // IMPORTANT appendList()
+            appendList : function(obj) {
+                var o = this;
+
+                var $tr = $('<tr>\
+                    <td class="text-center minimized-padding"></td>\
+                    <td></td>\
+                    <td class="text-right"></td>\
+                    <td class="text-center static"></td>\
+                    <td class="text-right"></td>\
+                    <td class="text-right static"></td>\
+                    <td class="text-right"></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td class="text-center minimized-padding"><a href="javascript:;" class="deleteitem" title="{% trans 'T_DELETE_ROW' %}" tabindex="-1"><i class="fa fa-trash fa-lg text-muted"></i></a></td>\
+                </tr>');
+
+                // material
+                var $input = $('<input type="text" name="materialcode" class="form-control" style="text-transform:uppercase;" />');
+                $tr.find('td').eq(1).append($input);
+                // quantity
+                $input = $('<input type="number" name="quantity" class="form-control text-right plus" min="0.01" max="99999999" step="0.01" />');
+                $tr.find('td').eq(2).append($input);
+                // weight
+                $input = $('<input type="number" name="weight" class="form-control text-right" min="0.01" max="99999999" step="0.01" />');
+                $tr.find('td').eq(4).append($input);
+                // unit price
+                $tr.find('td').eq(5).append('<span class="unitprice"></span>');
+                // value
+                $input = $('<input type="number" name="value" class="form-control text-right" min="0" max="999999999" step="0.01" />');
+                $tr.find('td').eq(6).append($input);
+                // location
+                $input = $('<select name="location" class="form-control"></select>');
+                 Front.buildOptionsByElement($input, choices[movement.C.LOV_KEY.LOCATION]);
+                $input.prepend('<option value=""></option>').val('');
+                $tr.find('td').eq(7).append($input);
+
+                // batch
+                $input = $('<select name="batch" class="form-control"></select>');
+                $input.attr('disabled', 'disabled');
+                $tr.find('td').eq(8).append($input);
+                // reason
+                $input = $('<input type="text" name="reason" class="form-control" />');
+                $tr.find('td').eq(9).append($input);
+
+                if(obj != null) {
+                    $tr.find('td').last().remove();
+
+                    var material = obj.material.substr('stock-'.length);
+
+                    api.common.idLookup(material, 'material_master', function(success, data) {
+                        if(success) {
+                            console.log(data);
+                            if(data.length > 0) {
+                                var mat = data[0];
+                                if(mat.hasOwnProperty('info') && !common.isEmpty(mat.info.uom)) {
+                                    $tr.find('td').eq(3).html(choices.uom[mat.info.uom].label);
+                                }
+                            }
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+
+                    var quantity = obj.quantity;
+                    var weight = obj.weight;
+                    if(common.isEmpty(weight)) {
+                        weight = '';
+                    } else {
+                        weight = weight.formatMoney(2);
+                    }
+                    var value = obj.value;
+                    var location = obj.location;
+                    var locationLabel = choices[movement.C.LOV_KEY.LOCATION].filter(function(option) {
+                        return option.value == obj.location;
+                    });
+                    if(locationLabel.length > 0) {
+                        location = locationLabel[0].label;
+                    }
+                    var reason = '';
+                    if(!common.isEmpty(obj.reason)) {
+                        reason = obj.reason;
+                    }
+
+                    $tr.find('td').eq(1).html('<a href="javascript:;" class="material interact" style="text-transform:uppercase;" data-type="materialcode" data-unique="' + material + '" data-from="movement_new">' + material + '</a>');
+                    $tr.find('td').eq(2).html('<span class="quantity">' + Math.abs(quantity).formatMoney(2) + '</span>');
+                    if(quantity < 0) {
+                        $tr.find('td').eq(2).addClass('minus');
+                    } else {
+                        $tr.find('td').eq(2).addClass('plus');
+                    }
+                    $tr.find('td').eq(4).html('<span class="weight">' + weight + '</span>');
+                    $tr.find('td').eq(6).html('<span class="value">' + value.formatMoney(2) + '</span>');
+                    $tr.find('td').eq(7).html('<span class="location">' + location + '</span>');
+                    $tr.find('td').eq(8).html('<span class="batch">' + obj.batch + '</span>');
+                    $tr.find('td').eq(9).html('<span class="reason">' + reason + '</span>');
+                } else {
+                    $tr.find('input[name="materialcode"]').autocomplete({
+                        autoFocus : true,
+                        minLength : 3,
+                        source : function(request, response) {
+                            api.common.idLookup(request.term, 'material_master', function(success, data) {
+                                if(success) {
+                                    data.forEach(function(item) {
+                                        item.label = item.label.substr('stock-'.length);
+                                    });
+                                    response(data);
+                                } else {
+                                    response([]);
+                                }
+                            });
+                        },
+                        position : { my : 'left top', at : 'left bottom+5' },
+                        select : function(event, ui) {
+                            console.log('select item', ui.item);
+                            $(this).val(ui.item.label);
+                            o.onMaterialChange($(this).closest('tr'), ui.item.label);
+
+                            if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                                $(this).closest('tr').next().find('[name="materialcode"]').val(ui.item.label);
+                                o.onMaterialChange($(this).closest('tr').next(), ui.item.label);
+                            }
+                            if(ui.item.info) {
+                                if(!common.isEmpty(ui.item.info.uom)) {
+                                    // show uom
+                                    if(choices.uom[ui.item.info.uom]) {
+                                        var label = choices.uom[ui.item.info.uom].label;
+                                        $(this).closest('tr').find('td').eq(3).html(label);
+                                        if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                                            $(this).closest('tr').next().find('td').eq(3).html(label);
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        change : function(event, ui) {
+                            if(!ui.item) {
+                                $(this).val('');
+                                o.onMaterialChange($(this).closest('tr'), '');
+                                $(this).closest('tr').find('td').eq(3).html('');
+                                if(movement.type == STL || movement.type == STLP || movement.type == STPL || movement.type == STLO) {
+                                    $(this).closest('tr').next().find('[name="materialcode"]').val('');
+                                    o.onMaterialChange($(this).closest('tr').next(), '');
+                                    $(this).closest('tr').next().find('td').eq(3).html('');
+                                }
+                            }
+                        }
+                    });
+
+                    $tr.find('input[name="reason"]').autocomplete({
+                        autoFocus : true,
+                        minLength : 0,
+                        source : function(request, response) {
+                            api.common.idLookup(request.term, 'inv-movement-reason', function(success, data) {
+                                console.log(data);
+                                if(success) {
+                                    if(data.length == 0) {
+                                        response([
+                                            {
+                                                label : "{% trans 'T_USE_$' %}".replace('$', request.term),
+                                                value : request.term,
+                                                needAdding : true
+                                            }
+                                        ]);
+                                    } else {
+                                        response(data);
+                                    }
+                                } else {
+                                    response([]);
+                                }
+                            });
+                        },
+                        position : { my : 'left top', at : 'left bottom+5'},
+                        select : function(event, ui) {
+                            console.log('select reason', ui.item);
+                            if(ui.item.needAdding) {
+                                api.common.add_lov('inv-movement-reason', ui.item.value, ui.item.value, null, function(success, data) {
+                                    if(!success) {
+                                        Front.handleAjaxError(data);
+                                    }
+                                });
+                            }
+                        },
+                        change : function(event, ui) {
+                            if(!ui.item) {
+                                $(this).val('');
+                            }
+                        }
+                    });
+
+                    // We only allow user to input value on Good Receive
+                    if(movement.type != GRPP && movement.type != GRBP && movement.type != GRPO && movement.type != GRLO) {
+                        $tr.find('[name="value"]').attr('disabled', 'disabled');
+                    }
+
+                    if(movement.type == GIPP || movement.type == GISO || movement.type == GISC || movement.type == GICC) {
+                        $tr.find('[name="quantity"]').removeClass('plus').addClass('minus');
+                    } else if(movement.type == SA) {
+                        $tr.find('[name="quantity"]').attr('min', -99999999);
+                        $tr.find('[name="weight"]').attr('disabled', 'disabled');
+                    }
+                }
+
+                $('#listTable').append($tr);
+
+                this.setUnitPriceForRow($tr);
+                this.recalculateItemNumbers();
+
+                return $tr;
+            },
+
+            recalculateItemNumbers : function() {
+                var index = 1;
+                $('#listTable tbody tr').each(function() {
+                    $(this).find('td').first().html(index);
+                    index++;
+                });
+            },
+
+            setWeightForRow : function($tr) {
+                var quantity = NaN;
+
+                if(movement.type == SA && $tr.closest('table').is('.inline')) {
+                    quantity = parseFloat($tr.find('[name="quantity"]').val());
+                    if(isNaN(quantity)) {
+                        $tr.find('[name="weight"]').val('');
+                        return;
+                    }
+                    var batchObj = $tr.find('[name="batch"] option:selected').data('context');
+                    if(!batchObj) return;
+                    if(batchObj.quantity == 0) {
+                        $tr.find('[name="weight"]').val(0.00);
+                    } else {
+                        var unitWeight = parseFloat(batchObj.weight / batchObj.quantity);
+                        $tr.find('[name="weight"]').val(Math.abs(quantity * unitWeight).toFixed(2));
+                    }
+                }
+            },
+
+            setUnitPriceForRow : function($tr) {
+                var quantity = NaN;
+                var value = NaN;
+
+                if($tr.closest('table').is('.inline')) {
+                    quantity = parseFloat($tr.find('[name="quantity"]').val());
+                    if($tr.find('[name="value"]').is('[disabled]')) {
+                        // calculate value from unit price
+                        var unitPrice = parseFloat($tr.find('.unitprice').text().replace(',', ''));
+                        if(isNaN(quantity) || isNaN(unitPrice)) {
+                            $tr.find('[name="value"]').val('');
+                        } else {
+                            var totalValue = Math.abs(unitPrice * quantity);
+                            $tr.find('[name="value"]').val(totalValue.toFixed(2));
+                        }
+                        return;
+                    } else {
+                        value = parseFloat($tr.find('[name="value"]').val());
+                    }
+                } else {
+                    quantity = parseFloat($tr.find('.quantity').text());
+                    value = parseFloat($tr.find('.value').text());
+                }
+
+                if(isNaN(quantity) || isNaN(value) || quantity == 0) {
+                    $tr.find('.unitprice').html('');
+                } else {
+                    var unitPrice = Math.abs(value / quantity);
+                    $tr.find('.unitprice').html(unitPrice.formatMoney(2));
+                }
+            },
+
+            empty : function() {
+                $('#listTable tbody tr').remove();
+            },
+
+            isEmpty : function() {
+                var ret = true;
+                $('#listTable tbody tr').each(function() {
+                    var material = $(this).find('[name="materialcode"]').val();
+                    var quantity = parseFloat($(this).find('[name="quantity"]').val());
+                    var weight = parseFloat($(this).find('[name="weight"]').val());
+                    var value = parseFloat($(this).find('[name="value"]').val());
+                    var location = $(this).find('[name="location"]').val();
+                    var batch = $(this).find('[name="batch"]').val();
+                    var reason = $(this).find('[name="reason"]').val();
+                    if(!common.isEmpty(material) || !isNaN(quantity) || !isNaN(weight) || !isNaN(value) || !common.isEmpty(location) || !common.isEmpty(batch) || !common.isEmpty(reason)) {
+                        ret = false;
+                    }
+                });
+                return ret;
+            },
+
+            commit : function() {
+                // this will be called after validation, so you don't have to check
+                var items = [];
+                $('#listTable tbody tr').each(function() {
+                    var material = $(this).find('[name="materialcode"]').val();
+                    var quantity = parseFloat($(this).find('[name="quantity"]').val());
+                    var isPlus = $(this).find('[name="quantity"]').is('.plus');
+                    var weight = parseFloat($(this).find('[name="weight"]').val());
+                    var value = parseFloat($(this).find('[name="value"]').val());
+                    var location = $(this).find('[name="location"]').val();
+                    var batch = $(this).find('[name="batch"]').val();
+                    var reason = $(this).find('[name="reason"]').val();
+                    if(common.isEmpty(material)) return;
+
+                    var multiplier = 1;
+                    if(!isPlus) {
+                        multiplier = -1;
+                    }
+                    quantity =  Math.abs(quantity) * multiplier;
+                    value = Math.abs(value) * multiplier;
+                    weight = Math.abs(weight) * multiplier;
+
+                    var item = {
+                        material : material,
+                        quantity : quantity,
+                        weight : weight,
+                        value : value,
+                        location : location,
+                        batch : batch,
+                        reason : reason
+                    };
+                    items.push(item);
+                });
+                movement.items = items;
+            },
+
+            // IMPORTANT validate items
+            doValidate : function() {
+                var errors = [];
+
+                $('#listTable tbody tr').each(function() {
+                    var material = $(this).find('[name="materialcode"]').val();
+                    var quantity = $(this).find('[name="quantity"]').val();
+                    var weight = $(this).find('[name="weight"]').val();
+                    var value = $(this).find('[name="value"]').val();
+                    var location = $(this).find('[name="location"]').val();
+                    var batch = $(this).find('[name="batch"]').val();
+                    var reason = $(this).find('[name="reason"]').val();
+                    if(common.isEmpty(material) && common.isEmpty(quantity) && common.isEmpty(value) && common.isEmpty(location) && common.isEmpty(batch)) {
+                        // if all empty, pass
+                    } else {
+                        if(common.isEmpty(material)) {
+                            errors.push('{% trans 'ERROR_EMPTY_MATERIAL' %}');
+                            common.setInvalid($(this).find('[name="materialcode"]'));
+                        } else if(movement.type == STM) {
+                            if($(this).find('[name="quantity"]').is('.minus')) {
+                                var anotherMaterial = $(this).next().find('[name="materialcode"]').val();
+                                if(material == anotherMaterial) {
+                                    errors.push('{% trans 'ERROR_TRANSFER_TO_SAME_MATERIAL' %}');
+                                    common.setInvalid($(this).next().find('[name="materialcode"]'));
+                                }
+                            }
+                        }
+                        if(common.isEmpty(quantity)) {
+                            errors.push('{% trans 'ERROR_EMPTY_QUANTITY' %}');
+                            common.setInvalid($(this).find('[name="quantity"]'));
+                        } else if(movement.type != SA && quantity <= 0) {
+                            errors.push('{% trans 'ERROR_INVALID_QUANTITY' %}');
+                            common.setInvalid($(this).find('[name="quantity"]'));
+                        }
+                        if(common.isEmpty(weight)) {
+                            // FIXME do not validate weight at this point
+                            //errors.push('{% trans 'ERROR_EMPTY_WEIGHT' %}');
+                            //common.setInvalid($(this).find('[name="weight"]'));
+                        } else if(weight < 0) {
+                            errors.push('{% trans 'ERROR_INVALID_WEIGHT' %}');
+                            common.setInvalid($(this).find('[name="weight"]'));
+                        }
+                        if(common.isEmpty(value)) {
+                            errors.push('{% trans 'ERROR_EMPTY_VALUE' %}');
+                            common.setInvalid($(this).find('[name="value"]'));
+                        } else if(value < 0) {
+                            errors.push('{% trans 'ERROR_INVALID_VALUE' %}');
+                            common.setInvalid($(this).find('[name="value"]'));
+                        }
+                        if(common.isEmpty(location)) {
+                            errors.push('{% trans 'ERROR_EMPTY_LOCATION' %}');
+                            common.setInvalid($(this).find('[name="location"]'));
+                        }
+                        // batch validation based on type
+                        if(movement.type == GRPP || movement.type == GRBP || movement.type == GRPO || movement.type == GRLO) {
+                            if(!common.isEmpty(batch)) {
+                                errors.push('{% trans 'ERROR_GOOD_RECEIVE_MUST_USE_NEW_BATCH' %}');
+                                common.setInvalid($(this).find('[name="batch"]'));
+                            }
+                        } else if(movement.type == SA || movement.type == GICC || movement.type == GIPP || movement.type == GISC || movement.type == GISO) {
+                            if(common.isEmpty(batch)) {
+                                errors.push('{% trans 'ERROR_EMPTY_BATCH' %}');
+                                common.setInvalid($(this).find('[name="batch"]'));
+                            }
+                        }
+
+                        if(movement.type == GISC || movement.type == SA) { // scrap or adjust
+                            if(common.isEmpty(reason)) {
+                                errors.push('{% trans 'ERROR_EMPTY_REASON' %}');
+                                common.setInvalid($(this).find('[name="reason"]'));
+                            }
+                        }
+                    }
+                });
+
+                this.commit();
+                if(errors.length == 0) {
+                    if(movement.items.length == 0) {
+                        errors.push('{% trans 'ERROR_EMPTY_ITEMS' %}');
+                    } else if((movement.type == STL || movement.type == STM || movement.type == STLP || movement.type == STPL || movement.type == STLO) && (movement.items.length % 2) != 0) {
+                        errors.push('{% trans 'ERROR_EMPTY_TRANSFER_ITEM' %}');
+                    }
+                }
+
+                return errors;
+            },
+
+            // IMPORTANT List.renderFromModel()
+            renderFromModel : function() {
+                var o = this;
+                if(common.isEmpty(docId)) {
+                    for(var i = 0; i < 5; i++) {
+                        this.appendList();
+                    }
+                } else {
+                    movement.items.forEach(function(item) {
+                        o.appendList(item);
+                    });
+                }
+            }
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                Front.buildOptions('mmType', choices['inv-movement_type']);
+
+                Header.init();
+                List.init();
+
+                if(!common.isEmpty(docId)) {
+                    var operation = common.getParam(window.location.href, 'op');
+                    Front.removeParamFromAddressBar();
+                    if(operation == 'created') {
+                        Front.notify('success', '{% trans 'NOTI_MOVEMENT_CREATED' %}', '');
+                    }
+
+                    movement.load(docId, function(success, data) {
+                        if(success) {
+                            if(movement.cancel) {
+                                api.crud.single('inv_movement', movement.cancel, {}, function(suc2, result) {
+                                    if (suc2) {
+                                        parentDoc = result;
+                                        prepareInititalData();
+                                    } else {
+                                        Front.handleAjaxError(result);
+                                    }
+                                });
+                            } else {
+                                movement.isCancelled(function (suc2, result) {
+                                    if (suc2) {
+                                        if (result.length > 0) {
+                                            cancelDoc = result.shift();
+                                        }
+                                        prepareInititalData();
+                                    } else {
+                                        Front.handleAjaxError(result);
+                                    }
+                                });
+                            }
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                } else {
+                    prepareInititalData();
+                }
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                /**
+                 * New Doc
+                 * */
+                if(common.isEmpty(docId)) {
+                    $('#viewLogButton, .created-parent, .docno-parent').hide();
+                } else {
+                    $('#listTable').removeClass('inline');
+                    $('#listTable thead th').last().remove();
+                    $('#saveMovementButton, .additem-parent').hide();
+                    $('#basic input').attr('readonly', 'readonly');
+                    $('#basic select').attr('disabled', 'disabled').addClass('readonly');
+
+                    // check if this movement already cancelled
+                    if(cancelDoc != null) {
+                        Front.notifyTop('danger', '{% trans 'NOTI_MOVEMENT_CANCELLED' %}', '{% trans 'NOTI_MOVEMENT_CANCELLED_MESSAGE' %}'.replace('$', '<a href="' + URL.stock_movement_detail(cancelDoc._id) + '">' + cancelDoc.doc_no + '</a>'), -1);
+                    } else if(parentDoc != null) { // This is the cancel document
+                        Front.notifyTop('warning', '', '{% trans 'NOTI_MOVEMENT_CANCEL_DOCUMENT_MESSAGE' %}'.replace('$', '<a href="' + URL.stock_movement_detail(parentDoc._id) + '">' + parentDoc.doc_no + '</a>'), -1);
+                    } else {
+                        // PERMISSION can cancel movement
+                        Header.initCancelModal();
+                        $('#cancelMovementButton').show();
+                    }
+                }
+
+                Header.renderFromModel();
+                List.renderFromModel();
+
+                // PERMISSION cannot write
+                if(!Front.userCan('inv_movement+write')) {
+                    $('#saveMovementButton, .additem-parent, .deleteitem').remove();
+                    $('input[type="text"], input[type="number"], select, textarea').attr('readonly', 'readonly');
+                } else {
+                    Front.enableInputChangesChecking();
+                }
+
+                common.unblockUI($('#main-content'));
+            }
+
+        })(jQuery);
+    </script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% load staticfiles %}
+{% load templatetags %}
+<aside>
+    <div id="sidebar" class="nav-collapse {% if collapse_on_start %}hide-left-bar{% endif %}">
+        <!-- sidebar menu start-->
+        <div class="leftside-navigation">
+            <ul class="sidebar-menu" id="nav-accordion">
+                {% for item in menu %}
+                    {% if item in breadcrumb and item|hasvisiblechildren %}
+                        {% for subitem in item.children %}
+                            {% if not subitem.hidden %}
+                                <li class="{% if subitem|hasvisiblechildren %}sub-menu{% endif %}">
+                                    <a href="{{ subitem.url|default:'javascript:;' }}" class="{% if subitem in breadcrumb %}active{% endif %}">{% if subitem.icon %}<i class="fa fa-{{ subitem.icon }}"></i>{% endif %}<span>{{ subitem.label }}</span></a>
+                                    {% if subitem|hasvisiblechildren %}
+                                        <ul class="sub">
+                                        {% for leafitem in subitem.children %}
+                                            {% if not leafitem.hidden %}
+                                                <li class="{% if leafitem in breadcrumb %}active{% endif %}">
+                                                    <a href="{{ leafitem.url|default:'javascript:;' }}"><span>{{ leafitem.label }}</span></a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- sidebar menu end-->
+    </div>
+</aside>
+<!--sidebar end-->

@@ -1,0 +1,2000 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section id="basic" class="panel">
+        <header class="panel-heading withtools">
+            {% if operation_id == None %}
+                {{ page_title }}
+            {% else %}
+                {% trans 'PAGE_TITLE_PRODUCTION_ORDER' %}
+            {% endif %}
+            <span class="tools pull-right">
+                <a class="btn btn-primary" id="printJobTagButton" href="javascript:;"><i class="fa fa-print"></i><span class="hidden-xs"> {% trans 'BUTTON_PRINT_JOB_TAG' %}</span></a>
+                <a class="btn btn-danger" id="cancelOrderButton" href="javascript:;" tabindex="-1" style="display:none;"><i class="fa fa-times"></i><span class="hidden-xs"> {% trans 'BUTTON_CANCEL_THIS_DOC' %}</span></a>
+                <a class="btn btn-success" id="savePlanOrderButton" href="javascript:;"><i class="fa fa-save"></i><span class="hidden-xs"> {% trans 'BUTTON_SAVE' %}</span></a>
+            </span>
+            <span class="tools pull-right" style="margin-right: 1.5em;">
+                <a class="btn btn-default" id="viewLogButton" href="javascript:;">{% trans 'BUTTON_VIEW_HISTORY' %}</a>
+            </span>
+        </header>
+        <div class="panel-body">
+
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="row form-horizontal">
+                        <div class="col-md-6">
+                            <div class="form-group orderno-parent">
+                                <label for="orderNo" class="col-sm-4 control-label">{% trans 'T_DOC_NO' %}</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="orderNo" readonly="readonly" data-attribute="docNo" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group created-parent">
+                                <label class="col-sm-4 control-label">{% trans 'T_LAST_MODIFIED' %}</label>
+                                <div class="col-sm-8">
+                                    <p class="form-control-static" id="orderCreated">&nbsp;</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row form-horizontal">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="orderSalesDoc" class="col-sm-4 control-label"><a href="javascript:;" class="interact open-sales-doc" data-type="sales_order" data-from="production_order" data-target="_blank">{% trans 'T_SALES_DOC' %}</a></label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="orderSalesDoc" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6" id="orderSalesDocItemCol">
+                            <div class="form-group">
+                                <div class="col-xs-12">
+                                    <select class="form-control" id="orderSalesDocItem"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="manualMaterialRow">
+                        <div class="col-sm-3 col-sm-offset-0 col-md-4 col-md-offset-2">
+                            <div class="form-group">
+                                <label for="orderMaterial" class="control-label"><a href="javascript:;" class="interact open-material" data-type="materialcode" data-from="production_order" data-target="_blank">{% trans 'T_MATERIAL' %}</a></label>
+                                <input type="text" class="form-control req" id="orderMaterial" />
+                            </div>
+                        </div>
+                        <div class="col-sm-3 col-md-2">
+                            <div class="form-group">
+                                <label for="orderMaterialRevision" class="control-label">{% trans 'T_REVISION' %}</label>
+                                <select class="form-control req" id="orderMaterialRevision"></select>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 col-md-2">
+                            <div class="form-group">
+                                <label for="orderMaterialSize" class="control-label">{% trans 'T_SIZE' %}</label>
+                                <select class="form-control" id="orderMaterialSize" data-attribute="size"></select>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 col-md-2">
+                            <div class="form-group">
+                                <label for="orderQuantity" class="control-label">{% trans 'T_QUANTITY' %}</label>
+                                <input type="number" class="form-control req" id="orderQuantity" min="1" step="1" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12 form-horizontal">
+                            <div class="form-group">
+                                <label for="orderRemark" class="control-label col-sm-2">{% trans 'T_REMARK' %}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="orderRemark" data-attribute="remark" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 form-horizontal">
+                    {% block right_fields_area %}
+                    <div class="form-group">
+                        <label for="orderStatus" class="col-sm-4 control-label">{% trans 'T_STATUS' %}</label>
+                        <div class="col-sm-2 col-sm-zeropadright">
+                            <p class="form-control-static" id="orderStatus">&nbsp;</p>
+                        </div>
+                        <label for="orderType" class="col-sm-2 control-label">{% trans 'T_TYPE' %}</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" id="orderType" data-attribute="type"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderStartDate" class="col-sm-4 control-label">{% trans 'T_PLANNED_START' %}</label>
+                        <div class="col-sm-4 col-sm-zeropadright">
+                            <input type="date" class="form-control" id="orderStartDate" data-mode="plannedStart" />
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="time" class="form-control" id="orderStartTime" data-mode="plannedStart" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderEndDate" class="col-sm-4 control-label">{% trans 'T_PLANNED_END' %}</label>
+                        <div class="col-sm-4 col-sm-zeropadright">
+                            <input type="date" class="form-control" id="orderEndDate" data-mode="plannedEnd" />
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="time" class="form-control" id="orderEndTime" data-mode="plannedEnd" />
+                        </div>
+                    </div>
+                    {% endblock %}
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="panel" id="listPanel">
+        <div class="panel-heading text-right">
+            <button class="btn btn-info btn-sm" id="recalculateGanttButton" style="margin-right: 1em; display:none;"><i class="fa fa-sort-amount-asc"></i> {% trans 'BUTTON_OPTIMIZE_TASKS' %}</button>
+            <div class="btn-group btn-group-sm" data-toggle="buttons">
+                <label class="btn btn-default active">
+                    <input type="radio" name="view" id="tableView" value="table" checked="checked" class="skipchecking" /> {% trans 'T_TABLE' %}
+                </label>
+                <label class="btn btn-default">
+                    <input type="radio" name="view" id="ganttView" value="gantt" class="skipchecking" /> {% trans 'T_GANTT' %}
+                </label>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="tableViewContainer"></div>
+            <div id="ganttViewContainer" style="display: none;"><div id="gantt"></div></div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/worktime.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/production-order.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.full.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.tokenizer-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.ajaxcomplete-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.ajaxselect-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-tokenfield/bootstrap-tokenfield.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/component-tokenizer-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxgantt.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/gantt_locale_th.js' %}"></script>
+    <script type="text/javascript">
+        var orderId = '{{ order_id }}';
+        var order = new ProductionOrder();
+        var choices = {% choices 'uom' 'production_order_status' 'production_order_type' %};
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }};
+        var dateBlurTimer = null;
+        var isReadMode = {% if operation_id == None %}false{% else %}true{% endif %};
+
+        var Header = {
+            eventLogViewer : null,
+
+            init : function() {
+                var o = this;
+
+                this.eventLogViewer = new EventLogViewer({
+                    model : 'production_order',
+                    objectId : orderId
+                });
+
+                $('#viewLogButton').click(function() {
+                    Header.eventLogViewer.show();
+                });
+
+                $('#basic').find('input[data-attribute]').bind('keyup change', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    if($(this).is('[type="number"]')) {
+                        val = parseFloat(val);
+                        if(isNaN(val)) {
+                            val = 0;
+                        }
+                    }
+                    order[att] = val;
+                });
+
+                $('#basic').find('select[data-attribute]').change(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    order[att] = val;
+                });
+
+                $('#orderStartDate, #orderEndDate').change(function() {
+                    var mode = $(this).data('mode');
+                    var date = $(this).val();
+                    var $timeInput = $(this).closest('.form-group').find('[type="time"]');
+                    var time = $timeInput.val();
+
+                    if(common.isEmpty(date) || common.isEmpty(time)) {
+                        return;
+                    }
+
+                    o.preventDates(mode, function() {
+                        order[mode] = moment(date + 'T' + time).toDate();
+                    });
+                });
+
+                $('#orderStartTime, #orderEndTime').change(function() {
+                    var mode = $(this).data('mode');
+                    var time = $(this).val();
+                    var $dateInput = $(this).closest('.form-group').find('[type="date"]');
+                    var date = $dateInput.val();
+
+                    if(common.isEmpty(date) || common.isEmpty(time)) {
+                        return;
+                    }
+
+                    o.preventDates(mode, function() {
+                        order[mode] = moment(date + 'T' + time).toDate();
+                    });
+                });
+
+                $('#orderSalesDoc').autocomplete({
+                    autoFocus : true,
+                    minLength : 1,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'sales_order:open-only', function(success, data) {
+                            if(success) {
+                                response(data);
+                            } else {
+                                response([]);
+                                console.log(data);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        $(this).val(ui.item.label);
+                        order.refDoc = ui.item.fullCode;
+                        $('#orderSalesDoc').data('remark', ui.item.info.remark || '');
+                        o.onSalesOrderChange();
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('');
+                            order.refDoc = null;
+                            $('#orderSalesDoc').data('remark', '');
+                            o.onSalesOrderChange();
+                        }
+                    }
+                }).autocomplete('instance')._renderItem = function(ul, item) {
+                    var $li = $('<li style="line-height:1.2em;"></li>');
+                    $li.append(item.label + '<br/><small style="color:#777;"></small>');
+                    $li.find('small').append(Resolver.labelize(api.common.C.TRANS.TYPED_CODES, item.info.customer, '<span>{label}</span>'));
+                    return $li.appendTo(ul);
+                };
+
+                $('#orderSalesDocItem').change(function() {
+                    o.onSalesDocItemChange();
+                });
+
+                $('#orderMaterial').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                                console.log(data);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        $(this).val(ui.item.label);
+                        order.uom = ui.item.info.uom;
+                        o.onMaterialChange();
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('');
+                            order.uom = null;
+                            o.onMaterialChange();
+                        }
+                    }
+                });
+
+                $('#orderMaterialRevision').change(function() {
+                    o.onRevisionChange();
+                });
+
+                $('#orderMaterialSize').change(function() {
+                    o.onSizeChange();
+                });
+
+                $('#orderQuantity').change(function() {
+                    o.onQuantityChange();
+                });
+
+                // IMPORTANT save button
+                $('#savePlanOrderButton').click(function() {
+                    if(!Header.doValidate()) return;
+                    Table.commit();
+                    if(dateBlurTimer) {
+                        clearTimeout(dateBlurTimer);
+                        dateBlurTimer = null;
+                    }
+                    Gantt.fitPlannedTime();
+                    Header.confirmReschedule(function() {
+                        Header.doSave(null, true);
+                    }, function() {
+                        Header.doSave(null, false);
+                    });
+                });
+
+                // IMPORTANT print button
+                $('#printJobTagButton').click(function() {
+                    var url = '{% url 'production:job_tags' %}';
+                    url = common.addParam(url, 'ids', order.id);
+                    window.open(url);
+                });
+
+                // IMPORTANT release button
+                $(document).on('click', '#releaseOrderButton', function() {
+                    if(!Header.doValidate()) return;
+                    Table.commit();
+                    if(dateBlurTimer) {
+                        clearTimeout(dateBlurTimer);
+                        dateBlurTimer = null;
+                    }
+                    Gantt.fitPlannedTime();
+                    // no need to ask user to detach group because user cannot click release button if they edit something
+                    // always keep group
+                    Header.doSave(2, null);
+                });
+
+                // IMPORTANT cancel button
+                $('#cancelOrderButton').click(function() {
+                    Front.confirm('{% trans 'T_CANCEL_PRODUCTION_ORDER_MESSAGE' %}',
+                            '{% trans 'BUTTON_YES' %}',
+                            '{% trans 'BUTTON_NO' %}',
+                            function() {
+                                // no need to ask user to detach group
+                                // always detach group
+                                Header.doSave(5, true);
+                            }, function() {
+                                Header.doSave(5, false);
+                            });
+                });
+            },
+
+            // IMPORTANT Header.attachHideReleaseEvents
+            attachHideReleaseEvents : function() {
+                $(document).on('change', '#main-content input, #main-content textarea, #main-content select', function(e) {
+                    if($(this).is('.skipchecking')) return;
+                    $('#releaseOrderButton').closest('.alert').stop(true, false).slideUp('medium');
+                });
+            },
+
+            confirmReschedule : function(yesCallback, noCallback) {
+                if(!common.isEmpty(orderId)) {
+                    Front.confirm('{% trans 'T_CONFIRM_RESCHEDULE_MESSAGE' %}',
+                        '{% trans 'BUTTON_YES' %}',
+                        '{% trans 'BUTTON_NO' %}',
+                        yesCallback, noCallback);
+                } else {
+                    noCallback();
+                }
+            },
+
+            preventDates : function(mode, callback) {
+                var o = this;
+                var checkingField = 'plannedStart';
+                if(mode == 'plannedStart') {
+                    checkingField = 'plannedEnd';
+                }
+
+                if(common.isEmpty(order[checkingField])) {
+                    callback();
+                    if(dateBlurTimer) {
+                        clearTimeout(dateBlurTimer);
+                        dateBlurTimer = null;
+                    }
+                    dateBlurTimer = setTimeout(function() {
+                        o.onPlannedDateBlur();
+                    }, 2500);
+                } else {
+                    Front.confirm('{% trans 'T_START_OR_END_WARN_WARNING' %}', null, null, function() {
+                        order[checkingField] = null;
+                        $('[type="date"][data-mode="' + checkingField + '"], [type="time"][data-mode="' + checkingField + '"]').val('');
+                        callback();
+                        if(dateBlurTimer) {
+                            clearTimeout(dateBlurTimer);
+                            dateBlurTimer = null;
+                        }
+                        dateBlurTimer = setTimeout(function() {
+                            o.onPlannedDateBlur();
+                        }, 2500);
+                    }, function() {
+                        $('[type="date"][data-mode="' + mode + '"], [type="time"][data-mode="' + mode + '"]').val('');
+                    });
+                }
+            },
+
+            // IMPORTANT onPlannedDateBlur
+            onPlannedDateBlur : function() {
+                if(common.isEmpty(order.plannedStart) && common.isEmpty(order.plannedEnd)) {
+                    order.plannedStart = moment().add(30, 'm').toDate();
+                }
+
+                if(Table.handsontable) {
+                    Table.commit();
+                } else {
+                    Gantt.commit();
+                }
+
+                if(order.operation.length == 0) return;
+
+                Gantt.fitPlannedTime(true);
+
+                if(Table.handsontable) {
+                    Table.handsontable.destroy();
+                    Table.renderFromModel();
+                } else {
+                    Gantt.isHoldData = false;
+                    Gantt.renderFromModel();
+                }
+            },
+
+            // IMPORTANT onSalesOrderChange
+            onSalesOrderChange : function() {
+                if(common.isEmpty(order.refDoc)) {
+                    order.refDocItem = null;
+                    $('.open-sales-doc').removeAttr('data-unique');
+                } else {
+                    $('.open-sales-doc').attr('data-unique', order.refDoc);
+                }
+                this.doQuerySalesDocItem(order.refDoc);
+            },
+
+            doQuerySalesDocItem : function(salesDocId, noCascade) {
+                var o = this;
+                var tempRefDocItem = order.refDocItem;
+                order.refDocItem = null;
+                $('#orderSalesDocItem option').remove();
+                if(common.isEmpty(salesDocId)) {
+                    $('#orderSalesDocItemCol').hide();
+                } else {
+                    api.crud.single('sales_order', salesDocId, {}, function(success, data) {
+                        if(success) {
+                            for(var i = 0; i < data.items.length; i++) {
+                                if(common.isEmpty(data.items[i].size)) {
+                                    var $opt = $('<option value="' + i + '"></option>');
+                                    $opt.data('context', data.items[i]);
+
+                                    var label = data.items[i].material.substr('stock-'.length);
+                                    if (!common.isEmpty(data.items[i].revision)) {
+                                        label = label + ' [rev:' + data.items[i].revision + ']';
+                                    }
+                                    if (!common.isEmpty(data.items[i].size)) {
+                                        label = label + ' [size:' + data.items[i].size + ']';
+                                    }
+                                    label = label + ' ' + data.items[i].quantity.formatMoney(2) + ' ' + data.items[i].uom;
+
+                                    $opt.html(label);
+                                    $('#orderSalesDocItem').append($opt);
+                                } else {
+                                    var label = data.items[i].material.substr('stock-'.length);
+                                    if (!common.isEmpty(data.items[i].revision)) {
+                                        label = label + ' [rev:' + data.items[i].revision + ']';
+                                    }
+                                    if (!common.isEmpty(data.items[i].size)) {
+                                        label = label + ' [size:{label}]';
+                                    }
+                                    label = label + ' ' + data.items[i].quantity.formatMoney(2) + ' ' + data.items[i].uom;
+
+                                    var optString = '<option value="' + i + '">' + label + '</option>';
+                                    var $opt = Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, data.items[i].size, optString);
+                                    $opt.data('context', data.items[i]);
+                                    $('#orderSalesDocItem').append($opt);
+                                }
+                            }
+                            $('#orderSalesDocItemCol').show();
+                            order.refDocItem = $('#orderSalesDocItem').val();
+                            if(tempRefDocItem != null || typeof tempRefDocItem != 'undefined') {
+                                if($('#orderSalesDocItem option[value="' + tempRefDocItem + '"]').length > 0) {
+                                    $('#orderSalesDocItem').val(tempRefDocItem);
+                                    order.refDocItem = tempRefDocItem;
+                                }
+                            }
+                            if(!noCascade) {
+                                $('#orderSalesDocItem').trigger('change');
+                            }
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                }
+            },
+
+            // IMPORTANT onSalesDocItemChange
+            onSalesDocItemChange : function() {
+                var o = this;
+                var itemIndex = parseInt($('#orderSalesDocItem').val());
+                if(!isNaN(itemIndex)) {
+                    order.refDocItem = itemIndex;
+                    o.salesDocItemDidChange();
+                } else {
+                    order.refDocItem = null;
+                }
+            },
+
+            salesDocItemDidChange : function() {
+                var context = $('#orderSalesDocItem option:selected').data('context');
+                if(!context) return;
+
+                order.revision = context.revision || null;
+                order.size = context.size || null;
+                order.quantity = context.quantity;
+                order.uom = context.uom;
+                // since remark can be deliberately empty string
+                if(order.remark == null) {
+                    order.remark = ($('#orderSalesDoc').data('remark') || '') + ' // ' + (context.remark + '');
+                    $('#orderRemark').val(order.remark);
+                }
+                $('#orderMaterial').val(context.material.substr('stock-'.length));
+                $('#orderQuantity').val(order.quantity);
+                this.onMaterialChange();
+            },
+
+            onMaterialChange : function() {
+                var matCode = $('#orderMaterial').val();
+                if(common.isEmpty(matCode)) {
+                    order.material = null;
+                    $('.open-material').removeAttr('data-unique');
+                } else {
+                    order.material = 'stock-' + matCode;
+                    $('.open-material').attr('data-unique', order.material);
+                }
+                this.doQueryRevision(order.material);
+            },
+
+            doQueryRevision : function(matCode) {
+                var o = this;
+                var tempRevision = order.revision;
+                order.revision = null;
+                $('#orderMaterialRevision option').remove();
+                if(common.isEmpty(matCode)) return;
+
+                api.helper.material_revisions(matCode, function(success, data) {
+                    if(success) {
+                        data.sort(function(a, b) {
+                            return b.rev_id - a.rev_id;
+                        });
+
+                        var currentRev = null;
+                        data.forEach(function(revEntry) {
+                            var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                            $opt.data('context', revEntry);
+                            if(revEntry.default) {
+                                currentRev = revEntry.rev_id;
+                            }
+                            $('#orderMaterialRevision').append($opt);
+                        });
+
+                        if(common.isEmpty(tempRevision) || (!common.isEmpty(tempRevision) && $('#orderMaterialRevision option[value="' + tempRevision + '"]').length == 0)) {
+                            tempRevision = currentRev;
+                        }
+
+                        if(!common.isEmpty(tempRevision)) {
+                            if($('#orderMaterialRevision option[value="' + tempRevision + '"]').length > 0) {
+                                $('#orderMaterialRevision').val(tempRevision);
+                                order.revision = tempRevision;
+                            }
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                    $('#orderMaterialRevision').trigger('change');
+                });
+            },
+
+            // IMPORTANT Header.onRevisionChange
+            onRevisionChange : function() {
+                var revision = $('#orderMaterialRevision').val();
+
+                $('#orderMaterialSize option').remove();
+
+                if(common.isEmpty(revision)) {
+                    order.revision = null;
+                } else {
+                    order.revision = revision;
+
+                    var revEntry = $('#orderMaterialRevision option:selected').data('context');
+                    if(!revEntry) return;
+
+                    revEntry.conf_size.forEach(function(size) {
+                        $('#orderMaterialSize').append(Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, size));
+                    });
+
+                    if(order.size != null) {
+                        if($('#orderMaterialSize option[value="' + order.size + '"]').length > 0) {
+                            $('#orderMaterialSize').val(order.size);
+                        }
+                    }
+                }
+                $('#orderMaterialSize').trigger('change');
+            },
+
+            // IMPORTANT Header.onSizeChange
+            onSizeChange : function() {
+                var skipResetChecking = $('#orderMaterialRevision').data('skipchecking');
+                $('#orderMaterialRevision').data('skipchecking', false);
+
+                if(!skipResetChecking) {
+                    this.promptResetSchematic();
+                } else {
+                    setTimeout(function() {
+                        Front.unblockBackButton();
+                        Header.attachHideReleaseEvents();
+                    }, 500);
+                }
+            },
+
+            // IMPORTANT onQuantityChange
+            onQuantityChange : function() {
+                var quantity = parseFloat($('#orderQuantity').val());
+                if(isNaN(quantity) || quantity <= 0) {
+                    quantity = 1;
+                }
+                var previousQuantity = order.quantity || 1;
+                order.quantity = quantity;
+
+                if($('[name="view"]:checked').val() == 'table') {
+                    Table.commit(true);
+                }
+
+                order.operation.forEach(function(item) {
+                    var task = Front.getTask(item.task);
+                    if(task && task.fixed_duration != 1) {
+                        item.duration = (item.duration / previousQuantity) * quantity;
+                    }
+
+                    item.materials.forEach(function(mat) {
+                        mat.quantity = (mat.quantity / previousQuantity) * quantity;
+                    });
+                });
+
+                if($('[name="view"]:checked').val() == 'table') {
+                    Table.renderFromModel();
+                } else {
+                    $('[name="view"]').first().trigger('click');
+                }
+            },
+
+            promptResetSchematic : function() {
+                var o = this;
+                if($('[name="view"]:checked').val() == 'table') {
+                    Table.commit();
+                }
+                if(order.operation.length > 0) {
+                    Front.confirm('{% trans 'T_CONFIRM_RESET_SCHEMATIC_MESSAGE' %}', '{% trans 'BUTTON_OK' %}', '{% trans 'BUTTON_CANCEL' %}', function() {
+                        if($('[name="view"]:checked').val() == 'table') {
+                            Table.commit(true);
+                        }
+                        order.operation = [];
+                        o.doQuerySchematic();
+                    });
+                } else {
+                    if($('[name="view"]:checked').val() == 'table') {
+                        Table.commit(true);
+                    }
+                    o.doQuerySchematic();
+                }
+            },
+
+            // IMPORTANT doQuerySchematic
+            doQuerySchematic : function() {
+                var o = this;
+                var revEntry = $('#orderMaterialRevision option:selected').data('context');
+                if(common.isEmpty(revEntry)) {
+                    $('[name="view"]').first().trigger('click');
+                } else {
+                    common.blockUI($('#listPanel'));
+                    api.crud.single(api.common.C.MODELS.MATERIAL_SCHEMATIC, revEntry.schematic_id, {}, function(success, data) {
+                        if(success) {
+                            o.originalSchematic = data;
+                            o.convertOriginalSchematic();
+                        } else {
+                            $('[name="view"]').first().trigger('click');
+                            Front.handleAjaxError(data);
+                        }
+                        common.unblockUI($('#listPanel'));
+                    });
+                }
+            },
+
+            // IMPORTANT convertOriginalSchematic
+            convertOriginalSchematic : function() {
+                if(!this.originalSchematic) return;
+                var size = order.size;
+                var quantity = order.quantity || 1;
+                var sizeIndex = 0;
+                for(var i = 0; i < this.originalSchematic.conf_size.length; i++) {
+                    if(this.originalSchematic.conf_size[i] == size) {
+                        sizeIndex = i;
+                        break;
+                    }
+                }
+
+                this.originalSchematic.schematic.forEach(function(item) {
+                    // FIXME remark
+                    var obj = {
+                        id : item.id,
+                        task : item.process,
+                        materials : [],
+                        duration : 1,
+                        stagingTime: 0,
+                        source : item.source || [],
+                        status : 0,
+                        remark : item.remark || '',
+                        plannedStart : null,
+                        actualStart : null,
+                        actualEnd : null,
+                        assignee : null
+                    };
+                    if(item.duration.length <= sizeIndex) {
+                        obj.duration = item.duration[0];
+                    } else {
+                        obj.duration = item.duration[sizeIndex];
+                    }
+
+                    // Staging duration
+                    if(item.staging_duration.length <= sizeIndex) {
+                        obj.stagingTime = item.staging_duration[0];
+                    } else {
+                        obj.stagingTime = item.staging_duration[sizeIndex];
+                    }
+
+                    var task = Front.getTask(obj.task);
+                    if(task && task.fixed_duration != 1) {
+                        obj.duration = obj.duration * quantity;
+                    }
+
+                    item.materials.forEach(function(mat) {
+                        var matObj = {
+                            material : mat.code,
+                            revision : mat.revision || '',
+                            quantity : 0,
+                            uom : mat.counter,
+                        };
+
+                        if(mat.quantity.length <= sizeIndex) {
+                            matObj.quantity = mat.quantity;
+                        } else {
+                            matObj.quantity = mat.quantity[sizeIndex];
+                        }
+                        matObj.quantity = matObj.quantity * quantity;
+
+                        obj.materials.push(matObj);
+                    });
+
+                    order.operation.push(obj);
+
+                });
+
+                if($('[name="view"]:checked').val() == 'table') {
+                    Table.renderFromModel();
+                } else {
+                    $('[name="view"]').first().trigger('click');
+                }
+            },
+
+            // IMPORTANT Header.renderFromModel()
+            renderFromModel : function() {
+                var o = this;
+                $('#basic').find('[data-attribute]').each(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+
+                    if(common.isEmpty(order[att]) && order[att] !== 0) {
+                        $(this).val('');
+                    } else {
+                        $(this).val(order[att]);
+                    }
+                });
+
+                if(typeof order.status != 'undefined' && order.status != null && order.status !== '') {
+                    var statusClass = '';
+                    switch(order.status) {
+                        case PD_STATUS_PLANNED:
+                            statusClass = 'info';
+                            break;
+                        case PD_STATUS_RELEASED:
+                            statusClass = 'warning';
+                            break;
+                        case PD_STATUS_CONFIRMED:
+                            statusClass = 'success';
+                            break;
+                        case PD_STATUS_CLOSED:
+                        case PD_STATUS_CANCELLED:
+                            statusClass = 'default';
+                            break;
+                        case PD_STATUS_OPEN:
+                        default:
+                            statusClass = 'primary';
+                    }
+                    $('#orderStatus').html('<span class="label label-' + statusClass + '">' + choices.production_order_status[order.status].label + '</span>');
+                }
+
+                if(!common.isEmpty(order.id)) {
+                    $('#orderType').attr('disabled', 'disabled');
+                }
+
+                if(!common.isEmpty(order.refDoc)) {
+                    api.crud.single('sales_order', order.refDoc, {}, function(success, data) {
+                        if(success) {
+                            $('#orderSalesDoc').val(data.doc_no).data('remark', data.remark || '');
+                            o.onSalesOrderChange();
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                } else {
+                    $('#orderSalesDocItemCol').hide();
+
+                    if(!common.isEmpty(order.material)) {
+                        $('#orderMaterial').val(order.material.substr('stock-'.length));
+                        this.onMaterialChange();
+                    }
+                }
+
+                $('#orderQuantity').val(order.quantity);
+
+                this.plannedDatesObserver();
+                this.createdObserver();
+            },
+
+            createdObserver : function() {
+                if(order.lastEdited) {
+                    var editBy = displayName(order.lastEdited.who.first_name, order.lastEdited.who.last_name);
+                    var editWhen = moment(order.lastEdited.when).format('YYYY-MM-DD HH:mm');
+                    $('#orderCreated').html(editWhen + ' {% trans 'T_BY' %} ' + editBy);
+                }
+            },
+
+            plannedDatesObserver : function() {
+                if(order.plannedStart) {
+                    $('#orderStartDate').val(moment(order.plannedStart).format('YYYY-MM-DD'));
+                    $('#orderStartTime').val(moment(order.plannedStart).format('HH:mm'));
+                } else {
+                    $('#orderStartDate, #orderStartTime').val('');
+                }
+                if(order.plannedEnd) {
+                    $('#orderEndDate').val(moment(order.plannedEnd).format('YYYY-MM-DD'));
+                    $('#orderEndTime').val(moment(order.plannedEnd).format('HH:mm'));
+                } else {
+                    $('#orderEndDate, #orderEndTime').val('');
+                }
+
+                var refTime = order.plannedStart || order.plannedEnd;
+                if(refTime) {
+                    var from = moment(refTime).startOf('day').subtract(3, 'month').toDate();
+                    var to = moment(refTime).startOf('day').add(6, 'month').toDate();
+                    WorkTime.doQueryOffHours(from, to);
+                }
+            },
+
+            // IMPORTANT validate header
+            doValidate : function() {
+                Front.clearNotifications([403]);
+                common.resetValidate($('.invalid'));
+
+                Table.commit(false);
+                Gantt.commit(false);
+
+                var errors = [];
+
+                var valid = common.autoValidate($('#basic .req'));
+                if(common.isEmpty(order.plannedStart) && common.isEmpty(order.plannedEnd)) {
+                    common.setInvalid($('#orderStartDate'));
+                    common.setInvalid($('#orderStartTime'));
+                    valid = false;
+                }
+
+                if(!valid) {
+                    errors.push('{% trans 'ERROR_EMPTY_REQUIRED_FIELDS' %}');
+                }
+
+                errors = errors.concat(Table.doValidate());
+
+                if(errors.length > 0) {
+                    var param = { status : 403, content : common.unique(errors).join('<br/>') };
+                    Front.handleAjaxError(param);
+                }
+                return errors.length == 0;
+            },
+
+            // IMPORTANT doSave
+            doSave : function(statusToBeSaved, detachGroup) {
+                common.blockUI($('#main-content'));
+                // generate new ids
+                var newIdCount = order.operation.filter(function(item) {
+                    return (!item.id || item.id.length != 24);
+                }).length;
+
+                // Generate new object id for operations that does not have real id and replace the value in source array and in handsontable
+                api.common.new_id(newIdCount, function(s1, d1) {
+                    if(s1) {
+                        order.operation.forEach(function(item) {
+                            if(!item.id || item.id.length != 24) {
+                                var prevId = item.id;
+                                item.id = d1.shift();
+
+                                for(var i = 0; i < order.operation.length; i++) {
+                                    for(var j = 0; j < order.operation[i].source.length; j++) {
+                                        if(order.operation[i].source[j] == prevId) {
+                                            order.operation[i].source[j] = item.id;
+                                        }
+                                    }
+                                }
+
+                                for(var i = 0; i < Table.tempData.length; i++) {
+                                    if(Table.tempData[i].id == prevId) {
+                                        Table.tempData[i].id = item.id;
+                                    }
+                                }
+                            }
+                        });
+
+                        var tempPlannedStart = order.plannedStart;
+                        var tempPlannedEnd = order.plannedEnd;
+                        order.plannedStart = order.getMinStart();
+                        order.plannedEnd = order.getMaxEnd();
+
+                        var param = {};
+                        if(statusToBeSaved != null) {
+                            param.status = statusToBeSaved;
+                        }
+                        if(detachGroup != null) {
+                            param.detach = detachGroup ? 1 : 0;
+                        }
+                        order.save(param, function(success, data) {
+                            common.unblockUI($('#main-content'));
+                            if(success) {
+                                var operation = 'saved';
+                                var newUrl = '';
+                                if(!order.id) {
+                                    newUrl = URL.production_order_edit(data);
+                                    operation = 'created';
+                                } else {
+                                    newUrl = URL.production_order_edit(orderId);
+                                }
+                                Front.unblockBackButton();
+                                window.location = common.addParam(newUrl, 'op', operation);
+                            } else {
+                                // TODO will throw error if there is active proposal. There should be a confirm pop up saying that this action will destroy active proposal. If user confirm then we will pass another param in .save() to destroy proposal
+                                order.plannedStart = tempPlannedStart;
+                                order.plannedEnd = tempPlannedEnd;
+                                Front.handleAjaxError(data);
+                            }
+                        });
+                    } else {
+                        common.unblockUI($('#main-content'));
+                        Front.handleAjaxError(d1);
+                    }
+                });
+            }
+        };
+
+        var Table = {
+
+            handsontable : null,
+            tempData : null,
+            // key: material code (without stock-), value : [ rev_id ]
+            revisionCache : {},
+
+            init : function() {
+                var o = this;
+            },
+
+            recalculateStepNo : function(needsUpdateCells) {
+                var counter = 1;
+                for(var i = 0; i < this.tempData.length; i++) {
+                    var row = this.tempData[i];
+                    var stepNo = '';
+                    if(common.isEmpty(row.task)) { // not a task row
+
+                    } else {
+                        stepNo = counter;
+                        counter++;
+                    }
+
+                    row.stepNo = stepNo;
+
+                    if (needsUpdateCells) {
+                        this.handsontable.render();
+                    }
+                }
+            },
+
+            // IMPORTANT Table.renderFromModel()
+            renderFromModel : function() {
+                var o = this;
+
+                var $table = $('<div id="handsontable"></div>').appendTo($('#tableViewContainer'));
+
+                this.tempData = this.getHandson();
+
+                this.recalculateStepNo();
+
+                var columnHeaders = [
+                    '{% trans 'TH_STEP_NO' %}',
+                    '{% trans 'TH_PROCESS' %}',
+                    ' ',
+                    '{% trans 'TH_MATERIALS' %}',
+                    '{% trans 'TH_REVISION' %}',
+                    '{% trans 'TH_QUANTITY' %}',
+                    '{% trans 'TH_COUNTER' %}',
+                    '{% trans 'TH_PREVIOUS_STEPS' %}',
+                    '{% trans 'TH_STAGING_TIME' %}',
+                    '{% trans 'TH_DURATION' %}',
+                    '{% trans 'TH_REMARK' %}'
+                ];
+
+                var columns = [
+                    {
+                        data : 'stepNo',
+                        className : 'htCenter htGrey',
+                        readOnly : true
+                    },
+                    {
+                        data : 'task',
+                        editor : 'ajaxcomplete',
+                        minLength : 0,
+                        source : function(request, response) {
+                            var query = request.term;
+                            if(request.term.indexOf('task-') == 0) {
+                                query = request.term.substr('task-'.length);
+                            }
+                            response(Front.taskLookup(query));
+                        },
+                        renderer : o.taskRenderer
+                    },
+                    {
+                        data : 'cp',
+                        editor : 'select',
+                        selectOptions : [
+                            { label : '{% trans 'T_CONSUME' %}', value : 'consume' },
+                            { label : '{% trans 'T_PRODUCE' %}', value : 'produce' },
+                            { label : '{% trans 'T_BORROW' %}', value : 'borrow' }
+                        ],
+                        className : 'htCenter',
+                        renderer : o.cpRenderer
+                    },
+                    {
+                        data : 'material',
+                        editor : 'ajaxcomplete',
+                        minLength : 3,
+                        source : function(request, response) {
+                            api.common.idLookup(request.term, 'material_master', function(success, data) {
+                                if(success) {
+                                    data.forEach(function(item) {
+                                        item.value = item.label;
+                                        item.label = item.label.substr('stock-'.length);
+                                    });
+                                    response(data);
+                                } else {
+                                    console.log(data);
+                                    response([]);
+                                }
+                            });
+                        },
+                        renderer : o.materialRenderer
+                    },
+                    {
+                        data : 'revision',
+                        className : 'htCenter',
+                        editor : 'ajaxselect',
+                        source : function(response, cellProp) {
+                            var matCode = o.handsontable.getDataAtRowProp(cellProp.row, 'material');
+                            if(common.isEmpty(matCode)) return;
+                            var revArr = Table.revisionCache[matCode];
+                            if(!revArr) return;
+                            response(revArr);
+                        }
+                    },
+                    {
+                        data : 'quantity',
+                        className : 'htCenter'
+                    },
+                    {
+                        data : 'uom',
+                        className : 'htCenter',
+                        readOnly : true,
+                        renderer : o.counterRenderer
+                    },
+                    {
+                        data : 'source',
+                        className : 'htCenter htGrey',
+                        renderer : o.sourceRenderer,
+                        readOnly : true
+                    },
+                    {
+                        data : 'stagingTime',
+                        className : 'htCenter'
+                    },
+                    {
+                        data : 'duration',
+                        className : 'htCenter'
+                    },
+                    {
+                        data : 'remark'
+                    }
+                ];
+
+                var contextMenu = ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo'];
+                var isReadOnly = false;
+                // PERMISSION cannot write
+                if(isReadMode || !Front.userCan('production_order+write') || !order.isEditable()) {
+                    contextMenu = false;
+                    isReadOnly = true;
+                }
+
+                this.handsontable = $table.handsontable({
+                    data: this.tempData,
+                    colHeaders: columnHeaders,
+                    columns: columns,
+                    rowHeaders: false,
+                    manualRowMove: false,
+                    contextMenu: contextMenu,
+                    stretchH: 'all',
+                    onBeginEditing : function(row, prop, value) {
+                        return true;
+                    },
+                    afterCreateRow : function(index, amount) {
+                        Table.tempData[index] = {};
+                    },
+                    afterChange : function(changes, source) {
+                        if(!changes) return;
+                        var needRecalculation = changes.some(function(ch) {
+                            var affectStep = ch[1] == 'task' && common.isEmpty(ch[3]);
+                            affectStep = affectStep || (ch[1] == 'task' && common.isEmpty(ch[2]) && !common.isEmpty(ch[3]));
+                            return affectStep;
+                        });
+                        if(needRecalculation) {
+                            o.recalculateStepNo(true);
+                        }
+
+                        // set material from blank, set consume by default
+                        // remove material, set cp to blank
+                        changes.forEach(function(ch) {
+                            if(ch[1] == 'material') {
+                                if(common.isEmpty(ch[3])) { // clear
+                                    Table.tempData[ch[0]].cp = '';
+                                    Table.tempData[ch[0]].quantity = '';
+                                    Table.tempData[ch[0]].uom = '';
+                                    Table.tempData[ch[0]].revision = '';
+                                    Table.handsontable.render();
+                                } else { // set
+                                    if(common.isEmpty(ch[2])) { // from empty
+                                        if(common.isEmpty(Table.tempData[ch[0]].cp)) {
+                                            Table.tempData[ch[0]].cp = 'consume';
+                                            Table.tempData[ch[0]].quantity = 1;
+                                            Table.handsontable.render();
+                                        }
+                                    }
+
+                                    if(ch[2] != ch[3]) { // change
+                                        api.common.idLookup(ch[3], 'material_master', function(success, data) {
+                                            if(data.length == 0) return;
+                                            if(data[0].info && data[0].info.uom) {
+                                                o.handsontable.setDataAtRowProp(ch[0], 'uom', data[0].info.uom);
+                                            }
+                                        });
+
+                                        if(o.revisionCache[ch[3]] != null && o.revisionCache[ch[3]].length > 0) {
+                                            // check current revision for this material
+                                            var currentRev = o.revisionCache[ch[3]][0];
+                                            for(var i = 0; i < o.revisionCache[ch[3]].length; i++) {
+                                                if(o.revisionCache[ch[3]][i].default) {
+                                                    currentRev = o.revisionCache[ch[3]][i];
+                                                }
+                                            }
+                                            o.handsontable.setDataAtRowProp(ch[0], 'revision', currentRev.value);
+                                            return;
+                                        }
+                                        api.helper.material_revisions(ch[3], function(success, data) {
+                                            if(success) {
+                                                data.forEach(function(item) {
+                                                    item.label = item.rev_id;
+                                                    item.value = item.rev_id;
+                                                });
+                                                data.sort(function(a, b) {
+                                                    return b.rev_id - a.rev_id;
+                                                });
+                                                o.revisionCache[ch[3]] = data;
+                                                if(data.length > 0) {
+                                                    var currentRev = data[0];
+                                                    for(var i = 0; i < data.length; i++) {
+                                                        if(data[i].default) {
+                                                            currentRev = data[i];
+                                                        }
+                                                    }
+                                                    o.handsontable.setDataAtRowProp(ch[0], 'revision', currentRev.value);
+                                                } else {
+                                                    o.handsontable.setDataAtRowProp(ch[0], 'revision', '');
+                                                }
+                                            } else {
+                                                o.handsontable.setDataAtRowProp(ch[0], 'revision', '');
+                                                Front.handleAjaxError(data);
+                                                console.log(data);
+                                            }
+                                        });
+                                    }
+                                }
+                            } else if(ch[1] == 'task') {
+                                if(common.isEmpty(ch[3])) { // clear
+                                    Table.tempData[ch[0]].duration = '';
+                                    Table.tempData[ch[0]].stagingTime = '';
+                                    Table.tempData[ch[0]].source = '';
+                                    Table.tempData[ch[0]].remark = '';
+                                    Table.handsontable.render();
+                                } else { // change
+                                    if(Table.tempData[ch[0]].stagingTime == '' || Table.tempData[ch[0]].stagingTime == null) {
+                                        Table.tempData[ch[0]].stagingTime = 0;
+                                    }
+                                    if(common.isEmpty(Table.tempData[ch[0]].duration)) {
+                                        Table.tempData[ch[0]].duration = Front.getStandardTime(ch[3], order.quantity || 1);
+                                        Table.handsontable.render();
+                                    }
+                                }
+                            } else if(ch[1] == 'quantity') {
+                                if(!common.isEmpty(ch[3])) {
+                                    var qty = parseFloat(ch[3]);
+                                    if(isNaN(qty)) {
+                                        Table.tempData[ch[0]].quantity = '';
+                                        Table.handsontable.render();
+                                    }
+                                }
+                            } else if(ch[1] == 'duration') {
+                                if(!common.isEmpty(ch[3])) {
+                                    var duration = parseFloat(ch[3]);
+                                    if (isNaN(duration)) {
+                                        Table.tempData[ch[0]].duration = 0;
+                                        Table.handsontable.render();
+                                    }
+                                }
+                            } else if(ch[1] == 'stagingTime') {
+                                if(!common.isEmpty(ch[3])) {
+                                    var duration = parseFloat(ch[3]);
+                                    if (isNaN(duration)) {
+                                        Table.tempData[ch[0]].stagingTime = 0;
+                                        Table.handsontable.render();
+                                    }
+                                }
+                            }
+                        });
+                    },
+                    afterRemoveRow : function(indexOfStart, amount) {
+                        o.recalculateStepNo(true);
+                    },
+                    cells : function(row, col, prop) {
+                        var cellProperties = {};
+                        var data = Table.tempData;
+                        if(data.length == 0) return cellProperties;
+                        var dataRow = Table.tempData[row];
+                        cellProperties.readOnly = isReadOnly || dataRow.readOnly || false;
+                        if(['quantity', 'revision'].indexOf(prop) != -1 && common.isEmpty(dataRow.material)) {
+                            cellProperties.readOnly = true;
+                        } else if(['stagingTime', 'duration', 'remark'].indexOf(prop) != -1 && common.isEmpty(dataRow.task)) {
+                            cellProperties.readOnly = true;
+                        }
+                        return cellProperties;
+                    }
+                }).handsontable('getInstance');
+            },
+
+            taskRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    var task = Front.getTask(value);
+                    if(task) {
+                        $(td).html('<strong>' + task.code + '</strong> ' + task.label);
+                    } else {
+                        $(td).html('<span class="text-danger">' + value + '</span>');
+                    }
+                }
+                return $(td).get(0);
+            },
+
+            cpRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('').removeClass('producefield consumefield borrowfield');
+                if(value == 'produce') {
+                    $(td).html('{% trans 'T_PRODUCE' %}').addClass('producefield');
+                } else if(value == 'consume') {
+                    $(td).html('{% trans 'T_CONSUME' %}').addClass('consumefield');
+                } else if(value == 'borrow') {
+                    $(td).html('{% trans 'T_BORROW' %}').addClass('borrowfield');
+                } else {
+                    $(td).html(value);
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            materialRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    $(td).append(Resolver.labelize(api.common.C.TRANS.TYPED_CODES, value.substr('stock-'.length), '<span><strong class="small">{code}</strong> {label}</span>'));
+                }
+                return $(td).get(0);
+            },
+
+            counterRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    var uom = choices.uom[value];
+                    if(uom) {
+                        $(td).append(uom.label);
+                    }
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            sourceRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                if(common.isEmpty(instance.getData()[row].task)) {
+                    $(td).html('');
+                } else if(!value || value.length == 0) {
+                    $(td).html('');
+                } else {
+                    var labels = [];
+                    var data = instance.getData();
+                    value.forEach(function(id) {
+                        var entry = data.filter(function(obj) {
+                            return obj.id == id;
+                        });
+                        if(entry.length > 0) {
+                            labels.push(entry[0].stepNo);
+                        }
+                    });
+                    $(td).html(labels.join(', '));
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            // IMPORTANT validate items
+            doValidate : function() {
+                var errors = [];
+
+                this.commit();
+
+                if(order.operation.length == 0) {
+                    errors.push('{% trans 'ERROR_EMPTY_OPERATIONS' %}');
+                } else {
+                    order.operation.forEach(function(task, index) {
+                        if(common.isEmpty(task.duration)) {
+                            errors.push('{% trans 'ERROR_EMPTY_DURATION' %}');
+                        }
+                        task.materials.forEach(function(mat) {
+                            if(common.isEmpty(mat.quantity)) {
+                                errors.push('{% trans 'ERROR_EMPTY_QUANTITY' %}');
+                            }
+                        });
+                    });
+                }
+
+                return $.unique(errors);
+            },
+
+            // IMPORTANT Table.getHandson
+            getHandson : function() {
+                var ret = [];
+                order.operation.forEach(function(item) {
+                    var line = {
+                        id : item.id,
+                        task : item.task,
+                        duration : item.duration,
+                        remark : item.remark,
+                        status : item.status,
+                        material : '',
+                        waitingTime : item.waitingTime,
+                        stagingTime: item.stagingTime,
+                        plannedStart : item.plannedStart,
+                        actualStart : item.actualStart,
+                        plannedEnd : item.plannedEnd,
+                        actualEnd : item.actualEnd,
+                        actualDuration : item.actualDuration,
+                        revision : '',
+                        cp : '',
+                        quantity : '',
+                        uom : '',
+                        source : item.source,
+                        controlKey : item.controlKey,
+                        assignee : item.assignee,
+                        laborCost : item.laborCost,
+                        refDoc : item.refDoc,
+                        group : item.group,
+                        confirmations : item.confirmations,
+                        lastEdited : item.lastEdited,
+                        createdBy : item.createdBy
+                    };
+
+                    if(item.materials.length == 0) {
+                        ret.push(line);
+                        return;
+                    }
+
+                    var lastMaterial = null;
+                    for(var i = 0; i < item.materials.length; i++) {
+                        if(i == 0) {
+                            line.material = item.materials[i].material;
+                            line.revision = item.materials[i].revision;
+                            line.quantity = Math.abs(item.materials[i].quantity);
+                            line.uom = item.materials[i].uom;
+                            line.openStagingQuantity = item.materials[i].openStagingQuantity;
+                            line.openConsumptionQuantity = item.materials[i].openConsumptionQuantity;
+                            line.cost = item.materials[i].cost;
+                            line.location = item.materials[i].location;
+                            if(item.materials[i].quantity >= 0) {
+                                line.cp = 'consume';
+                            } else {
+                                line.cp = 'produce';
+                            }
+                            ret.push(line);
+                        } else {
+                            var newLine = $.extend({}, line);
+                            newLine.task = '';
+                            newLine.duration = '';
+                            newLine.stagingTime = '';
+                            delete newLine.id;
+                            delete newLine.status;
+                            delete newLine.source;
+                            delete newLine.plannedStart;
+                            delete newLine.actualStart;
+                            delete newLine.plannedEnd;
+                            delete newLine.actualEnd;
+                            delete newLine.actualDuration;
+                            delete newLine.controlKey;
+                            delete newLine.assignee;
+                            delete newLine.refDoc;
+                            delete newLine.group;
+                            delete newLine.confirmations;
+                            delete newLine.remark;
+                            newLine.material = item.materials[i].material;
+                            newLine.revision = item.materials[i].revision;
+                            newLine.quantity = Math.abs(item.materials[i].quantity);
+                            newLine.uom = item.materials[i].uom;
+                            newLine.openStagingQuantity = item.materials[i].openStagingQuantity;
+                            newLine.openConsumptionQuantity = item.materials[i].openConsumptionQuantity;
+                            newLine.cost = item.materials[i].cost;
+                            newLine.location = item.materials[i].location;
+                            if(item.materials[i].quantity >= 0) {
+                                newLine.cp = 'consume';
+                            } else {
+                                newLine.cp = 'produce';
+                            }
+
+                            // check borrow
+                            var lastLine = ret[ret.length - 1];
+                            if((item.materials[i].material == lastMaterial.material && item.materials[i].revision == lastMaterial.revision)
+                                    && (item.materials[i].quantity == (lastMaterial.quantity * -1))
+                                    && (lastLine.cp != 'borrow')) {
+                                ret[ret.length - 1].cp = 'borrow';
+                            } else {
+                                ret.push(newLine);
+                            }
+                        }
+                        lastMaterial = item.materials[i];
+                    }
+                });
+
+                var diff = 5 - ret.length;
+                for(var i = 0; i < diff; i++) {
+                    ret.push({});
+                }
+
+                return ret;
+            },
+
+            // IMPORTANT Table.commit
+            commit : function(destroy) {
+                var o = this;
+                if(this.handsontable) {
+                    var dataToPass = this.handsontable.getData();
+                    var ret = order.operation = [];
+
+                    var lastObj = {
+                        materials : []
+                    };
+
+                    var maxId = 0;
+                    dataToPass.forEach(function(row) {
+                        var idAsInt = parseInt(row.id);
+                        if(!isNaN(idAsInt)) {
+                            maxId = Math.max(maxId, idAsInt);
+                        }
+                    });
+
+                    dataToPass.forEach(function(row) {
+                        if(!common.isEmpty(row.task)) {
+                            lastObj = {
+                                id : row.id || ++maxId,
+                                task : row.task,
+                                duration : parseFloat(row.duration) || 0,
+                                stagingTime : parseFloat(row.stagingTime) || 0,
+                                materials : [],
+                                remark : row.remark || '',
+                                actualStart : row.actualStart || null,
+                                plannedStart : row.plannedStart || null,
+                                plannedEnd : row.plannedEnd || null,
+                                waitingTime : parseFloat(row.waitingTime) || 0,
+                                actualEnd : row.actualEnd || null,
+                                actualDuration : row.actualDuration,
+                                source : row.source || [],
+                                // FIXME what if the operation is added after order has been released
+                                status : row.status || OP_STATUS_OPEN,
+                                assignee : row.assignee,
+                                laborCost : row.laborCost,
+                                controlKey : row.controlKey,
+                                confirmations : row.confirmations,
+                                refDoc : row.refDoc,
+                                group : row.group || null,
+                                lastEdited : row.lastEdited || null,
+                                createdBy : row.createdBy || null
+                            };
+                            if(isNaN(lastObj.duration)) {
+                                lastObj.duration = 15;
+                            }
+                            if(isNaN(lastObj.stagingTime)) {
+                                lastObj.stagingTime = 0;
+                            }
+
+                            ret.push(lastObj);
+                        }
+
+                        if(!common.isEmpty(row.material)) {
+                            var mat = {
+                                material : row.material || '',
+                                revision : row.revision || '',
+                                quantity : 0,
+                                uom : row.uom || '',
+                                openStagingQuantity : row.openStagingQuantity,
+                                openConsumptionQuantity : row.openConsumptionQuantity,
+                                cost : row.cost,
+                                location : row.location
+                            };
+                            var quantity = parseFloat(row.quantity);
+                            if(!isNaN(quantity)) {
+                                mat.quantity = Math.max(1, quantity);
+                            } else {
+                                mat.quantity = 1;
+                            }
+                            if(row.cp == 'consume') {
+                                mat.quantity = Math.abs(mat.quantity);
+                            } else if(row.cp == 'produce') {
+                                mat.quantity = Math.abs(mat.quantity) * -1;
+                            } else if(row.cp == 'borrow') {
+                                mat.quantity = Math.abs(mat.quantity);
+                                lastObj.materials.push(mat);
+                                mat = $.extend({}, mat);
+                                mat.quantity = Math.abs(mat.quantity) * -1;
+                            }
+                            lastObj.materials.push(mat);
+                        }
+                    });
+
+                    order.operation = ret;
+
+                    // validate sources
+                    for(var i = 0; i < order.operation.length; i++) {
+                        var op = order.operation[i];
+                        var tempSource = [].concat(op.source);
+                        var validatedSource = [];
+                        var sid = tempSource.shift();
+                        while(typeof sid != 'undefined') {
+                            var found = order.operation.filter(function(a) {
+                                return a.id == sid;
+                            });
+
+                            if(found.length == 1) {
+                                validatedSource.push(sid);
+                            }
+
+                            sid = tempSource.shift();
+                        }
+                        op.source = validatedSource;
+                    }
+
+                    if(destroy) {
+                        this.handsontable.destroy();
+                    }
+                }
+
+                if(destroy) {
+                    this.handsontable = null;
+                    $('#handsontable').remove();
+                }
+            }
+        };
+
+        var Gantt = {
+
+            data : null,
+            isHoldData : false,
+
+            init : function() {
+                gantt.config.work_time = false;
+                Front.configGanttForBOM();
+                gantt.config.drag_resize = false;
+                gantt.config.drag_move = false;
+                gantt.config.scale_unit = 'day';
+                gantt.config.date_scale = '%l %j %F';
+                gantt.config.subscales = [
+                    { unit : 'hour', step : 1, date : '%H:00'},
+                    //{ unit : 'minute', step : 30, date : '%i'}
+                ];
+                gantt.config.min_column_width = 40;
+                gantt.templates.task_cell_class = function(item, date) {
+                    if(WorkTime.isOffHour(date, true, false)) {
+                        return 'offhour';
+                    }
+                    return '';
+                };
+
+                // PERMISSION cannot write
+                if(isReadMode || !Front.userCan('production_order+write') || !order.isEditable()) {
+                    gantt.config.readonly = true;
+                }
+                gantt.init('gantt');
+
+                $('#recalculateGanttButton').click(function() {
+                    Gantt.commit(true);
+                    if(dateBlurTimer) {
+                        clearTimeout(dateBlurTimer);
+                        dateBlurTimer = null;
+                    }
+                    Gantt.fitPlannedTime(true); // force recalculate
+                    Gantt.renderFromModel();
+                });
+            },
+
+            // IMPORTANT Gantt.getGantt
+            getGantt : function() {
+                var ret = { data : [], links : [] };
+
+                var link = function(source, target) {
+                    return {
+                        id : dhtmlx && dhtmlx.uid() || ('0x'+source+'->'+target),
+                        source : source,
+                        target : target,
+                        type : '0'
+                    };
+                };
+
+                var index = 0;
+                order.operation.forEach(function(item) {
+                    var entry = {
+                        id : item.id,
+                        text : item.task,
+                        start_date : item.plannedStart,
+                        end_date : item.plannedEnd,
+                        order : index,
+                        contextItem : item,
+                    };
+
+                    ret.data.push(entry);
+
+                    item.source.forEach(function(sid) {
+                        ret.links.push(link(sid, item.id));
+                    });
+
+                    index++;
+                });
+
+                return ret;
+            },
+
+            // IMPORTANT Gantt.renderFromModel
+            renderFromModel : function() {
+                this.isHoldData = true;
+
+                this.data = Gantt.getGantt();
+
+                $('#ganttViewContainer .alert').remove();
+
+                if(this.data.data.length == 0) {
+                    $('#recalculateGanttButton').hide();
+                    $('#gantt').hide();
+                    $('#ganttViewContainer').prepend('<div class="alert alert-warning fade in text-center">{% trans 'T_NOT_ENOUGH_TO_DISPLAY' %}</div>');
+                    return;
+                }
+
+                gantt.config.start_date = moment(this.data.data[0].start_date).startOf('day').toDate();
+                var maxEnd = null;
+                this.data.data.forEach(function(entry) {
+                    if(entry.end_date) {
+                        if(!maxEnd) {
+                            maxEnd = entry.end_date;
+                        } else if(maxEnd.getTime() < entry.end_date.getTime()) {
+                            maxEnd = entry.end_date;
+                        }
+                    }
+                });
+                if(maxEnd) {
+                    gantt.config.end_date = moment(maxEnd).endOf('day').toDate();
+                }
+
+                $('#recalculateGanttButton').show();
+
+                $('#gantt').show();
+
+                gantt.clearAll();
+                gantt.parse(this.data);
+                gantt.render();
+                gantt.sort();
+            },
+
+            // IMPORTANT Gantt.commit
+            commit : function(destroy) {
+                if(this.isHoldData) {
+                    var ganttData = gantt.serialize();
+                    ganttData.data.forEach(function(entry) {
+
+                        var foundOp = order.operation.filter(function(item) {
+                            return (item.id + '') == (entry.id + '');
+                        });
+
+                        if(foundOp.length > 0) {
+                            foundOp[0].source = [];
+                            ganttData.links.forEach(function(linkEntry) {
+                                if((linkEntry.target + '') == (entry.id + '')) {
+                                    foundOp[0].source.push(linkEntry.source + '');
+                                }
+                            });
+                        }
+                    });
+                }
+                if(destroy) {
+                    this.isHoldData = false;
+                }
+            },
+
+            // IMPORTANT fitPlannedTime
+            fitPlannedTime : function(forceRecalculate) {
+                if(order.operation.length == 0) return;
+                // PERMISSION cannot write
+                if(isReadMode || !Front.userCan('production_order+write') || !order.isEditable()) return;
+
+                // if this is an edit mode, force all new tasks to be at the first
+                if(!common.isEmpty(orderId) && !forceRecalculate) {
+
+                    order.operation.filter(function(item) {
+                        return common.isEmpty(item.plannedStart);
+                    }).forEach(function(item) {
+                        item.plannedStart = moment(order.plannedStart).toDate();
+                        item.plannedEnd = moment(item.plannedStart).add(item.duration, 'minutes').toDate();
+                    });
+
+                } else {
+                    // first iteration, calculate time offset for each node
+                    order.operation.forEach(function (item) {
+                        if (item.source.length == 0) {
+                            item.startTimeOffset = 0;
+                        } else {
+                            var maxSourceDuration = 0;
+                            for (var i = 0; i < item.source.length; i++) {
+                                var found = order.operation.filter(function (obj) {
+                                    return obj.id == item.source[i];
+                                });
+                                if (found.length == 0) continue;
+                                var endOffset = found[0].startTimeOffset + found[0].duration + found[0].stagingTime;
+                                maxSourceDuration = Math.max(endOffset, maxSourceDuration);
+                            }
+                            item.startTimeOffset = maxSourceDuration;
+                        }
+                    });
+
+                    var lastLongestOperation = null;
+                    var leaves = order.getLeafOperations();
+                    leaves.forEach(function(item) {
+                        if(lastLongestOperation == null || (lastLongestOperation.startTimeOffset + lastLongestOperation.duration + lastLongestOperation.stagingTime) < (item.startTimeOffset + item.duration + item.stagingTime)) {
+                            lastLongestOperation = item;
+                        }
+                    });
+
+                    var wholeOffset = lastLongestOperation.startTimeOffset + lastLongestOperation.duration + lastLongestOperation.stagingTime;
+                    var startOfToday = moment().startOf('d').toDate();
+                    var shiftOffset = 0;
+                    // IMPORTANT TIME CALC
+                    if (common.isEmpty(order.plannedStart) && !common.isEmpty(order.plannedEnd)) { // backward
+                        var tempPlannedStart = moment(order.plannedEnd).subtract(wholeOffset, 'm');
+                        shiftOffset = moment(tempPlannedStart).diff(moment(startOfToday), 'minutes', true);
+                    } else if (!common.isEmpty(order.plannedStart)) { // forward
+                        shiftOffset = moment(order.plannedStart).diff(moment(startOfToday), 'minutes', true);
+                    } else { // invalid start
+                        // do nothing and let it be the start of today
+                    }
+
+                    // second iteration, calculate plannedStartDate based on start time or end time of header
+                    order.operation.forEach(function (item) {
+                        // convert back to today first and add startTimeOffset + backward/forward offset (shiftOffset)
+                        // startTimeOffset is the offset based on start of today
+                        item.plannedStart = moment(startOfToday).add(item.startTimeOffset + shiftOffset + item.stagingTime, 'm').toDate();
+                        item.plannedEnd = moment(item.plannedStart).add(item.duration, 'm').toDate();
+                        // remove startTimeOffset so it will not get confused
+                        delete item.startTimeOffset;
+                    });
+
+                    // third iteration, adjust tree with off hours
+                    if (common.isEmpty(order.plannedStart) && !common.isEmpty(order.plannedEnd)) { // backward
+                        order.backwardOperationWithOffHours();
+                        // set all operations that has no source to be min start
+                        var newStart = order.getMinStart();
+                        var sourceOps = order.getSourceOperations();
+                        sourceOps.forEach(function(item) {
+                            //item.plannedStart = moment(newStart).toDate();
+                        });
+                        //order.adjustOperationsToOffHours();
+                    } else { // forward
+                        order.adjustOperationsToOffHours();
+                    }
+
+                }
+
+                // Set header planned time based on calculated time
+                if(!common.isEmpty(order.plannedEnd)) { // backward
+                    order.plannedEnd = order.getMaxEnd();
+                    $('#orderEndDate').val(moment(order.plannedEnd).format('YYYY-MM-DD'));
+                    $('#orderEndTime').val(moment(order.plannedEnd).format('HH:mm'));
+                }
+                if(!common.isEmpty(order.plannedStart)) { // forward
+                    order.plannedStart = order.getMinStart();
+                    $('#orderStartDate').val(moment(order.plannedStart).format('YYYY-MM-DD'));
+                    $('#orderStartTime').val(moment(order.plannedStart).format('HH:mm'));
+                }
+            }
+        };
+
+        (function($) {
+            $(document).ready(function () {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                // view switcher
+                $('input[name="view"]').change(function() {
+                    var view = $(this).val();
+                    if(view == 'gantt') {
+                        $('#tableViewContainer').hide();
+                        $('#ganttViewContainer').show();
+                        Table.commit(true);
+                        if(dateBlurTimer) {
+                            clearTimeout(dateBlurTimer);
+                            dateBlurTimer = null;
+                        }
+                        Gantt.fitPlannedTime();
+                        Gantt.renderFromModel();
+                    } else if(view == 'table') {
+                        $('#recalculateGanttButton').hide();
+                        $('#ganttViewContainer').hide();
+                        $('#tableViewContainer').show();
+                        Gantt.commit(true);
+                        Table.renderFromModel();
+                    }
+                });
+
+                Header.init();
+                Table.init();
+                Gantt.init();
+
+                if(!common.isEmpty(orderId)) {
+                    var operation = common.getParam(window.location.href, 'op');
+                    Front.removeParamFromAddressBar();
+                    if(operation == 'created') {
+                        Front.notify('success', '{% trans 'NOTI_PRODUCTION_ORDER_CREATED' %}', '');
+                    } else if(operation == 'released' || operation == 'saved') {
+                        Front.notify('success', '{% trans 'NOTI_PRODUCTION_ORDER_SAVED' %}', '');
+                    }
+
+                    order.load(orderId, function(success, data) {
+                        if(success) {
+                            prepareInititalData();
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                } else {
+                    prepareInititalData();
+                }
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        Front.buildOptions('orderType', choices.production_order_type);
+
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                /**
+                 * New Doc
+                 * */
+                if(common.isEmpty(orderId)) {
+                    order.plannedStart = moment().add(30, 'm').toDate();
+                    order.quantity = 1;
+
+                    $('#viewLogButton, .created-parent, .orderno-parent, #printJobTagButton').remove();
+                    $('[type="datetime-local"]').attr('min', moment().format('YYYY-MM-DDTHH:mm'));
+                } else {
+                    $('#orderMaterialRevision').data('skipchecking', true);
+
+                    if(order.status <= PD_STATUS_PLANNED) { // open, planned
+                        // PERMISSION can write | can release
+                        if(!isReadMode && Front.userCan('production_order+write')) {
+                            // FIXME at the moment, there is no way you can release a single production order because you cannot assign the oprations in this screen whilst proposal approval will auto-release the conform orders
+                            //Front.notifyTop('info', '{% trans 'NOTI_READY_TO_RELEASE' %}', '{% trans 'NOTI_READY_TO_RELEASE_MESSAGE' %} <a class="btn btn-info btn-sm first" id="releaseOrderButton" href="javascript:;"><i class="fa fa-paper-plane"></i> {% trans 'BUTTON_RELEASE' %}</a>', -1);
+                        }
+                    }
+
+                    if(order.status < PD_STATUS_RELEASED) { // open, planned, released
+                        // PERMISSION can can cancel
+                        if(!isReadMode && Front.userCan('production_order+write@cancel')) {
+                            $('#cancelOrderButton').show();
+                        }
+                    }
+
+                    if(order.status != PD_STATUS_RELEASED) { // released
+                        $('#printJobTagButton').remove();
+                    }
+                }
+
+                Header.renderFromModel();
+
+                $('input[name="view"]:checked').trigger('change');
+
+                // PERMISSION cannot write
+                if(isReadMode || !Front.userCan('production_order+write') || !order.isEditable()) {
+                    $('#savePlanOrderButton, #recalculateGanttButton').remove();
+                    $('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea').attr('readonly', 'readonly');
+                    $('select').attr('disabled', 'disabled');
+                } else {
+                    Front.enableInputChangesChecking();
+                }
+
+                if(window.Extended) {
+                    window.Extended.onReadyToUse();
+                }
+
+                common.unblockUI($('#main-content'));
+            }
+
+        })(jQuery);
+    </script>
+    {% block extended_script %}
+    {% endblock %}
+{% endblock %}

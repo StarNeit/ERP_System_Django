@@ -1,0 +1,138 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right">
+                <a id="createMaterialButton" class="btn btn-primary" href="{% url 'stock:material_new' %}"><i class="fa fa-plus"></i><span class="hidden-xs"> {% trans 'BUTTON_NEW_MATERIAL' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+
+            <table id="materialTable" class="table table-hover general-table">
+                <thead>
+                <tr>
+                    <th>{% trans 'TH_CODE' %}</th>
+                    <th>{% trans 'TH_LAST_MODIFIED' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <div class="text-right paginationblock">
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/models/material.js' %}"></script>
+    <script type="text/javascript">
+        var List = {
+
+            PAGE_SIZE : 20,
+            pageIndex : 0,
+
+            init : function() {
+                var o = this;
+                $(document).on('click', '.pagination li a', function() {
+                    var index = $(this).data('index');
+                    if(index == o.pageIndex) return;
+                    o.pageIndex = index;
+                    $('.pagination li.active').removeClass('active');
+                    $('.paginationblock .pagination').each(function() {
+                        $(this).find('li').eq(o.pageIndex).addClass('active');
+                    });
+                    o.query();
+                });
+            },
+
+            query : function() {
+                var o  = this;
+                common.blockUI($('#materialTable').closest('.panel-body'));
+                api.crud.read('material_master', null, this.PAGE_SIZE, this.pageIndex, function(success, data) {
+                    $('#materialTable tbody > *').remove();
+                    common.unblockUI($('#materialTable').closest('.panel-body'));
+                    if(success) {
+                        data.forEach(function(obj) {
+                            var $renderer = o.renderMaterialEntry(obj);
+                            $('#materialTable tbody').append($renderer);
+                        });
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            queryTotal : function() {
+                var o = this;
+                api.crud.count('material_master', null, function(success, data) {
+                    if(success) {
+                        $('.paginationblock').empty();
+                        if(data == 0) return;
+                        var pageCount = Math.ceil(data / o.PAGE_SIZE);
+                        if(pageCount > 1) {
+                            $('.paginationblock').append('<ul class="pagination"></ul>');
+                            for (var i = 1; i <= pageCount; i++) {
+                                $('.paginationblock .pagination').append('<li><a href="javascript:;" data-index="' + (i -1) + '">' + i + '</a></li>');
+                            }
+                            $('.paginationblock .pagination').each(function() {
+                                $(this).find('li').eq(o.pageIndex).addClass('active');
+                            });
+                        }
+                    } else {
+                        console.log(data);
+                    }
+                });
+            },
+
+            renderMaterialEntry : function(obj) {
+                var url = URL.stock_material_edit(obj._id);
+                var statusClass = 'primary';
+                console.log(obj);
+
+                var editBy = '';
+                var editWhen = '';
+                if(obj.last_edited) {
+                    editBy = displayName(obj.last_edited.who.first_name, obj.last_edited.who.last_name);
+                    editWhen = moment(obj.last_edited.when * 1000).format('YYYY-MM-DD HH:mm');
+                }
+
+                var materialCodeLabel = '(not set)';
+                if(!common.isEmpty(obj.code)) {
+                    materialCodeLabel = obj.code;
+                    // strip 'stock-' out
+                    if(materialCodeLabel.indexOf('stock-') == 0) {
+                        materialCodeLabel = materialCodeLabel.substr('stock-'.length);
+                    }
+                }
+                // FIXME remove revision for now
+                // materialCodeLabel = materialCodeLabel + ' rev' + obj.rev_id;
+
+                var $r = $('<tr>\
+                    <td class="codeCol"><a href="' + url + '">' + materialCodeLabel + '</a></td>\
+                    <td>' + editWhen + ' {% trans 'T_BY' %} ' + editBy + '</td>\
+                </tr>');
+
+                return $r;
+            }
+
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                List.init();
+                List.query();
+                List.queryTotal();
+
+                // PERMISSION cannot write
+                if(!Front.userCan('material_master+write')) {
+                    $('#createMaterialButton').remove();
+                }
+            });
+        })(jQuery);
+    </script>
+{% endblock %}

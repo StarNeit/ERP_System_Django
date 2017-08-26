@@ -1,0 +1,1498 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section class="panel action-bar">
+        <div class="panel-body">
+            <div class="row">
+                <div id="standByCmds" class="col-xs-12 text-right context-cmds">
+                    <button class="btn btn-primary" id="scanButton"><i class="fa fa-barcode"></i> {% trans 'TOOLTIP_SCAN_STAGING_FORM' %}</button>
+                    <button id="returnMaterialButton" class="btn btn-primary"><i class="fa fa-hand-paper-o"></i> {% trans 'BUTTON_RETURN_MATERIAL' %}</button>
+                </div>
+                <div id="todoCmds" class="col-xs-12 text-right context-cmds" style="display: none;">
+                    <div class="btn-group">
+                        <button id="startButton" class="btn btn-primary"><i class="fa fa-play"></i> {% trans 'TOOLTIP_START_PREPARE' %}</button>
+                        <button id="confirmButton" class="btn btn-primary"><i class="fa fa-check"></i> {% trans 'BUTTON_CONFIRM' %}</button>
+                    </div>
+                </div>
+                <div id="confirmedCmds" class="col-xs-12 text-right context-cmds" style="display: none;">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="printTagButton"><i class="fa fa-print"></i> {% trans 'TOOLTIP_PRINT_MATERIAL_TAG' %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row">
+        <div class="col-sm-4">
+            <!-- Preparation Queue -->
+            <section id="requestQueue" class="panel">
+                <header class="panel-heading withtools">{% trans 'PANEL_TITLE_MATERIAL_REQUEST' %}
+                    <span class="badge bg-info" style="display: none;"></span>
+                    <span class="tools pull-right">
+                        <input type="text" id="searchMaterialInput" class="form-control" placeholder="{% trans 'T_MATERIAL_FILTER' %}" style="display:inline-block; width: 200px;" />
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <p class="no-task-message">{% trans 'T_NO_REQUEST_NOW' %}</p>
+                    <div class="queue-wrapper"></div>
+                    <input type="hidden" id="refresh" value="no" />
+                </div>
+            </section>
+        </div>
+        <div class="col-sm-4">
+            <!-- Confirmed Queue -->
+            <section id="confirmedQueue" class="panel">
+                <header class="panel-heading withtools">{% trans 'PANEL_TITLE_CONFIRMED' %}
+                    <span class="badge bg-info" style="display: none;"></span>
+                </header>
+                <div class="panel-body">
+                    <p class="no-task-message">{% trans 'T_NO_RECORDS' %}</p>
+                    <div class="queue-wrapper"></div>
+                </div>
+            </section>
+        </div>
+        <div class="col-sm-4">
+            <!-- Recent Movement -->
+            <section id="recent" class="panel">
+                <header class="panel-heading">{% trans 'PANEL_TITLE_RECENT_MOVEMENT' %}</header>
+                <div class="panel-body">
+                    <p class="widget-message text-center text-muted" style="display:none;"></p>
+                    <table class="table table-hover general-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>{% trans 'TH_TYPE' %}</th>
+                                <th>{% trans 'TH_DOC_NO' %}</th>
+                                <th>{% trans 'TH_TIME' %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="confirmPrepareModal" class="modal fade confirm-prepare-modal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% trans 'T_CONFIRM_MATERIAL_PREPARATION' %}</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered inline">
+                        <thead>
+                            <tr>
+                                <th colspan="6" class="text-center"></th>
+                            </tr>
+                            <tr>
+                                <th>{% trans 'TH_MATERIAL' %}</th>
+                                <th>{% trans 'TH_REVISION' %}</th>
+                                <th class="text-right">{% trans 'TH_QUANTITY' %}</th>
+                                <th class="text-center">{% trans 'TH_COUNTER' %}</th>
+                                <th width="150">{% trans 'TH_WEIGHT' %} (g)</th>
+                                <th class="text-center">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <p class="text-right additem-parent"><a class="btn btn-default btn-sm additem" href="javascript:;"><i class="fa fa-plus"></i> {% trans 'BUTTON_ADD_ROW' %}</a></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary prev-button">{% trans 'BUTTON_PREV' %}</button>
+                    <button class="btn btn-primary next-button">{% trans 'BUTTON_NEXT' %}</button>
+                    <button class="btn btn-primary confirm-button">{% trans 'BUTTON_CONFIRM' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cancelPrepareModal" class="modal fade cancel-prepare-modal">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{% trans 'T_CANCEL_MATERIAL_PREPARATION' %}</h4>
+                </div>
+                <div class="modal-body">
+                    <p class="text-center">{% trans 'T_CANCEL_MATERIAL_PREPARATION_MESSAGE' %}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">{% trans 'BUTTON_BACK' %}</button>
+                    <button class="btn btn-primary proceed-button">{% trans 'BUTTON_PROCEED' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnableTasksModal" class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% trans 'T_WIP_FROM_OPERATIONS' %}</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{% trans 'T_WIP_FROM_OPERATIONS_MESSAGE' %}</p>
+                    <div class="task-list"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">{% trans 'BUTTON_CANCEL' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnStagedModal" class="modal fade return-staged-modal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{% trans 'T_RETURN_STAGED_MATERIALS' %}</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{% trans 'TH_MATERIAL' %}</th>
+                                <th>{% trans 'TH_REVISION' %}</th>
+                                <th class="text-right">{% trans 'TH_QUANTITY' %}</th>
+                                <th class="text-center">{% trans 'TH_COUNTER' %}</th>
+                                <th class="text-right" width="150">{% trans 'TH_EXPECTED_WEIGHT' %} (g)</th>
+                                <th class="text-right" width="150">{% trans 'TH_WEIGHT' %} (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">{% trans 'BUTTON_CANCEL' %}</button>
+                    <button class="btn btn-primary confirm-button">{% trans 'BUTTON_CONFIRM' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnWIPModal" class="modal fade return-wip-modal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">{% trans 'T_RETURN_WIP' %} <small class="title-suffix"></small></h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{% trans 'TH_MATERIAL' %}</th>
+                                <th class="text-center">{% trans 'TH_REVISION' %}</th>
+                                <th class="text-center">{% trans 'TH_SIZE' %}</th>
+                                <th class="text-right">{% trans 'TH_QUANTITY' %}</th>
+                                <th class="text-center">{% trans 'TH_COUNTER' %}</th>
+                                <th class="text-right" width="150">{% trans 'TH_WEIGHT' %} (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">{% trans 'BUTTON_CANCEL' %}</button>
+                    <button class="btn btn-primary confirm-button">{% trans 'BUTTON_CONFIRM' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/inventory.js' %}"></script>
+    <script type="text/javascript">
+        var choices = {% choices 'uom' 'inv-movement_type' %};
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }};
+        var tempMovement = new InventoryMovement();
+
+        var RequestWidget = {
+            INTERVAL : 15 * 1000,
+            timer : null,
+            raw : [],
+            selected : [],
+            lastSelected : [],
+            filters : {
+                material : ''
+            },
+
+            confirmListActivePageIndex : 0,
+            confirmList : [],
+
+            // IMPORTANT RequestWidget.init
+            init : function() {
+                var o = this;
+                $(document).on('click', '#requestQueue .task .alert-icon', function() {
+                    if(ConfirmWidget.selected.length > 0) {
+                        ConfirmWidget.deselectAll();
+                    }
+                    o.toggleSelect($(this).closest('.task'));
+                });
+
+                $('#searchMaterialInput').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                                console.log(data);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        $(this).val(ui.item.label);
+                        o.filters.material = ui.item.label;
+                        o.render();
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('');
+                            o.filters.material = '';
+                            o.render();
+                        }
+                    }
+                });
+
+                $('#confirmButton').click(function() {
+                    this.openConfirmPopUp();
+                }.bind(this));
+
+                $('#startButton').click(function() {
+                    this.doStart();
+                }.bind(this));
+
+                $('#confirmPrepareModal').on('shown.bs.modal', function() {
+                    $('#confirmPrepareModal input').first().focus();
+                }.bind(this));
+
+                $('#confirmPrepareModal .additem').click(function() {
+                    this.addNewLine(null, false);
+                }.bind(this));
+
+                $(document).on('click', '#confirmPrepareModal .deleteitem', function() {
+                    if($(this).closest('tbody').find('tr').length == 1) return;
+                    $(this).closest('tr').remove();
+                });
+
+                $('#confirmPrepareModal .next-button').click(function() {
+                    if(this.commitConfirmList()) {
+                        this.renderConfirmPage(this.confirmListActivePageIndex + 1);
+                    }
+                }.bind(this));
+
+                 $('#confirmPrepareModal .prev-button').click(function() {
+                    if(this.commitConfirmList()) {
+                        this.renderConfirmPage(this.confirmListActivePageIndex - 1);
+                    }
+                }.bind(this));
+
+                $('#confirmPrepareModal').on('hidden.bs.modal', function() {
+                    this.start();
+                }.bind(this));
+
+                $('#confirmPrepareModal .confirm-button').click(function() {
+                    if(this.commitConfirmList()) {
+                        this.doConfirm(window.open());
+                    }
+                }.bind(this));
+            },
+
+            // IMPORTANT RequestWidget.doStart
+            doStart : function() {
+                var params = [];
+                var temp = [].concat(this.selected);
+
+                for(var i = 0; i < temp.length; i++) {
+                    if(temp[i].activity == null) {
+                        params.push([temp[i]._id, '{{ user }}']);
+                    }
+                }
+
+                if(params.length == 0) {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_TASK_IS_ALREADY_STARTED' %}' });
+                    return;
+                }
+
+                this.stop();
+
+                common.blockUI($('#requestQueue'));
+
+                api.BATCH({
+                    args : params,
+                    method : api.activity.start.bind(api.activity),
+                    done : function(results) {
+                        common.unblockUI($('#requestQueue'));
+
+                        var passed = results.filter(function(entry) {
+                            return entry.result[0] && entry.result[1];
+                        });
+                        if(passed.length > 0) {
+                            this.selected = [];
+                        }
+
+                        // report fail cases
+                        results.filter(function(entry) {
+                            return !entry.result[0] && entry.result[1];
+                        }).forEach(function(entry) {
+                            Front.handleAjaxError(entry.result[1]);
+                        });
+
+                        this.query();
+                        this.start();
+                    }.bind(this)
+                });
+            },
+
+            // IMPORTANT RequestWidget.openConfirmPopUp
+            openConfirmPopUp : function() {
+                this.stop();
+
+                // check if there is at least one valid task to be confirmed
+                var toConfirm = [];
+                var temp = [].concat(this.selected);
+                for(var i = 0; i < temp.length; i++) {
+                    var entry = temp[i];
+                    if(entry.activity != null) {
+                        toConfirm.push(entry);
+                    }
+                }
+
+                if(toConfirm.length == 0) {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_ONLY_STARTED_TASK_CAN_BE_CONFIRMED' %}' });
+                    return;
+                }
+
+                this.confirmList = [];
+
+                for(var i = 0; i < toConfirm.length; i++) {
+                    var entry = toConfirm[i];
+                    console.log(entry);
+                    this.confirmList.push({
+                        _id : entry._id,
+                        parent_task_code : entry.parent_task_code,
+                        po_doc_no : entry.po_doc_no,
+                        materials : [].concat(entry.materials)
+                    });
+                }
+
+                this.renderConfirmPage(0);
+
+                $('#confirmPrepareModal').modal('show');
+            },
+
+            // IMPORTANT RequestWidget.renderConfirmPage
+            renderConfirmPage : function(pageIndex) {
+                $('#confirmPrepareModal tbody > *').remove();
+                if(pageIndex < 0 || pageIndex >= this.confirmList.length) return;
+
+                this.confirmListActivePageIndex = pageIndex;
+                var entry = this.confirmList[pageIndex];
+
+                $('#confirmPrepareModal table thead th').first().html(entry.parent_task_code + ' {% trans 'T_OF' %} ' + entry.po_doc_no);
+
+                for(var j = 0; j < entry.materials.length; j++) {
+                    var mat = entry.materials[j];
+                    if(mat.quantity < 0) continue;
+
+                    this.addNewLine(mat, j == 0);
+                }
+
+                if((pageIndex + 1) < this.confirmList.length) {
+                    $('#confirmPrepareModal .next-button').show();
+                    $('#confirmPrepareModal .confirm-button').hide();
+                } else {
+                    $('#confirmPrepareModal .next-button').hide();
+                    $('#confirmPrepareModal .confirm-button').show();
+                }
+                if(pageIndex > 0) {
+                    $('#confirmPrepareModal .prev-button').show();
+                } else {
+                    $('#confirmPrepareModal .prev-button').hide();
+                }
+            },
+
+            // IMPORTANT RequestWidget.addNewLine
+            addNewLine : function(mat, hideRemove) {
+                var o = this;
+
+                var $tr = $('<tr>\
+                    <td></td>\
+                    <td></td>\
+                    <td class="text-right"></td>\
+                    <td class="text-center static"></td>\
+                    <td class="text-right"></td>\
+                    <td class="text-center minimized-padding"><a href="javascript:;" class="deleteitem" title="{% trans 'T_DELETE_ROW' %}" tabindex="-1"><i class="fa fa-trash fa-lg text-muted"></i></a></td>\
+                </tr>');
+
+                if(hideRemove) {
+                    $tr.find('.deleteitem').remove();
+                }
+
+                // material
+                var $input = $('<input type="text" name="materialcode" class="form-control" style="text-transform:uppercase;" />');
+                $tr.find('td').eq(0).append($input);
+                // revision
+                $input = $('<select name="revision" class="form-control"></select>');
+                $input.attr('disabled', 'disabled');
+                $tr.find('td').eq(1).append($input);
+                // quantity
+                $input = $('<input type="number" name="quantity" class="form-control text-right" min="0.01" max="99999999" step="0.01" />');
+                $tr.find('td').eq(2).append($input);
+                // weight
+                $input = $('<input type="number" name="weight" class="form-control text-right" min="0" max="999999999" step="0.01" />');
+                $tr.find('td').eq(4).append($input);
+
+                $tr.find('input[name="materialcode"]').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        console.log('select item', ui.item);
+                        $(this).val(ui.item.label);
+                        o.onMaterialChange($(this).closest('tr'), ui.item.label);
+
+                        if(ui.item.info) {
+                            if(!common.isEmpty(ui.item.info.uom)) {
+                                $(this).data('uom', ui.item.info.uom);
+                                $(this).closest('tr').find('td').eq(3).html(ui.item.info.uom);
+                            }
+                        }
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('').data('uom', '');
+                            o.onMaterialChange($(this).closest('tr'), '');
+                            $(this).closest('tr').find('td').eq(3).html('');
+                        }
+                    }
+                });
+
+                Front.alwaysFloat($tr.find('[type="number"]'));
+
+                if(mat != null) {
+                    $tr.find('[name="materialcode"]').val(mat.material.substr('stock-'.length)).data('uom', mat.uom);
+                    $tr.find('[name="quantity"]').val(mat.quantity.toFixed(2));
+                    $tr.find('td').eq(3).html(mat.uom);
+                    if(!common.isEmpty(mat.weight) || mat.weight === 0) {
+                        $tr.find('[name="weight"]').val(mat.weight.toFixed(2) || '');
+                    }
+
+                    this.onMaterialChange($tr, $tr.find('[name="materialcode"]').val(), function($row) {
+                        if(this.revision != null) {
+                            $row.find('[name="revision"]').val(this.revision);
+                        }
+                    }.bind(mat));
+                }
+
+                $('#confirmPrepareModal tbody').append($tr);
+
+                $tr.find('input').first().focus();
+            },
+
+            // IMPORTANT RequestWidget.onMaterialChange
+            onMaterialChange : function($tr, mat, callback) {
+                if(common.isEmpty(mat)) {
+                    $tr.find('[name="revision"]').attr('disabled', 'disabled').find('option').remove();
+                    if(callback) {
+                        callback($tr);
+                    }
+                } else {
+                    this.doQueryRevisions($tr, mat, callback);
+                }
+            },
+
+            doQueryRevisions : function($tr, materialCode, callback) {
+                var o = this;
+                $tr.find('[name="revision"] option').remove();
+                api.helper.material_revisions('stock-' + materialCode, function(success, data) {
+                    if(success) {
+                        if(data.length == 0) { // no revision
+                            $tr.find('[name="revision"]').attr('disabled', 'disabled');
+                        } else {
+                            data.sort(function(a, b) {
+                                return parseInt(b.rev_id) - parseInt(a.rev_id);
+                            });
+
+                            var currentRev = null;
+                            data.forEach(function(revEntry) {
+                                var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                                $opt.data('context', revEntry);
+                                if(currentRev == null || revEntry.default) {
+                                    currentRev = revEntry.rev_id;
+                                }
+                                $tr.find('[name="revision"]').append($opt);
+                            });
+                            $tr.find('[name="revision"]').removeAttr('disabled').val(currentRev);
+                        }
+
+                        if(callback) {
+                            callback($tr);
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                        $tr.find('[name="revision"]').attr('disabled', 'disabled');
+                        if(callback) {
+                            callback($tr);
+                        }
+                    }
+                });
+            },
+
+            // IMPORTANT RequestWidget.commitConfirmList
+            commitConfirmList : function() {
+                common.resetValidate($('#confirmPrepareModal .invalid'));
+                var valid = true;
+                if(this.confirmListActivePageIndex < 0 || this.confirmListActivePageIndex >= this.confirmList.length) return false;
+
+                var entry = this.confirmList[this.confirmListActivePageIndex];
+
+                var matList = [];
+                $('#confirmPrepareModal tbody tr').each(function() {
+                    var material = $(this).find('[name="materialcode"]').val();
+                    var revision = $(this).find('[name="revision"]').val();
+                    var quantity = $(this).find('[name="quantity"]').val();
+                    var weight = $(this).find('[name="weight"]').val();
+                    var uom = $(this).find('[name="materialcode"]').data('uom');
+
+                    var lineValid = true;
+
+                    if(!common.isEmpty(material) && common.isEmpty(uom)) {
+                        lineValid = false;
+                        common.setInvalid($(this).find('[name="materialcode"]'));
+                    }
+                    quantity = parseFloat(quantity);
+                    if(isNaN(quantity)) {
+                        quantity = 0;
+                    }
+                    if(quantity == 0) {
+                        lineValid = false;
+                        common.setInvalid($(this).find('[name="quantity"]'));
+                    }
+
+                    valid = valid && lineValid;
+
+                    if(!lineValid) return;
+
+                    if(weight != '') {
+                        weight = parseFloat(weight);
+                        if(isNaN(weight)) {
+                            weight = '';
+                        }
+                    }
+
+                    if(common.isEmpty(revision)) {
+                        revision = null;
+                    } else {
+                        revision = parseInt(revision);
+                    }
+
+                    var newMat = {
+                        material : 'stock-' + material,
+                        revision : revision,
+                        quantity : quantity,
+                        uom : uom,
+                        size : null
+                    };
+
+                    if(weight != '') {
+                        newMat.weight = weight;
+                    }
+                    matList.push(newMat);
+                });
+
+                if(matList.length == 0) {
+                    common.setInvalid($('#confirmPrepareModal tbody input').first());
+                    valid = false;
+                }
+
+                if(valid) {
+                    entry.materials = matList;
+                }
+
+                return valid;
+            },
+
+            // IMPORTANT RequestWidget.doConfirm
+            doConfirm : function(win) {
+                var o = this;
+                var params = [];
+                var temp = [].concat(this.selected);
+
+                for(var i = 0; i < temp.length; i++) {
+                    var entry = temp[i];
+                    var found = this.confirmList.filter(function(a) {
+                        return a._id == entry._id;
+                    });
+                    if(found.length > 0) {
+                        params.push([ entry._id, { materials : found[0].materials } ]);
+                    }
+                }
+
+                if(params.length == 0) return;
+
+                common.blockUI($('#confirmPrepareModal'));
+
+                api.BATCH({
+                    args : params,
+                    method : api.activity.stop_store_aux_task.bind(api.activity),
+                    done : function(results) {
+                        common.unblockUI($('#confirmPrepareModal'));
+                        $('#confirmPrepareModal').modal('hide');
+
+                        // success cases
+                        var ids = results.filter(function(entry) {
+                            return entry.result[0] && entry.result[1];
+                        }).map(function(entry) {
+                            return entry.arguments[0];
+                        });
+
+                        // report fail cases
+                        results.filter(function(entry) {
+                            return !entry.result[0] && entry.result[1];
+                        }).forEach(function(entry) {
+                            Front.handleAjaxError(entry.result[1]);
+                        });
+
+                        if(ids.length == 0) {
+                            win.close();
+                            o.start();
+                        } else {
+                            var objs = [];
+                            for (var i = 0; i < ids.length; i++) {
+                                var $task = $('.task[data-id="' + ids[i] + '"]');
+                                if ($task.length == 0) continue;
+                                var obj = $task.data('context');
+                                if (!obj) return;
+                                objs.push(obj);
+                            }
+
+                            ConfirmWidget.openMaterialTags(win, objs);
+                            o.query();
+                            o.start();
+                        }
+                    }
+                });
+            },
+
+            // IMPORTANT RequestWidget.query
+            query : function() {
+                api.inventory.holding_pen(function(success, data) {
+                    console.log(data);
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        this.raw = data;
+                        this.render();
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                }.bind(this));
+            },
+
+            // IMPORTANT RequestWidget.applyFilters
+            applyFilters : function() {
+                var ret = [];
+
+                for(var i = 0; i < this.raw.length; i++) {
+                    var entry = this.raw[i];
+                    if(entry.status != AUX_STATUS_CONFIRMED) { // not confirmed
+                        var found = entry.materials.filter(function(a) {
+                           return a.material.toLowerCase().indexOf(this.filters.material.toLowerCase()) != -1;
+                        }.bind(this));
+                        if(found.length == 0) {
+                            continue;
+                        }
+                    }
+                    ret.push(entry);
+                }
+
+                return ret;
+            },
+
+            // IMPORTANT RequestWidget.applySorting
+            applySorting : function(data) {
+                data.sort(function(a, b) {
+                    return a.planned_start - b.planned_start;
+                });
+            },
+
+            // IMPORTANT RequestWidget.clearRenderers
+            clearRenderer : function() {
+                this.lastSelected = this.selected;
+                this.selected = [];
+
+                ConfirmWidget.lastSelected = ConfirmWidget.selected;
+                ConfirmWidget.selected = [];
+
+                $('#requestQueue .panel-body .queue-wrapper, #confirmedQueue .panel-body .queue-wrapper').html('');
+                $('#requestQueue .panel-heading .badge, #confirmedQueue .panel-heading .badge').hide();
+                $('#requestQueue .no-task-message, #confirmedQueue .no-task-message').hide();
+            },
+
+            // IMPORTANT RequestWidget.render
+            render : function() {
+                this.clearRenderer();
+
+                var data = this.applyFilters();
+                this.applySorting(data);
+
+                var requestCount = 0;
+                var confirmedCount = 0;
+
+                for(var i = 0; i < data.length; i++) {
+                    var $entry = this.renderEntry(data[i]);
+
+                    // check if this task is already confirmed or not
+                    if(data[i].status == AUX_STATUS_CONFIRMED) {
+                        confirmedCount++;
+                        $('#confirmedQueue .panel-body .queue-wrapper').append($entry);
+
+                        var found = ConfirmWidget.lastSelected.filter(function (a) {
+                            return a._id == data[i]._id;
+                        });
+                        if (found.length > 0) {
+                            ConfirmWidget.toggleSelect($entry);
+                        }
+                    } else {
+                        requestCount++;
+                        $('#requestQueue .panel-body .queue-wrapper').append($entry);
+
+                        var found = this.lastSelected.filter(function (a) {
+                            return a._id == data[i]._id;
+                        });
+                        if (found.length > 0) {
+                            this.toggleSelect($entry);
+                        }
+                    }
+                }
+                this.lastSelected = [];
+                if(requestCount > 0) {
+                    $('#requestQueue .panel-heading .badge').html(requestCount).show();
+                } else {
+                    $('#requestQueue .no-task-message').show();
+                    $('#requestQueue .panel-heading .badge').hide();
+                }
+
+                if(confirmedCount > 0) {
+                    $('#confirmedQueue .panel-heading .badge').html(confirmedCount).show();
+                } else {
+                    $('#confirmedQueue .no-task-message').show();
+                    $('#confirmedQueue .panel-heading .badge').hide();
+                }
+
+                this.checkButtonState();
+            },
+
+            // IMPORTANT RequestWidget.renderEntry
+            renderEntry : function(obj) {
+                var $ret = $('<div class="alert alert-info clearfix task mat-prepare">\
+                    <span class="alert-icon"><i class="fa"></i></span>\
+                    <div class="notification-info">\
+                        <ul class="clearfix notification-meta">\
+                            <li class="pull-left notification-sender"><strong class="title"></strong></li>\
+                            <li class="pull-right notification-time"></li>\
+                        </ul>\
+                        <div class="row">\
+                            <div class="col-sm-6 mat-list-l">\
+                            </div>\
+                            <div class="col-sm-6 mat-list-r">\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>');
+
+                var opText = obj.parent_task_code + ' ' + Front.getTaskLabel('task-' + obj.parent_task_code) + ' {% trans 'T_FROM' %} ' + obj.po_doc_no;
+
+                $ret.attr('data-id', obj._id).data('context', obj);
+                $ret.find('[data-type="operation"]').attr('data-unique', obj.po_id + '/' + obj.parent_task);
+                $ret.find('.title').html(opText);
+
+                if(obj.status == AUX_STATUS_CONFIRMED) { // confirmed
+                    $ret.removeClass('alert-info').addClass('alert-success');
+                } else if(obj.activity != null) {
+                    $ret.addClass('ongoing');
+                }
+
+                var lMax = Math.ceil(obj.materials.length / 2);
+                var lArr = [];
+                var rArr = [];
+                for(var i = 0; i < obj.materials.length; i++) {
+                    var arr = lArr;
+                    if(i >= lMax) arr = rArr;
+
+                    var mat = obj.materials[i];
+
+                    if(mat.quantity < 0) continue;
+
+                    var revSizeText = '';
+                    if(mat.revision != null) {
+                        if(!common.isEmpty(mat.size)) {
+                            revSizeText = ' (r' + mat.revision + ', <span class="labelize" data-type="' + api.common.C.TRANS.LOV_SIZE + '" data-code="' + mat.size + '" data-pattern="{label}">' + mat.size + '</span>)';
+                        } else {
+                            revSizeText = ' (r' + mat.revision + ')';
+                        }
+                    }
+
+                    var qtyString = mat.quantity;
+                    if(mat.quantity % 1 != 0) {
+                        qtyString = parseFloat(mat.quantity).toFixed(2);
+                    } else {
+                        qtyString = parseInt(mat.quantity);
+                    }
+
+                    arr.push('<a href="javascript:;" class="interact" data-type="materialcode" data-from="inventory_dashboard" data-unique="' + mat.material + '" data-target="_blank">' + mat.material.substr('stock-'.length) + '</a>' + revSizeText + ' (' + qtyString + ' ' + mat.uom + ')');
+                }
+
+                if(lArr.length > 0) {
+                    $ret.find('.mat-list-l').append('<p>' + lArr.join('<br/>') + '</p>');
+                }
+                if(rArr.length > 0) {
+                    $ret.find('.mat-list-r').append('<p>' + rArr.join('<br/>') + '</p>');
+                }
+
+                $ret.find('.labelize').each(function() {
+                    Resolver.translate($(this));
+                });
+
+                var plannedStart = obj.planned_start * 1000;
+                var dateText = moment(plannedStart).fromNow();
+                var prefix = '';
+                if(obj.status == AUX_STATUS_CONFIRMED) {
+                    prefix = '<button class="btn btn-danger btn-xs cancel-confirm-button">{% trans 'BUTTON_CANCEL' %}</button> ';
+                }
+
+                $ret.find('.notification-time').html(prefix + dateText);
+
+                return $ret;
+            },
+
+            // IMPORTANT RequestWidget.toggleSelect
+            toggleSelect : function($task) {
+                var obj = $task.data('context');
+                if($task.is('.selected')) {
+                    $task.removeClass('selected alert-warning');
+                    if(obj.status == AUX_STATUS_CONFIRMED) {
+                        $task.addClass('alert-success');
+                    } else {
+                        $task.addClass('alert-info');
+                    }
+                    for(var i = 0; i < this.selected.length; i++) {
+                        if(this.selected[i]._id == obj._id) {
+                            this.selected.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    $task.removeClass('alert-info alert-success').addClass('selected alert-warning');
+                    var found = this.selected.filter(function(a) {
+                        return a._id == obj._id;
+                    });
+                    if(found.length == 0) {
+                        this.selected.push(obj);
+                    }
+                }
+
+                this.checkButtonState();
+            },
+
+            // IMPORTANT RequestWidget.deselectAll
+            deselectAll : function() {
+                this.selected = [];
+                $('#requestQueue .task.selected').each(function() {
+                    RequestWidget.toggleSelect($(this));
+                });
+            },
+
+            // IMPORTANT RequestWidget.checkButtonState
+            checkButtonState : function() {
+                if($('#requestQueue .task.selected').length > 0) {
+                    Front.showContextCmds('#todoCmds');
+                } else if($('#confirmedQueue .task.selected').length > 0) {
+                    Front.showContextCmds('#confirmedCmds');
+                } else {
+                    Front.showContextCmds('#standByCmds');
+                }
+            },
+
+            start : function() {
+                var o = this;
+                this.stop();
+                console.log('start query');
+                this.timer = setInterval(function() {
+                    o.query();
+                }, this.INTERVAL);
+            },
+
+            stop : function() {
+                console.log('stop query');
+                if(this.timer) {
+                    clearInterval(this.timer);
+                }
+                this.timer = null;
+            }
+        };
+
+        var ConfirmWidget = {
+
+            barcodeInput : null,
+            selected : [],
+            lastSelected : [],
+
+            // IMPORTANT ConfirmWidget.init
+            init : function() {
+                var o = this;
+                $(document).on('click', '#confirmedQueue .task .alert-icon', function() {
+                    if(RequestWidget.selected.length > 0) {
+                        RequestWidget.deselectAll();
+                    }
+                    o.toggleSelect($(this).closest('.task'));
+                });
+
+                $(document).on('click', '.cancel-confirm-button', function() {
+                    var obj = $(this).closest('.task').data('context');
+                    if(!obj) return;
+                    o.openCancelDialog(obj);
+                });
+
+                $('#printTagButton').click(function() {
+                    this.doPrintTags(window.open());
+                }.bind(this));
+
+                $('#scanButton').click(function() {
+                    this.barcodeInput.show();
+                }.bind(this));
+
+                this.barcodeInput = new BarcodeInput({
+                    message : '{% trans 'BARCODE_PLEASE_SCAN_STAGING_FORM' %}',
+                    placeholder : '{% trans 'PLACEHOLDER_STAGING_FORM' %}',
+                    callback : function(stagingFormDocNo) {
+                        var win = window.open();
+                        api.crud.read('material_staging_form', { query : { doc_no : stagingFormDocNo } }, 1, 0, function(success, data) {
+                            if(success) {
+                                if(data.length == 0) {
+                                    win.close();
+                                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_INVALID_STAGING_FORM_NO' %}' });
+                                } else {
+                                    win.location.href = URL.staging_form(data[0]._id);
+                                }
+                            } else {
+                                win.close();
+                                Front.handleAjaxError(data);
+                            }
+                        });
+                    }.bind(this)
+                });
+            },
+
+            // IMPORTANT ConfirmWidget.openCancelDialog
+            openCancelDialog : function(task) {
+                $('#cancelPrepareModal .proceed-button').unbind('click touchstart').click(function() {
+                    $('#cancelPrepareModal').modal('hide');
+                    this.doCancelConfirmation(task._id);
+                }.bind(this));
+
+                $('#cancelPrepareModal').modal('show');
+            },
+
+            // IMPORTANT ConfirmWidget.doCancelConfirmation
+            doCancelConfirmation : function(taskId) {
+                RequestWidget.stop();
+                api.production.revert(taskId, function(success, data) {
+                    if(success) {
+                        Front.notify('warning', '{% trans 'NOTI_PREPARATION_CANCELLED' %}', '');
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                    RequestWidget.query();
+                    RequestWidget.start();
+                }.bind(this));
+            },
+
+            // IMPORTANT ConfirmWidget.doPrintTags
+            doPrintTags : function(win) {
+                var objs = [];
+                $('#confirmedQueue .task.selected').each(function() {
+                    var obj = $(this).data('context');
+                    if(!obj) return;
+                    objs.push(obj);
+                });
+
+                this.openMaterialTags(win, objs);
+            },
+
+            // IMPORTANT ConfirmWidget.openMaterialTags
+            openMaterialTags : function(win, objs) {
+                localStorage.setItem('material-tags-to-print', JSON.stringify(objs));
+
+                if(objs.length == 0) {
+                    win.close();
+                    return;
+                }
+
+                var url = '{% url 'stock:material_tags' %}';
+                win.location.href = url;
+            },
+
+            // IMPORTANT ConfirmWidget.toggleSelect
+            toggleSelect : function($task) {
+                var obj = $task.data('context');
+                if($task.is('.selected')) {
+                    $task.removeClass('selected alert-warning');
+                    if(obj.status == AUX_STATUS_CONFIRMED) {
+                        $task.addClass('alert-success');
+                    } else {
+                        $task.addClass('alert-info');
+                    }
+                    for(var i = 0; i < this.selected.length; i++) {
+                        if(this.selected[i]._id == obj._id) {
+                            this.selected.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    $task.removeClass('alert-info alert-success').addClass('selected alert-warning');
+                    var found = this.selected.filter(function(a) {
+                        return a._id == obj._id;
+                    });
+                    if(found.length == 0) {
+                        this.selected.push(obj);
+                    }
+                }
+
+                RequestWidget.checkButtonState();
+            },
+
+            // IMPORTANT ConfirmWidget.deselectAll
+            deselectAll : function() {
+                this.selected = [];
+                $('#confirmedQueue .task.selected').each(function() {
+                    ConfirmWidget.toggleSelect($(this));
+                });
+            }
+        };
+
+        var RecentWidget = {
+            PAGE_SIZE : 20,
+            INTERVAL : 20 * 1000,
+            pageIndex : 0,
+            timer : null,
+
+            init : function() {
+            },
+
+            // IMPORTANT RecentWidget.query
+            query : function() {
+                var o  = this;
+                common.blockUI($('#recent .panel-body'));
+                api.inventory.movement({}, '-_id', this.PAGE_SIZE, this.pageIndex, function(success, data) {
+                    //console.log(data);
+                    $('#recent table tbody > *').remove();
+                    common.unblockUI($('#recent .panel-body'));
+                    if(success) {
+                        if(data.length == 0) {
+                            $('#recent table').hide();
+                            $('#recent .widget-message').html('{% trans 'T_NO_RECENT_MOVEMENT' %}').show();
+                        } else {
+                            data.forEach(function (obj) {
+                                var $renderer = o.renderEntry(obj);
+                                $('#recent table tbody').append($renderer);
+                            });
+                            $('#recent .widget-message').hide();
+                            $('#recent table').show();
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            // IMPORTANT RecentWidget.renderEntry
+            renderEntry : function(obj) {
+                var time = '&nbsp;';
+                if(obj.last_edited) {
+                    time = moment(ModelUtils.Converters.$date(obj.last_edited.when)).fromNow();
+                }
+
+                var type = '';
+                if(!common.isEmpty(obj.type)) {
+                    choices[tempMovement.C.LOV_KEY.TYPE].forEach(function(item) {
+                        if(item.value == obj.type) {
+                            type = item.label;
+                        }
+                    });
+                }
+
+                var typeCls = '';
+                if(!common.isEmpty(obj.cancel)) {
+                    type = type + ' (cancel doc.)';
+                    typeCls = 'text-danger';
+                }
+
+                var url = URL.stock_movement_detail(obj._id);
+
+                var $tr = $('<tr>\
+                    <td><a href="' + url + '" class="' + typeCls + '">' + type + '</a></td>\
+                    <td><a href="' + url + '">' + obj.doc_no + '</a></td>\
+                    <td><a href="' + url + '">' + time + '</a></td>\
+                </tr>');
+                return $tr;
+            },
+
+            start : function() {
+                var o = this;
+                this.stop();
+                this.timer = setInterval(function() {
+                    o.query();
+                }, this.INTERVAL);
+            },
+
+            stop : function() {
+                if(this.timer) {
+                    clearInterval(this.timer);
+                }
+                this.timer = null;
+            }
+        };
+
+        var Dashboard = {
+
+            returnMaterialBarcodeInput : null,
+
+            // IMPORTANT Dashboard.init
+            /**
+             * Steps:
+             * 1. call 'return_candidates' to retrieve returning list.
+             * It can be array in case of job tag (to allow user to choose which task they are returning
+             * 2. If has one return list, call Dashboard.handleReturnList to present the UI according to type
+             * 3. call 'return_materials'
+             */
+            init : function() {
+                $(document).on('click', '#returnableTasksModal .makereturn', function() {
+                    $('#returnableTasksModal').modal('hide');
+                    var data = $(this).data('context');
+                    if(common.isEmpty(data)) return;
+                    o.handleReturnList(data);
+                });
+
+                this.returnMaterialBarcodeInput = new BarcodeInput({
+                    message : '',
+                    placeholder : '{% trans 'PLACEHOLDER_RETURN_MATERIAL_BARCODE' %}',
+                    callback : function(tag) {
+                        // resolve barcode into either:
+                        // - Store Aux Task
+                        // - Production Order
+                        api.inventory.return_candidates(tag, function(success, data) {
+                            if(success) {
+                                if(data.length == 1) {
+                                    data = data.shift();
+                                    this.handleReturnList(data);
+                                } else {
+                                    this.openReturnableTasksModal(data);
+                                }
+                            } else {
+                                Front.handleAjaxError(data);
+                            }
+                        }.bind(this));
+                    }.bind(this)
+                });
+
+                $('#returnMaterialButton').click(function() {
+                    this.returnMaterialBarcodeInput.show();
+                }.bind(this));
+
+                $('#returnWIPModal, #returnStagedModal').on('shown.bs.modal', function() {
+                    $(this).find('input').first().focus();
+                });
+
+                $('body').bind('authenticator.cancelled', function() {
+                    common.unblockUI($('.modal.in .modal-dialog'));
+                    RequestWidget.start();
+                }.bind(this));
+            },
+
+            // IMPORTANT Dashboard.openReturnableTasksModal
+            openReturnableTasksModal : function(taskList) {
+                $('#returnableTasksModal .modal-body .task-list > *').remove();
+
+                for(var i = 0; i < tasks.length; i++) {
+                    var $entry = $('<p><a href="javascript:;" class="btn btn-primary btn-block makereturn" data-docno="' + tasks[i].doc_no + '">' + tasks[i].task + ' (' + tasks[i].doc_no + ')</a></p>');
+                    $entry.find('.makereturn').data('context', taskList);
+                    $('#returnableTasksModal .modal-body .task-list').append($entry);
+                }
+
+                $('#returnableTasksModal').modal('show');
+            },
+
+            // IMPORTANT Dashboard.handleReturnList
+            handleReturnList : function(data) {
+                if(data.return_list.length == 0) {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_NO_MATERIAL_TO_RETURN' %}' });
+                    return;
+                }
+
+                if(data.type == 'production_wip') {
+                    this.openReturnWIPPopUp(data);
+                } else {
+                    this.openReturnStagedMaterialsPopUp(data);
+                }
+            },
+
+            // IMPORTANT Dashboard.openReturnStagedMaterialsPopUp
+            openReturnStagedMaterialsPopUp : function(data) {
+                $('#returnStagedModal tbody > *').remove();
+
+                var matList = data.return_list;
+
+                for(var j = 0; j < matList.length; j++) {
+                    var mat = matList[j];
+
+                    var $tr = $('<tr>\
+                        <td></td>\
+                        <td></td>\
+                        <td class="text-right inline"></td>\
+                        <td class="text-center static"></td>\
+                        <td class="text-right static"></td>\
+                        <td class="text-right inline"></td>\
+                    </tr>');
+                    // material
+                    $tr.find('td').eq(0).html(mat.material.substr('stock-'.length));
+                    // revision
+                    $tr.find('td').eq(1).html(mat.revision || '');
+                    // quantity
+                    $input = $('<input type="number" name="quantity" class="form-control text-right" min="0.01" max="' + mat.quantity + '" step="0.01" value="' + mat.quantity + '" />');
+                    $tr.find('td').eq(2).append($input);
+                    // uom
+                    $tr.find('td').eq(3).html(mat.uom);
+                    // expected weight
+                    $tr.find('td').eq(4).html(mat.weight.formatMoney(2));
+                    // weight
+                    $input = $('<input type="number" name="weight" class="form-control text-right" min="0" max="999999999" step="0.01" />');
+                    $tr.find('td').eq(5).append($input);
+
+                    $('#returnStagedModal table tbody').append($tr);
+                }
+
+                Front.alwaysFloat($('#returnStagedModal input[type="number"]'));
+
+                Front.enterToTriggerClick($('#returnStagedModal input'), $('#returnStagedModal .confirm-button'));
+                $('#returnStagedModal .confirm-button').unbind('click touchstart').click(function() {
+                    var valid = true;
+                    common.resetValidate($('#returnStagedModal .invalid'));
+
+                    var quantitys = [];
+                    var weights = [];
+
+                    $('#returnStagedModal [name="quantity"]').each(function() {
+                        var value = parseFloat($(this).val());
+                        var max = parseFloat($(this).attr('max'));
+                        if(isNaN(value) || value <= 0 || value > max) {
+                            valid = false;
+                            common.setInvalid($(this));
+                            return;
+                        } else {
+                            quantitys.push(value);
+                        }
+                    });
+
+                    $('#returnStagedModal [name="weight"]').each(function() {
+                        var value = parseFloat($(this).val());
+                        if(isNaN(value) || value <= 0) {
+                            valid = false;
+                            common.setInvalid($(this));
+                        } else {
+                            weights.push(value);
+                        }
+                    });
+
+                    if(!valid) return;
+
+                    for(var i = 0; i < weights.length; i++) {
+                        matList[i].quantity = quantitys[i];
+                        matList[i].weight = weights[i];
+                    }
+
+                    this.doReturnMaterials(data.doc_no, data.type, matList);
+                }.bind(this));
+
+                $('#returnStagedModal').modal('show');
+            },
+
+            // IMPORTANT Dashboard.openReturnWIPPopUp
+            openReturnWIPPopUp : function(data) {
+                $('#returnWIPModal .title-suffix').html('{% trans 'T_FROM' %} ' + data.doc_no);
+
+                $('#returnWIPModal tbody > *').remove();
+
+                var matList = data.return_list;
+
+                for(var j = 0; j < matList.length; j++) {
+                    var mat = matList[j];
+
+                    var $tr = $('<tr>\
+                        <td class="static"></td>\
+                        <td class="text-center static"></td>\
+                        <td class="text-center static"></td>\
+                        <td class="text-right inline"></td>\
+                        <td class="text-center static"></td>\
+                        <td class="text-right inline"></td>\
+                    </tr>');
+                    // material
+                    $tr.find('td').eq(0).html(mat.material);
+                    // revision
+                    $tr.find('td').eq(1).html(mat.revision || '');
+                    // size
+                    $tr.find('td').eq(2).html(mat.size || '');
+                    // quantity
+                    $input = $('<input type="number" name="quantity" class="form-control text-right" min="1" max="' + mat.quantity + '" step="1" value="' + mat.quantity + '" />');
+                    $tr.find('td').eq(3).append($input);
+                    // uom
+                    $tr.find('td').eq(4).html(mat.uom);
+                    // weight
+                    $input = $('<input type="number" name="weight" class="form-control text-right" min="0" max="999999999" step="0.01" />');
+                    $tr.find('td').eq(5).append($input);
+
+                    $('#returnWIPModal table tbody').append($tr);
+                }
+
+                Front.alwaysFloat($('#returnWIPModal input[type="number"]'));
+
+                Front.enterToTriggerClick($('#returnWIPModal input'), $('#returnWIPModal .confirm-button'));
+                $('#returnWIPModal .confirm-button').unbind('click touchstart').click(function() {
+                    var valid = true;
+                    common.resetValidate($('#returnWIPModal .invalid'));
+
+                    var quantitys = [];
+                    var weights = [];
+
+                    $('#returnWIPModal [name="quantity"]').each(function() {
+                        var value = parseFloat($(this).val());
+                        var max = parseFloat($(this).attr('max'));
+                        if(isNaN(value) || value <= 0 || value > max) {
+                            valid = false;
+                            common.setInvalid($(this));
+                            return;
+                        } else {
+                            quantitys.push(value);
+                        }
+                    });
+
+                    $('#returnWIPModal [name="weight"]').each(function() {
+                        var value = parseFloat($(this).val());
+                        if(isNaN(value) || value < 0) {
+                            valid = false;
+                            common.setInvalid($(this));
+                        } else {
+                            weights.push(value);
+                        }
+                    });
+
+                    if(!valid) return;
+
+                    for(var i = 0; i < weights.length; i++) {
+                        matList[i].quantity = quantitys[i];
+                        matList[i].weight = weights[i];
+                    }
+
+                    this.doReturnMaterials(data.doc_no, data.type, matList);
+                }.bind(this));
+
+                $('#returnWIPModal').modal('show');
+            },
+
+            // IMPORTANT Dashboard.doReturnMaterials
+            doReturnMaterials : function(docNo, type, matList) {
+                common.blockUI($('.modal.in .modal-dialog'));
+
+                RequestWidget.stop();
+                api.inventory.return_materials(docNo, type, matList, function(success, data) {
+                    common.unblockUI($('.modal.in .modal-dialog'));
+                    if(success) {
+                        $('.modal.in').modal('hide');
+                        RequestWidget.query();
+                        Front.notify('success', '{% trans 'NOTI_MATERIALS_RETURNED' %}', '');
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                    RequestWidget.start();
+                }.bind(this));
+            }
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                Front.checkRefresh();
+
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                Dashboard.init();
+                RequestWidget.init();
+                ConfirmWidget.init();
+                RecentWidget.init();
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                RecentWidget.query();
+                RecentWidget.start();
+
+                RequestWidget.query();
+                RequestWidget.start();
+
+                common.unblockUI($('#main-content'));
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

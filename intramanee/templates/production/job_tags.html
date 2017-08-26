@@ -1,0 +1,321 @@
+{% load i18n %}
+{% load templatetags %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Sylli Studio">
+    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}">
+
+    <title>{% trans 'PAGE_TITLE_JOB_TAGS' %}</title>
+
+    <!--Core CSS -->
+    <link href="{% static 'bs3/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-reset.css' %}" rel="stylesheet">
+    <link href="{% static 'font-awesome-4.4.0/css/font-awesome.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'syjscss/bootstrap-extended.css' %}" rel="stylesheet">
+
+    <link href="{% static 'css/job_tags.less' %}" rel="stylesheet/less" type="text/css">
+
+    <script type="text/javascript">
+        var STATIC = '{% static '' %}';
+    </script>
+</head>
+<body>
+
+<!--
+<tr>
+    <td class="num">1</td>
+    <td class="prev"></td>
+    <td class="task">5291</td>
+    <td class="materials">IMC011SILVLAG108 (40 pc)</td>
+    <td class="duration">65h</td>
+</tr>
+<tr>
+    <td class="num">2</td>
+    <td class="prev">1</td>
+    <td class="task">5291</td>
+    <td class="materials">IMC011SILVLAG108 (40 pc)<br/>IMC011SILVCOPPER (40 pc)</td>
+    <td class="duration">24h</td>
+</tr>
+<tr>
+    <td class="num" rowspan="2">3</td>
+    <td class="prev">2</td>
+    <td class="task">4143</td>
+    <td class="materials">IMC011SILVCOPPER (20 g)</td>
+    <td class="duration">1h 5m</td>
+</tr>
+<tr>
+    <td class="desc" colspan="4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer eget commodo ex, a molestie augue. Pellentesque sagittis metus vel imperdiet egestas.</td>
+</tr>
+{% for i in "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" %}
+    <tr>
+        <td class="num">{{ forloop.counter }}</td>
+        <td class="prev">1</td>
+        <td class="task">5291</td>
+        <td class="materials">IMC011SILVLAG108 (40 pc)</td>
+        <td class="duration">24h</td>
+    </tr>
+{% endfor %}
+-->
+
+<!--Core js-->
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'bs3/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/moment-with-locales.js' %}"></script>
+<script src="{% static 'js/moment-timezone-with-data.js' %}"></script>
+<script src="{% static 'js/moment-range.js' %}"></script>
+<script src="{% static 'syjscss/jquery.blockUI.min.js' %}"></script>
+<script src="{% static 'js/JsBarcode.all.min.js' %}"></script>
+<script src="{% static 'syjscss/code.js' %}"></script>
+
+<!-- i18n -->
+<script type="text/javascript" src="{% url 'django.views.i18n.javascript_catalog' %}"></script>
+
+<!--common script init for all pages-->
+<script src="{% static 'js/less.min.js' %}"></script>
+
+<!-- custom components -->
+<script src="{% static 'js/custom.js' %}"></script>
+
+<!-- ajax script -->
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+
+<script type="text/javascript">
+var pos = [];
+var MAX_LINES = 44;
+var remainingLines = 0;
+
+(function($) {
+    $(document).ready(function() {
+        var idString = common.getParam(window.location.href, 'ids');
+        var docString = common.getParam(window.location.href, 'doc');
+        var query = null;
+        if(!common.isEmpty(idString)) {
+            var ids = idString.split(',');
+            ids = common.unique(ids);
+            query = {
+                '_id' : {
+                    '$in' : ids
+                }
+            };
+        } else if(!common.isEmpty(docString)) {
+            var docs = docString.split(',');
+            docs = common.unique(docs);
+            query = {
+                'doc_no' : {
+                    '$in' : docs
+                }
+            };
+        }
+
+        if(query == null) return;
+
+        api.crud.read('production_order', { query : query }, 60000, 0, function(success, data) {
+            if(success) {
+                pos = data;
+                renderData();
+            } else {
+                Front.handleAjaxError(data);
+            }
+        });
+    });
+
+    function renderData() {
+        console.log('render', pos);
+
+        for(var i = 0; i < pos.length; i++) {
+            var po = pos[i];
+
+            addNewPage(po);
+            remainingLines = MAX_LINES;
+
+            for(var j = 0; j < po.operation.length; j++) {
+                var op = po.operation[j];
+                op.step = j + 1;
+                op.prevSteps = [];
+
+                for(var k = 0; k < op.source.length; k++) {
+                    var sourceId = op.source[k];
+                    po.operation.some(function(a) {
+                        var isMatched = a._id == sourceId;
+                        if(isMatched) {
+                            op.prevSteps.push(a.step);
+                        }
+                        return isMatched;
+                    });
+                }
+
+                if(remainingLines <= 0) {
+                    addNewPage(po);
+                    remainingLines = MAX_LINES;
+                }
+
+                renderOperation(op);
+            }
+        }
+    }
+
+    function addNewPage(po) {
+        var p = '<page size="A5">\
+            <div class="job-tag">\
+                <div class="container-fluid">\
+                    <div class="row">\
+                        <div class="col-xs-3 col-xs-zeropadright">\
+                            <div class="thumb"></div>\
+                        </div>\
+                        <div class="col-xs-9">\
+                            <div class="row">\
+                                <div class="col-xs-6">\
+                                    <h1 class="doc_no"></h1>\
+                                    <p class="customer"></p>\
+                                </div>\
+                                <div class="col-xs-6 col-xs-zeropadleft">\
+                                    <img class="barcode" width="100%" height="40" />\
+                                </div>\
+                            </div>\
+                            <div class="row">\
+                                <div class="col-xs-8">\
+                                    <p class="material"></p>\
+                                </div>\
+                                <div class="col-xs-4 text-right col-xs-zeropadleft">\
+                                    <p class="date"></p>\
+                                </div>\
+                            </div>\
+                            <div class="row">\
+                                <div class="col-xs-4">\
+                                    <p class="planned_start"></p>\
+                                </div>\
+                                <div class="col-xs-8 col-xs-zeropadleft">\
+                                    <div class="remark"></div>\
+                                </div>\
+                            </div>\
+                        </div>\
+                    </div>\
+                    <table class="operations">\
+                        <thead>\
+                            <tr>\
+                                <th class="num">#</th>\
+                                <th class="prev">{% trans 'TH_PREV' %}</th>\
+                                <th class="task">{% trans 'TH_TASK' %}</th>\
+                                <th class="materials">{% trans 'TH_MATERIALS' %}</th>\
+                                <th class="duration">{% trans 'TH_DURATION' %}</th>\
+                            </tr>\
+                        </thead>\
+                        <tbody></tbody>\
+                    </table>\
+                <div>\
+            <div>\
+        </page>';
+
+        $('body').append(p);
+
+        var $page = $('page').last();
+
+        // TODO thumbnail needs to be pulled from design
+        // $page.find('.thumb');
+
+        $page.find('.doc_no').html(po.doc_no);
+        $page.find('.barcode').JsBarcode(po.doc_no, { displayValue : true, format : 'CODE128' });
+
+        // TODO production order does not hold customer data
+        //$page.find('.customer').html('IMC:Intramanee');
+
+        var materialText = po.material.substr('stock-'.length);
+        if(po.revision != null && po.revision != '') {
+            materialText = materialText + ' (r' + po.revision;
+            if(!common.isEmpty(po.size)) {
+                materialText = materialText + ', ' + po.size + ')';
+            } else {
+                materialText = materialText + ')';
+            }
+        } else if(!common.isEmpty(po.size)) {
+            materialText = materialText + '(' + po.size + ')';
+        }
+        materialText = materialText + '<br/>' + po.quantity.formatMoney(0) + ' ' + po.uom;
+        $page.find('.material').html(materialText);
+
+        var date = new Date();
+        $page.find('.date').html('{% trans 'T_PRINTED' %}: ' + moment(date).format('YYYY-MM-DD') + '<br/>' + moment(date).format('HH:mm'));
+
+        var start = new Date(po.planned_start * 1000);
+        var end = new Date(po.planned_end * 1000);
+        $page.find('.planned_start').html('S: ' + moment(start).format('YYYY-MM-DD HH:mm') + '<br/>E: ' + moment(end).format('YYYY-MM-DD HH:mm'));
+
+        $page.find('.remark').html(po.remark || '');
+    }
+
+    function renderOperation(op) {
+        var lineCount = Math.max(1, op.materials.length);
+
+        var $table = $('page').last().find('table.operations tbody');
+
+        var $row = $('<tr>\
+            <td class="num"></td>\
+            <td class="prev"></td>\
+            <td class="task"></td>\
+            <td class="materials">IMC011SILVCOPPER (20 g)</td>\
+            <td class="duration">1h 5m</td>\
+        </tr>');
+
+        $row.find('.num').html(op.step);
+        $row.find('.prev').html(op.prevSteps.join(', '));
+        $row.find('.task').html(op.task.substr('task-'.length));
+        $row.find('.duration').html(displayDuration(op.planned_duration));
+
+        var matText = [];
+        for(var i = 0; i < op.materials.length; i++) {
+            var mat = op.materials[i];
+            var revSizeText = '';
+            if(mat.revision != null) {
+                if(!common.isEmpty(mat.size)) {
+                    revSizeText = ' (r' + mat.revision + ', ' + mat.size + ')';
+                } else {
+                    revSizeText = ' (r' + mat.revision + ')';
+                }
+            }
+            matText.push(mat.material.substr('stock-'.length) + revSizeText + ' (' + mat.quantity + ' ' + mat.uom + ')');
+        }
+        $row.find('.materials').html(matText.join('<br/>'));
+
+        if(op.remark != null) {
+            op.remark = $.trim(op.remark);
+        }
+        if(!common.isEmpty(op.remark)) {
+            lineCount++;
+
+            $row.find('.num').attr('rowspan', 2);
+            $table.append($row);
+
+            var $remarkRow = $('<tr>\
+                <td class="desc" colspan="4"></td>\
+            </tr>');
+
+            $remarkRow.find('.desc').html(op.remark);
+            $table.append($remarkRow);
+        } else {
+            $table.append($row);
+        }
+
+        remainingLines = remainingLines - lineCount;
+    }
+})(jQuery);
+
+Front.notify = function(cls, topic, message, closeDelay) {
+    if(!common.isEmpty(topic) && common.isEmpty(message)) {
+        alert(topic);
+    } else if(common.isEmpty(topic) && !common.isEmpty(message)) {
+        alert(message);
+    } else {
+        alert(topic + '\n' + message);
+    }
+};
+</script>
+</body>
+</html>

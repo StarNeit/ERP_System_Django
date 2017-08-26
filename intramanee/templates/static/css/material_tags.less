@@ -1,0 +1,60 @@
+@page {
+  size: landscape;
+  margin: 0cm;
+}
+
+body {
+  background: rgb(204,204,204);
+  font-size: 11px;
+}
+
+page {
+  background: white;
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 0.5cm;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+  page-break-after: always;
+  overflow: hidden;
+
+  &[size="29mm"] {
+    width: 90mm;
+    height: 29mm;
+  }
+}
+
+h1 {
+  margin: 0px 0px 0.3em 0px;
+  font-size: 14px;
+}
+
+.material-tag {
+  padding: 15px 0px;
+
+  .doc_no {
+    margin-bottom: 0.1em;
+  }
+
+  p {
+    line-height: 1.2em;
+    margin-bottom: 0.4em;
+  }
+
+  .subline {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+@media print {
+  body, page {
+    margin: 0;
+    box-shadow: 0;
+  }
+
+  page[size="29mm"] {
+    height: 28mm;
+  }
+}
+

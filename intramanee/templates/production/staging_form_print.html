@@ -1,0 +1,189 @@
+{% load i18n %}
+{% load templatetags %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Sylli Studio">
+    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}">
+
+    <title>{% trans 'PAGE_TITLE_STAGING_FORM' %}</title>
+
+    <!--Core CSS -->
+    <link href="{% static 'bs3/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-reset.css' %}" rel="stylesheet">
+    <link href="{% static 'font-awesome-4.4.0/css/font-awesome.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'syjscss/bootstrap-extended.css' %}" rel="stylesheet">
+
+    <link href="{% static 'css/staging_form.less' %}" rel="stylesheet/less" type="text/css">
+
+    <script type="text/javascript">
+        var STATIC = '{% static '' %}';
+    </script>
+</head>
+<body>
+
+<!--Core js-->
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'bs3/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/moment-with-locales.js' %}"></script>
+<script src="{% static 'js/moment-timezone-with-data.js' %}"></script>
+<script src="{% static 'js/moment-range.js' %}"></script>
+<script src="{% static 'syjscss/jquery.blockUI.min.js' %}"></script>
+<script src="{% static 'js/JsBarcode.all.min.js' %}"></script>
+<script src="{% static 'syjscss/code.js' %}"></script>
+
+<!-- i18n -->
+<script type="text/javascript" src="{% url 'django.views.i18n.javascript_catalog' %}"></script>
+
+<!--common script init for all pages-->
+<script src="{% static 'js/less.min.js' %}"></script>
+
+<!-- custom components -->
+<script src="{% static 'js/custom.js' %}"></script>
+
+<!-- ajax script -->
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+
+<script type="text/javascript">
+var pos = {{ doc|jsonify }};
+var MAX_LINES = 50;
+var remainingLines = 0;
+
+(function($) {
+    $(document).ready(function() {
+        renderData();
+    });
+
+    function renderData() {
+        console.log('render', pos);
+
+        addNewPage(pos);
+
+        remainingLines = MAX_LINES;
+
+        for(var i = 0; i < pos.tasks.length; i++) {
+            var task = pos.tasks[i];
+            task.num = i + 1;
+
+            if(remainingLines <= 0) {
+                addNewPage(pos);
+                remainingLines = MAX_LINES;
+            }
+
+            renderEntry(task);
+        }
+
+        window.print();
+    }
+
+    function addNewPage(po) {
+        var p = '<page size="A5">\
+            <div class="staging-form">\
+                <div class="container-fluid">\
+                    <div class="row">\
+                        <div class="col-xs-5">\
+                            <h1>{% trans 'T_STAGING_FORM' %} : <span class="doc_no"></span></h1>\
+                            <p class="date"></p>\
+                        </div>\
+                        <div class="col-xs-7">\
+                            <img class="barcode" width="100%" height="45" />\
+                        </div>\
+                    </div>\
+                    <table class="entries">\
+                        <thead>\
+                            <tr>\
+                                <th class="num">#</th>\
+                                <th class="task">{% trans 'TH_TASK' %}</th>\
+                                <th class="po">{% trans 'TH_ORDER_NO' %}</th>\
+                                <th class="material">{% trans 'TH_MATERIAL' %}</th>\
+                                <th class="quantity">{% trans 'TH_QUANTITY' %}</th>\
+                                <th class="uom">{% trans 'TH_COUNTER' %}</th>\
+                            </tr>\
+                        </thead>\
+                        <tbody></tbody>\
+                    </table>\
+                <div>\
+            <div>\
+        </page>';
+
+        $('body').append(p);
+
+        var $page = $('page').last();
+
+        $page.find('.doc_no').html(pos.doc_no);
+
+        $page.find('.barcode').JsBarcode(pos.doc_no, { displayValue : true, format : 'CODE128' });
+
+        var date = new Date();
+        $page.find('.date').html('{% trans 'T_PRINTED' %}: ' + moment(date).format('YYYY-MM-DD') + ' ' + moment(date).format('HH:mm'));
+    }
+
+    function renderEntry(task) {
+        var lineCount = Math.max(1, task.materials.length);
+
+        var $table = $('page').last().find('table.entries tbody');
+
+        var mats = [];
+        var qty = [];
+        var uom = [];
+
+        for(var j = 0; j < task.materials.length; j++) {
+            var matObj = task.materials[j];
+            var revSizeText = '';
+            if(matObj.revision != null) {
+                if(!common.isEmpty(matObj.size)) {
+                    revSizeText = ' (r' + matObj.revision + ', ' + matObj.size + ')';
+                } else {
+                    revSizeText = ' (r' + matObj.revision + ')';
+                }
+            }
+            mats.push(matObj.material.substr('stock-'.length) + revSizeText);
+            qty.push(matObj.quantity);
+            uom.push(matObj.uom);
+        }
+
+        var $row = $('<tr>\
+            <td class="num"></td>\
+            <td class="task"></td>\
+            <td class="po"></td>\
+            <td class="material"></td>\
+            <td class="quantity"></td>\
+            <td class="uom"></td>\
+        </tr>');
+
+        if(task.status == 1) {
+            $row.addClass('confirmed');
+        }
+
+        $row.find('.num').html(task.num);
+        $row.find('.task').html(task.parent_task_code);
+        $row.find('.po').html(task.production_doc_no);
+        $row.find('.material').html(mats.join('<br/>'));
+        $row.find('.quantity').html(qty.join('<br/>'));
+        $row.find('.uom').html(uom.join('<br/>'));
+
+        $table.append($row);
+
+        remainingLines = remainingLines - lineCount;
+    }
+})(jQuery);
+
+Front.notify = function(cls, topic, message, closeDelay) {
+    if(!common.isEmpty(topic) && common.isEmpty(message)) {
+        alert(topic);
+    } else if(common.isEmpty(topic) && !common.isEmpty(message)) {
+        alert(message);
+    } else {
+        alert(topic + '\n' + message);
+    }
+};
+</script>
+</body>
+</html>

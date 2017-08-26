@@ -1,0 +1,258 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section id="basic" class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }} : {{ doc.doc_no }}
+            <span class="tools pull-right">
+                <a class="btn btn-success" id="confirmButton" href="javascript:;"><i class="fa fa-check"></i><span class="hidden-xs"> {% trans 'BUTTON_CONFIRM' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+            <div class="row form-horizontal">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="scanInput" class="col-sm-4 control-label">{% trans 'T_MATERIAL_TAG' %}</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="scanInput" />
+                            <p class="help-block">{% trans 'T_SCAN_MATERIAL_TAG_HELP_TEXT' %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table id="stagingFormTable" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center minimized-padding" width="55">#</th>
+                        <th width="220">{% trans 'TH_TASK' %}</th>
+                        <th width="190">{% trans 'TH_PRODUCTION_ORDER' %}</th>
+                        <th>{% trans 'TH_MATERIAL' %}</th>
+                        <th class="text-right" width="120">{% trans 'TH_QUANTITY' %}</th>
+                        <th class="text-center" width="120">{% trans 'TH_COUNTER' %}</th>
+                        <th class="text-center" width="120">{% trans 'TH_CONFIRM' %}</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript">
+        var doc = {{ doc|jsonify }};
+        var choices = {% choices 'uom' %};
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }};
+
+        var StagingForm = {
+            init : function() {
+                var o = this;
+
+                $('#confirmButton').click(function() {
+                    this.doConfirm();
+                }.bind(this));
+
+                $('#scanInput').keyup(function(e) {
+                    if(e.keyCode == 13) {
+                        e.preventDefault();
+                        var tagId = $(this).val();
+                        if(common.isEmpty(tagId)) return;
+
+                        o.checkTagId(tagId);
+                        $(this).val('');
+                    }
+                });
+            },
+
+            renderFromModel : function() {
+                $('#stagingFormTable tbody > *').remove();
+
+                for(var i = 0; i < doc.tasks.length; i++) {
+                    var task = doc.tasks[i];
+                    task.num = i + 1;
+                    var $row = this.renderEntry(task);
+                    $('#stagingFormTable tbody').append($row);
+                }
+            },
+
+            renderEntry : function(task) {
+                var mats = [];
+                var qty = [];
+                var uom = [];
+
+                for(var j = 0; j < task.materials.length; j++) {
+                    var matObj = task.materials[j];
+                    var revSizeText = '';
+                    if(matObj.revision != null) {
+                        if(!common.isEmpty(matObj.size)) {
+                            revSizeText = ' (r' + matObj.revision + ', ' + matObj.size + ')';
+                        } else {
+                            revSizeText = ' (r' + matObj.revision + ')';
+                        }
+                    }
+                    mats.push(matObj.material.substr('stock-'.length) + revSizeText);
+                    qty.push(matObj.quantity.formatMoney(2));
+                    uom.push(matObj.uom);
+                }
+
+                var $row = $('<tr data-id="' + task._id + '" data-checkid="' + task.ref_doc_no + '">\
+                    <td class="num text-center"></td>\
+                    <td class="task"></td>\
+                    <td class="po"></td>\
+                    <td class="material"></td>\
+                    <td class="text-right quantity"></td>\
+                    <td class="text-center uom"></td>\
+                    <td class="text-center confirm"><i class="fa fa-lg text-success"></i></td>\
+                </tr>');
+
+                $row.data('context', task);
+
+                var docNoText = '<a href="javascript:;" class="interact" data-unique="' + task.ref_doc[0] + '" data-type="production" data-from="staging-form">' + task.production_doc_no + '</a>';
+
+                $row.find('.num').html(task.num);
+                $row.find('.task').html(task.parent_task_code + ' ' + Front.getTaskLabel('task-' + task.parent_task_code));
+                $row.find('.po').html(docNoText);
+                $row.find('.material').html(mats.join('<br/>'));
+                $row.find('.quantity').html(qty.join('<br/>'));
+                $row.find('.uom').html(uom.join('<br/>'));
+
+                if(task.status == 1) { // already confirmed
+                    $row.addClass('confirmed');
+                }
+
+                return $row;
+            },
+
+            // IMPORTANT doConfirm
+            doConfirm : function() {
+                // validate, at least one confirmed task
+                var ids = [];
+
+                $('#stagingFormTable tr[data-id].confirmed').each(function() {
+                    var id = $(this).data('id');
+                    var task = $(this).data('context');
+
+                    // if this task is not confirmed when read, but is confirmed on UI
+                    if(task.status == 0) {
+                        ids.push(id);
+                    }
+                });
+
+                if(ids.length == 0) {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_REQUIRE_AT_LEAST_ONE_CONFIRMATION' %}' });
+                    return;
+                }
+
+                common.blockUI($('#main-content'));
+
+                var params = [];
+
+                $('#stagingFormTable tr.confirmed').each(function() {
+                    var clerkTaskId = $(this).data('id');
+                    var taskFound = doc.tasks.filter(function(a) {
+                        return a._id == clerkTaskId;
+                    });
+                    if(taskFound.length == 0) return;
+                    var task = taskFound[0];
+                    // if this task is already confirmed when it loads, skip it
+                    if(task.status == 1) return;
+                    params.push([ clerkTaskId, { materials : task.materials } ]);
+                });
+
+                api.BATCH({
+                    args : params,
+                    method : api.activity.stop_clerk_aux_task.bind(api.activity),
+                    done : function(results) {
+                        common.unblockUI($('#main-content'));
+
+                        // report fail cases
+                        var failed = results.filter(function(entry) {
+                            return !entry.result[0] && entry.result[1];
+                        });
+                        failed.forEach(function(entry) {
+                            Front.handleAjaxError(entry.result[1]);
+                            var taskId = entry.arguments[0];
+                            $('#stagingFormTable tr[data-id="' + taskId + '"]').removeClass('confirmed');
+                        });
+
+                        if(failed.length == 0) {
+                            window.location.reload();
+                        }
+                    }.bind(this)
+                });
+            },
+
+            // IMPORTANT checkTagId
+            checkTagId : function(tagId) {
+                var $row = $('#stagingFormTable tr[data-checkid="' + tagId + '"]');
+                // check if tag id valid
+                if($row.length == 1) {
+                    var task = $row.data('context');
+                    // check whether this task is already confirmed (when it reads)
+                    // if no, de-confirm it
+                    if(task.status == 0) {
+                        $row.toggleClass('confirmed');
+                    }
+                } else {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_INVALID_MATERIAL_TAG' %}' });
+                }
+            }
+        };
+
+        (function($) {
+            $(document).ready(function () {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                StagingForm.init();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                StagingForm.renderFromModel();
+
+                // PERMISSION cannot prepare material
+                if(!Front.userCan('task+write@5322')) {
+                    $('#confirmButton').remove();
+                    $('#scanInput').closest('.form-group').remove();
+                } else {
+                    $('#scanInput').focus();
+                }
+
+                common.unblockUI($('#main-content'));
+            }
+
+        })(jQuery);
+    </script>
+    {% block extended_script %}
+    {% endblock %}
+{% endblock %}

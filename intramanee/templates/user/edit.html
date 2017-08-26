@@ -1,0 +1,327 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% block page %}
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-block alert-danger fade in">
+            <button data-dismiss="alert" class="close close-sm" type="button"><i class="fa fa-times"></i></button>
+            {{ error }}
+        </div>
+    {% endfor %}
+    <form method="post" role="form" class="form-horizontal">
+        <div class="row">
+            <div class="col-sm-12">
+                {% block block_one %}
+                    <section class="panel">
+                        <header class="panel-heading">{% trans 'PANEL_TITLE_EDIT_USER_INFO' %}</header>
+                        <div class="panel-body">
+                            {% csrf_token %}
+                            <div class="position-center">
+                                <div class="form-group">
+                                    <label class="col-lg-3 col-sm-2 control-label">{% trans 'USER_FIELD_CODE' %}</label>
+                                    <div class="col-lg-9">
+                                        <p class="form-control-static">{{ object.code }}</p>
+                                    </div>
+                                </div>
+                                <div class="form-group {% if form.first_name.errors %} has-error {% endif %}">
+                                    <label for="{{ form.first_name.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.first_name.label }}</label>
+                                    <div class="col-lg-9">
+                                        {{ form.first_name }}
+                                        {% for error in form.first_name.errors %}
+                                            <p><span class="help-block text-danger">{{ error }}</span></p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="form-group {% if form.last_name.errors %} has-error {% endif %}">
+                                    <label for="{{ form.last_name.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.last_name.label }}</label>
+                                    <div class="col-lg-9">
+                                        {{ form.last_name }}
+                                        {% for error in form.last_name.errors %}
+                                            <p><span class="help-block text-danger">{{ error }}</span></p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                {% endblock %}
+            </div>
+        </div>
+
+        <p class="text-center"><a href="javascript:;" class="btn btn-danger submitaction">{% trans 'BUTTON_SUBMIT' %}</a></p>
+
+        <div class="row">
+            <div class="col-xs-12">
+                {% block block_three %}
+                    <section class="panel permissions">
+                        <header class="panel-heading">{% trans 'PANEL_TITLE_USER_PERMISSION' %}</header>
+                        <div class="panel-body">
+                            <table id="permissionTable" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'TH_MODEL' %}</th>
+                                        <th class="text-center" style="width:220px;">{% trans 'TH_READ' %}</th>
+                                        <th class="text-center" style="width:220px;">{% trans 'TH_WRITE' %}</th>
+                                        <th class="text-center" style="width:220px;">{% trans 'TH_DELETE' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </section>
+                {% endblock %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="form-group">
+                    <div class="col-xs-12 text-center">
+                        <a href="javascript:;" class="btn btn-danger submitaction">{% trans 'BUTTON_SUBMIT' %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript">
+        var permissions = {{ permissions|safe }};
+
+        var Header = {
+            init : function() {
+                var o = this;
+
+                $('.submitaction').click(function () {
+                    if(o.doValidate()) {
+                        $('form').submit();
+                    }
+                });
+            },
+
+            doValidate : function() {
+                Front.clearNotifications([403]);
+
+                var errors = [];
+
+                var valid = common.autoValidate($('form input'));
+
+                if(!valid) {
+                    errors.push('{% trans 'ERROR_EMPTY_REQUIRED_FIELDS' %}');
+                }
+
+                var password = $('input[name="password"]').val();
+                var newPass = $('input[name="new_password"]').val();
+                var confPass = $('input[name="confirm_password"]').val();
+                if (!common.isEmpty(password)) {
+                    if (common.isEmpty(newPass)) {
+                        valid = false;
+                        common.setInvalid($('input[name="new_password"]'));
+                        errors.push('{% trans 'ERROR_EMPTY_NEW_PASSWORD' %}');
+                    }
+                    if (common.isEmpty(confPass)) {
+                        valid = false;
+                        common.setInvalid($('input[name="confirm_password"]'));
+                        errors.push('{% trans 'ERROR_EMPTY_CONFIRM_PASSWORD' %}');
+                    }
+                    if (valid && newPass != confPass) {
+                        valid = false;
+                        common.setInvalid($('input[name="confirm_password"]'));
+                        errors.push('{% trans 'ERROR_PASSWORD_MISMATCH' %}');
+                    }
+                }
+
+                if(errors.length > 0) {
+                    var param = { status : 403, content : common.unique(errors).join('<br/>') };
+                    Front.handleAjaxError(param);
+                }
+
+                Permission.commit();
+
+                return errors.length == 0;
+            }
+        };
+
+        var Permission = {
+            init : function() {
+                // group permission
+                var permissionsObj = {};
+
+                permissions.forEach(function(permString) {
+                    var parts = permString.split('@');
+                    var arg = null;
+                    if(parts.length == 2) {
+                        arg = parts[1];
+                    }
+                    parts = parts[0].split('+');
+                    var model = parts[0];
+                    var action = parts[1];
+
+                    if(!permissionsObj[model]) {
+                        permissionsObj[model] = {};
+                    }
+                    if(!permissionsObj[model][action]) {
+                        permissionsObj[model][action] = { args : [] };
+                    }
+                    if(arg) {
+                        permissionsObj[model][action].args.push(arg);
+                    }
+                });
+
+                permissions = permissionsObj;
+            },
+
+            appendCheckBox : function($td) {
+                var o = this;
+
+                var model = $td.closest('tr').data('model');
+                var action = $td.data('action');
+
+                var $input = $('<div class="square-green single-row">\
+                    <div class="checkbox">\
+                        <input type="checkbox" />\
+                    </div>\
+                </div>');
+                $td.append($input).addClass('icheck');
+                $input.find('input').iCheck({
+                    checkboxClass: 'icheckbox_square-green',
+                    radioClass: 'iradio_square-green',
+                    increaseArea: '20%' // optional
+                });
+
+                var permissionString = model + '+' + action;
+
+                var enabled = userPermissions.some(function(permString) {
+                    return permString.indexOf(permissionString) == 0;
+                });
+
+                if(enabled) {
+                    $input.iCheck('check');
+                }
+
+                $input.on('ifChecked ifUnchecked', function() {
+                    o.applyCheckingState($(this).closest('td'));
+                });
+            },
+
+            appendMultiSelect : function($td, args) {
+                var o = this;
+
+                var model = $td.closest('tr').data('model');
+                var action = $td.data('action');
+
+                var $select = $('<select multiple class="populate" style="width:200px;" disabled="disabled"></select>');
+                args.forEach(function(item) {
+                    var selectedString = '';
+                    var permissionString = model + '+' + action + '@' + item;
+                    if(userPermissions.indexOf(permissionString) != -1) {
+                        selectedString = 'selected';
+                    }
+                    $select.append('<option value="' + item + '" ' + selectedString + '>' + item + '</option>');
+                });
+
+                $td.append($select);
+                $select.select2();
+
+                setTimeout(function() {
+                    o.applyCheckingState($td);
+                }, 50);
+            },
+
+            applyCheckingState : function($td) {
+                if($td.find('input[type="checkbox"]').prop('checked')) {
+                    $td.find('.select2-container').show();
+                    $td.find('select').removeAttr('disabled');
+                } else {
+                    $td.find('select').attr('disabled', 'disabled').select2('val', '');
+                    $td.find('.select2-container').hide();
+                }
+            },
+
+            renderFromModel : function() {
+                $('#permissionTable tbody tr').remove();
+                for(var model in permissions) {
+                    if(!permissions.hasOwnProperty(model)) continue;
+                    var $tr = $('<tr data-model="' + model + '">\
+                        <td>' + gettext('PERMISSION_' + model) + '</td>\
+                        <td class="text-center" data-action="read"></td>\
+                        <td class="text-center" data-action="write"></td>\
+                        <td class="text-center" data-action="delete"></td>\
+                    </tr>');
+
+                    this.appendCheckBox($tr.find('td[data-action="read"]'));
+                    if(permissions[model].read.args.length > 0) {
+                        this.appendMultiSelect($tr.find('td[data-action="read"]'), permissions[model].read.args);
+                    }
+                    this.appendCheckBox($tr.find('td[data-action="write"]'));
+                    if(permissions[model].write.args.length > 0) {
+                        this.appendMultiSelect($tr.find('td[data-action="write"]'), permissions[model].write.args);
+                    }
+                    this.appendCheckBox($tr.find('td[data-action="delete"]'));
+                    if(permissions[model].delete.args.length > 0) {
+                        this.appendMultiSelect($tr.find('td[data-action="delete"]'), permissions[model].delete.args);
+                    }
+
+                    $('#permissionTable tbody').append($tr);
+                }
+            },
+
+            commit : function() {
+                // TODO commit permissions
+                var permList = [];
+
+                $('#permissionTable input[type="checkbox"]:checked').each(function() {
+                    var $td = $(this).closest('td');
+                    var $tr = $td.closest('tr');
+                    var model = $tr.data('model');
+                    var action = $td.data('action');
+                    var permissionString = model + '+' + action;
+                    permList.push(permissionString);
+
+                    // possible for arguments
+                    if($td.find('select').length == 1) {
+                        var values = $td.find('select').select2('val');
+                        values.forEach(function(argString) {
+                            permList.push(permissionString + '@' + argString);
+                        });
+                    }
+                });
+
+                permList.forEach(function(item) {
+                    $('#permissionTable').after('<input type="hidden" name="permissions[]" value="' + item + '" />');
+                });
+            }
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                Header.init();
+                Permission.init();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                onReadyToUse();
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                Permission.renderFromModel();
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

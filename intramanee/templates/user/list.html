@@ -1,0 +1,29 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading">{% trans 'PANEL_TITLE_USER_LIST' %}</header>
+        <div class="panel-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{% trans 'USER_FIELD_CODE' %}</th>
+                        <th>{% trans 'FIELD_NAME' %}</th>
+                        <th>Group</th>
+                        <th width="160">{% trans 'USER_FIELD_LAST_LOGGED_IN' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in object_list %}
+                        <tr>
+                            <td><a href="{% url 'user:edit' user.id %}">{{ user.code }}</a></td>
+                            <td><a href="{% url 'user:edit' user.id %}">{{ user.first_name|default:'' }} {{ user.last_name|default:'' }}</a></td>
+                            <td>{{ user.group }}</td>
+                            <td><span class="utc" data-format="datetime">{{ user.last_login|date:'Y-m-d H:i:s' }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

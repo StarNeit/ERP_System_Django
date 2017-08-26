@@ -1,0 +1,434 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+{% block page %}
+    <section id="searchPanel" class="panel">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <label for="orderMaterial" class="control-label">{% trans 'T_MATERIAL' %}</label>
+                        <input type="text" class="form-control req" id="material" />
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label for="orderMaterialRevision" class="control-label">{% trans 'T_REVISION' %}</label>
+                        <select class="form-control" id="revision" disabled="disabled"></select>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label for="orderMaterialSize" class="control-label">{% trans 'T_SIZE' %}</label>
+                        <select class="form-control" id="size" disabled="disabled"></select>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">&nbsp;</label><br/>
+                        <a class="btn btn-info" id="searchButton" href="javascript:;"><i class="fa fa-tasks"></i> {% trans 'BUTTON_VIEW_DATA' %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="report" class="panel" style="display: none;">
+        <header class="panel-heading"></header>
+        <div class="panel-body">
+            <div id="supplyDemandChart"></div>
+
+            <table id="supplyDemandTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{% trans 'TH_DATE' %}</th>
+                        <th>{% trans 'TH_DEMAND' %}</th>
+                        <th>{% trans 'TH_SUPPLY' %}</th>
+                        <th>{% trans 'TH_BALANCE' %}</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <!-- jQuery Flot Chart-->
+    <script src="{% static 'js/flot-chart/jquery.flot.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.tooltip.min.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.resize.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.pie.resize.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.selection.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.stack.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.time.js' %}"></script>
+    <script src="{% static 'js/flot-chart/jquery.flot.orderBars.js' %}"></script>
+    <script type="text/javascript">
+        var choices = {% choices 'uom' %};
+
+        var Search = {
+            context : { material : null, size : null, revision : null },
+
+            init : function() {
+                var o = this;
+
+                $('#searchButton').click(this.onSearchClick.bind(this));
+
+                $('#material').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                                console.log(data);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        $(this).val(ui.item.label);
+                        o.context.material = ui.item;
+                        o.onMaterialChange();
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('');
+                            o.context.material = null;
+                            o.onMaterialChange();
+                        }
+                    }
+                });
+
+                $('#revision').change(function() {
+                    this.onRevisionChange();
+                }.bind(this));
+
+                $('#size').change(function() {
+                    var val = $(this).val();
+                    if(common.isEmpty(val)) {
+                        o.context.size = null;
+                    } else {
+                        o.context.size = val;
+                    }
+                });
+            },
+
+            // IMPORTANT Search.onSearchClick
+            onSearchClick : function() {
+                common.resetValidate($('.invalid'));
+                var valid = common.autoValidate($('#searchPanel .req'));
+                if(!valid) return;
+
+                Report.doQuery(this.context);
+            },
+
+            // IMPORTANT Search.onMaterialChange
+            onMaterialChange : function() {
+                this.doQueryRevision($('#material').val());
+            },
+
+            // IMPORTANT Search.onRevisionChange
+            onRevisionChange : function() {
+                var revision = $('#revision').val();
+
+                $('#size').removeClass('req').attr('disabled', 'disabled');
+                $('#size option').remove();
+
+                if(common.isEmpty(revision)) {
+                    this.context.revision = null;
+                } else {
+                    this.context.revision = revision;
+
+                    var revEntry = $('#revision option:selected').data('context');
+                    if(!revEntry) return;
+
+                    revEntry.conf_size.forEach(function(size) {
+                        $('#size').append(Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, size));
+                    });
+                    if(revEntry.conf_size.length > 0) {
+                        $('#size').addClass('req').removeAttr('disabled');
+                    } else {
+                        $('#size').removeClass('req').attr('disabled', 'disabled');
+                    }
+                }
+                $('#size').trigger('change');
+            },
+
+            // IMPORTANT Search.doQueryRevision
+            doQueryRevision : function(matCode) {
+                var o = this;
+                $('#revision option').remove();
+                $('#revision').removeClass('req').attr('disabled', 'disabled');
+                if(common.isEmpty(matCode)) {
+                    $('#revision').trigger('change');
+                    return;
+                }
+
+                api.helper.material_revisions('stock-' + matCode, function(success, data) {
+                    if(success) {
+                        data.sort(function(a, b) {
+                            return b.rev_id - a.rev_id;
+                        });
+
+                        data.forEach(function(revEntry) {
+                            var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                            $opt.data('context', revEntry);
+                            $('#revision').append($opt);
+                        });
+
+                        if(data.length > 0) {
+                            $('#revision').addClass('req').removeAttr('disabled');
+                        } else {
+                            $('#revision').removeClass('req').attr('disabled', 'disabled');
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                    $('#revision').trigger('change');
+                });
+            },
+
+            onReady : function() {
+                $('#material').focus();
+            }
+        };
+
+        var Report = {
+
+            raw : [],
+            data : [],
+
+            doQuery : function(context) {
+                if(context.material == null) return;
+
+                $('#report header').html(context.material.label);
+
+                common.blockUI($('#main-content'));
+
+                api.inventory.list_stock_requirements(context.material.fullCode, context.revision, context.size, function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        $('#supplyDemandTable tbody tr').remove();
+
+                        this.formatData(data);
+
+                        for(var i = 0; i < this.data.length; i++) {
+                            var entry = this.data[i];
+                            $('#supplyDemandTable tbody').append(this.buildEntry(entry));
+                        }
+
+                        $('#report').show();
+
+                        this.renderChart();
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                }.bind(this));
+            },
+
+            buildEntry : function(entry) {
+                var demand = '';
+                var supply = '';
+
+                var wrapWithIndicator = function(val) {
+                    if(val < 0) {
+                        return '<span class="text-danger"><i class="fa fa-sort-down"></i> ' + Math.abs(val).formatMoney(2) + '</span>';
+                    } else if(val > 0) {
+                        return '<span class="text-primary"><i class="fa fa-sort-up"></i> ' + Math.abs(val).formatMoney(2) + '</span>';
+                    }
+                    return '<i class="fa fa-sort-up" style="opacity:0;"></i> ' + Math.abs(val).formatMoney(2);
+                };
+
+                if(entry.demand > 0 || entry.marker === 1) {
+                    demand = wrapWithIndicator(entry.demand * -1);
+                }
+                if(entry.supply > 0 || entry.marker === 0) {
+                    supply = wrapWithIndicator(entry.supply);
+                }
+
+                var balanceLabel = entry.balance.formatMoney(2);
+                if(entry.balance < 0) {
+                    balanceLabel = '<span class="text-danger">' + balanceLabel + '</span>';
+                }
+
+                var $tr = $('<tr>\
+                    <td>' + entry.key + '</td>\
+                    <td>' + demand + '</td>\
+                    <td>' + supply + '</td>\
+                    <td>' + balanceLabel + '</td>\
+                </tr>');
+
+                return $tr;
+            },
+
+            formatData : function(d) {
+                this.raw = d;
+                this.data = [];
+
+                var tempDict = {};
+                var sumBalance = 0;
+
+                for(var i = 0; i < this.raw.length; i++) {
+                    var entry = $.extend({ key : '', demand : 0, supply : 0, balance : 0 }, this.raw[i]);
+                    entry.key = entry.marker + '';
+                    if(entry.marker === 0) {
+                        entry.key = '{% trans 'T_INITIAL' %}';
+                    } else if(entry.marker === 1) {
+                        entry.key = '{% trans 'T_SAFETY_STOCK' %}';
+                    } else {
+                        entry.key = moment(new Date(entry.marker * 1000)).format('YYYY-MM-DD');
+                    }
+
+                    if(entry.quantity < 0) {
+                        entry.demand = Math.abs(entry.quantity);
+                    } else {
+                        entry.supply = Math.abs(entry.quantity);
+                    }
+
+                    sumBalance = sumBalance + entry.quantity;
+
+                    if(tempDict.hasOwnProperty(entry.key)) {
+                        var prevEntry = tempDict[entry.key];
+                        prevEntry.demand = prevEntry.demand + entry.demand;
+                        prevEntry.supply = prevEntry.supply + entry.supply;
+                        prevEntry.quantity = prevEntry.quantity + entry.quantity;
+                        prevEntry.balance = prevEntry.balance + entry.quantity;
+                    } else {
+                        entry.balance = sumBalance;
+                        tempDict[entry.key] = entry;
+                        this.data.push(entry);
+                    }
+                }
+            },
+
+            renderChart : function() {
+                var demands = [];
+                var supplies = [];
+                var balances = [];
+                var ticks = [];
+
+                var lastGroup = null;
+                var counter = 0;
+                for(var i = 0; i < this.data.length; i++) {
+                    var entry = this.data[i];
+                    var tickLabel = entry.key;
+                    var diff = 1;
+                    if(entry.marker !== 0 && entry.marker !== 1) {
+                        var keyMoment = moment(entry.key + ' 00:00:00', 'YYYY-MM-DD HH:mm:ss');
+                        if(lastGroup != null) {
+                            diff = keyMoment.diff(lastGroup, 'days');
+                        }
+                        lastGroup = keyMoment;
+                        tickLabel = keyMoment.format('D MMM');
+                    }
+
+                    demands.push([counter, entry.demand]);
+                    supplies.push([counter, entry.supply]);
+                    balances.push([counter, entry.balance]);
+                    ticks.push([counter, tickLabel]);
+                    counter = counter + diff;
+                }
+
+                var data = [
+                    {
+                        label: '{% trans 'TH_DEMAND' %}',
+                        data: demands,
+                        bars : {
+                            order : 1
+                        }
+                    },
+                    {
+                        label: '{% trans 'TH_SUPPLY' %}',
+                        data: supplies,
+                        bars : {
+                            order : 2
+                        }
+                    },
+                    {
+                        label: '{% trans 'TH_BALANCE' %}',
+                        data: balances,
+                        bars : {
+                            show : false
+                        },
+                        lines : {
+                            lineWidth : 1,
+                            show : true,
+                            fill : true
+                        },
+                        points : {
+                            show : true
+                        }
+                    }
+                ];
+
+                var options = {
+                    xaxis: { ticks: ticks },
+                    series: {
+                        shadowSize: 0,
+                        bars : {
+                            show : true,
+                            barWidth : 0.3
+                        }
+                    },
+                    grid: {
+                        hoverable: true,
+                        clickable: true,
+                        tickColor: "#f9f9f9",
+                        borderWidth: 1,
+                        borderColor: "#eeeeee"
+                    },
+                    colors: ['#E67A77', '#79D1CF', '#d7d7d7'],
+                    tooltip: true,
+                    tooltipOpts: {
+                        defaultTheme: false,
+                        content : function(label, xval, yval, flotItem) {
+                            var found = ticks.filter(function(t) {
+                                return t[0] == xval;
+                            });
+                            return label + ' ' + found[0][1] + ' : ' + yval.formatMoney(2);
+                        }
+                    }
+                };
+
+                $.plot($('#supplyDemandChart'), data, options);
+            }
+        };
+
+        (function($) {
+            var delayStartTimer = null;
+
+            $(document).ready(function () {
+                common.blockUI($('#main-content'));
+
+                Search.init();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                Search.onReady();
+
+                common.unblockUI($('#main-content'));
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

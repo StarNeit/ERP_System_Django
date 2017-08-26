@@ -1,0 +1,559 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section id="basic" class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right" style="margin-right: 1.5em;">
+                <a class="btn btn-default" id="viewLogButton" href="javascript:;" style="margin-right:">{% trans 'BUTTON_VIEW_HISTORY' %}</a>
+            </span>
+        </header>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="row form-horizontal">
+                        <div class="col-md-6">
+                            <div class="form-group prno-parent">
+                                <label for="prDocNo" class="col-sm-4 control-label">{% trans 'T_DOC_NO' %}</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="prDocNo" readonly="readonly" data-attribute="doc_no" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group created-parent">
+                                <label class="col-sm-4 control-label">{% trans 'T_LAST_MODIFIED' %}</label>
+                                <div class="col-sm-8">
+                                    <p class="form-control-static" id="prCreated">&nbsp;</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row form-horizontal">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="prVendor" class="col-sm-4 control-label">{% trans 'T_VENDOR' %}</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="prVendor" data-attribute="vendor" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="prCurrency" class="col-sm-4 control-label">{% trans 'T_CURRENCY' %}</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" id="prCurrency" data-attribute="currency"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 form-horizontal">
+                    <div class="form-group">
+                        <label for="prStatus" class="col-sm-4 control-label">{% trans 'T_STATUS' %}</label>
+                        <div class="col-sm-2 col-sm-zeropadright">
+                            <p class="form-control-static" id="prStatus">&nbsp;</p>
+                        </div>
+                        <label for="prType" class="col-sm-2 control-label">{% trans 'T_TYPE' %}</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" id="prType" data-attribute="type"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="prMRPSession" class="col-sm-4 control-label">{% trans 'T_MRP_SESSION' %}</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="prMRPSession" data-attribute="mrp_session" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel" id="listPanel">
+        <div class="panel-body">
+            <p class="text-right additem-parent"><a class="btn btn-default btn-sm additem" href="javascript:;"><i class="fa fa-plus"></i> {% trans 'BUTTON_ADD_ROW' %}</a></p>
+            <table id="listTable" class="table table-bordered inline">
+                <thead>
+                    <tr>
+                        <th class="text-center minimized-padding" width="55">#</th>
+                        <th>{% trans 'TH_MATERIAL' %}</th>
+                        <th>{% trans 'TH_REVISION' %}</th>
+                        <th>{% trans 'TH_SIZE' %}</th>
+                        <th class="text-right">{% trans 'TH_QUANTITY' %}</th>
+                        <th class="text-right">{% trans 'TH_OPEN_QUANTITY' %}</th>
+                        <th class="text-center">{% trans 'TH_COUNTER' %}</th>
+                        <th class="text-right">{% trans 'TH_NET_PRICE' %}</th>
+                        <th>{% trans 'TH_LOCATION' %}</th>
+                        <th>{% trans 'TH_DELIVERY_DATE' %}</th>
+                        <th class="text-center">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p class="text-right additem-parent"><a class="btn btn-default btn-sm additem" href="javascript:;"><i class="fa fa-plus"></i> {% trans 'BUTTON_ADD_ROW' %}</a></p>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/pr.js' %}"></script>
+    <script type="text/javascript">
+        var prId = '{{ pr_id }}';
+        var pr = new PR();
+        var choices = {% choices 'uom' 'pr_currency' 'pr_status' 'pr_type' 'location' %};
+        var delayStartTimer = null;
+
+        var Header = {
+
+            eventLogViewer : null,
+
+            // IMPORTANT Header.init()
+            init : function() {
+                this.eventLogViewer = new EventLogViewer({
+                    model : 'purchase_requisition',
+                    objectId : prId
+                });
+
+                $('#viewLogButton').click(function() {
+                    this.eventLogViewer.show();
+                }.bind(this));
+
+                $('#basic').find('input[data-attribute]').bind('keyup change', function(e) {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    if($(this).is('[type="number"]')) {
+                        val = parseFloat(val);
+                        if(isNaN(val)) {
+                            val = 0;
+                        }
+                    }
+                    pr[att] = val;
+                });
+
+                $('#basic').find('select[data-attribute]').change(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    var val = $(this).val();
+                    pr[att] = val;
+                });
+            },
+
+            // IMPORTANT Header.renderFromModel()
+            renderFromModel : function() {
+                this.createdObserver();
+                this.statusObserver();
+
+                $('#basic').find('[data-attribute]').each(function() {
+                    var att = $(this).attr('data-attribute');
+                    if(common.isEmpty(att)) return;
+                    if(common.isEmpty(pr[att])) {
+                        $(this).val('');
+                    } else {
+                        $(this).val(pr[att]);
+                    }
+                });
+            },
+
+            createdObserver : function() {
+                if(pr.lastEdited) {
+                    var editBy = displayName(pr.lastEdited.who.first_name, pr.lastEdited.who.last_name);
+                    var editWhen = moment(pr.lastEdited.when).format('YYYY-MM-DD HH:mm');
+                    $('#prCreated').html(editWhen + ' {% trans 'T_BY' %} ' + editBy);
+                }
+            },
+
+            statusObserver : function() {
+                if(typeof pr.status != 'undefined' && pr.status != null && pr.status !== '') {
+                    var statusClass = '';
+                    switch(pr.status) {
+                        case 1: // approved
+                            statusClass = 'success';
+                            break;
+                        case 2: // partially converted
+                        case 3: // converted
+                            statusClass = 'warning';
+                            break;
+                        case 4: // cancelled
+                            statusClass = 'danger';
+                            break;
+                        case 0: // open
+                        default:
+                            statusClass = 'primary';
+                    }
+                    $('#prStatus').html('<span class="label label-' + statusClass + '">' + choices.pr_status[pr.status].label + '</span>');
+                } else {
+                    $('#prStatus').html('');
+                }
+            }
+        };
+
+        var List = {
+
+            // IMPORTANT List.init()
+            init : function() {
+                $(document).on('click', '#listPanel .additem', function() {
+                    this.appendList();
+                }.bind(this));
+                $(document).on('click', '#listTable .deleteitem', function() {
+                    $(this).closest('tr').remove();
+                    List.recalculateItemNumbers();
+                });
+
+                $(document).on('change', '#listTable [name="revision"]', function() {
+                    var $tr = $(this).closest('tr');
+                    List.onRevisionChange($tr, $(this).val());
+                });
+            },
+
+            // IMPORTANT appendList()
+            appendList : function(obj) {
+                var o = this;
+
+                var $tr = $('<tr>\
+                    <td class="text-center minimized-padding"></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td class="text-right"></td>\
+                    <td class="text-right static"></td>\
+                    <td class="text-center static"></td>\
+                    <td class="text-right"></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td class="text-center minimized-padding"><a href="javascript:;" class="deleteitem" title="{% trans 'T_DELETE_ROW' %}" tabindex="-1"><i class="fa fa-trash fa-lg text-muted"></i></a></td>\
+                </tr>');
+
+                // material
+                var $input = $('<input type="text" name="materialcode" class="form-control" style="text-transform:uppercase;" />');
+                $tr.find('td').eq(1).append($input);
+                // revision
+                $input = $('<select name="revision" class="form-control"></select>');
+                $input.attr('disabled', 'disabled');
+                $tr.find('td').eq(2).append($input);
+                // size
+                $input = $('<select name="size" class="form-control"></select>');
+                $input.attr('disabled', 'disabled');
+                $tr.find('td').eq(3).append($input);
+                // quantity
+                $input = $('<input type="number" name="quantity" class="form-control text-right" min="0.01" max="99999999" step="0.01" />');
+                $tr.find('td').eq(4).append($input);
+                // net price
+                $input = $('<input type="number" name="net_price" class="form-control text-right" min="0" max="999999999" step="0.01" />');
+                $tr.find('td').eq(7).append($input);
+                // location
+                $input = $('<select name="location" class="form-control"></select>');
+                $tr.find('td').eq(8).append($input);
+                Front.buildOptionsByElement($input, choices.location);
+                $input.prepend('<option value=""></option>');
+                // delivery date
+                // location
+                $input = $('<input type="text" name="delivery_date" class="form-control" />');
+                $tr.find('td').eq(9).append($input);
+
+                $tr.find('input[name="materialcode"]').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        console.log('select item', ui.item);
+                        $(this).val(ui.item.label);
+                        o.onMaterialChange($(this).closest('tr'), ui.item.label);
+
+                        if(ui.item.info) {
+                            if(!common.isEmpty(ui.item.info.uom)) {
+                                $(this).data('uom', ui.item.info.uom);
+                                // show uom
+                                if(choices.uom[ui.item.info.uom]) {
+                                    var label = choices.uom[ui.item.info.uom].label;
+                                    $(this).closest('tr').find('td').eq(6).html(label);
+                                }
+                            }
+                        }
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('').data('uom', '');
+                            o.onMaterialChange($(this).closest('tr'), '');
+                            $(this).closest('tr').find('td').eq(5).html('');
+                        }
+                    }
+                });
+
+                $tr.find('input[name="delivery_date"]').datepicker({
+                    format : 'yyyy-mm-dd',
+                    autoclose : true,
+                    language : '{% trans 'DATEPICKER_LOCALE' %}'
+                });
+
+                if(obj != null) {
+                    var matCode = obj.material.substr('stock-'.length);
+                    var revString = '';
+                    if(!common.isEmpty(obj.revision)) {
+                        revString = obj.revision;
+                    }
+
+                    $tr.find('td').eq(5).html(obj.open_quantity.toFixed(2));
+
+                    // PERMISSION can write
+                    if(Front.userCan('purchase_requisition+write')) {
+                        $tr.find('[name="materialcode"]').val(matCode).data('uom', obj.uom);
+                        this.onMaterialChange($tr, matCode, function() {
+                            $tr.find('[name="revision"]').val(obj.revision);
+                            this.onRevisionChange($tr, obj.revision);
+                            $tr.find('[name="size"]').val(obj.size);
+                        }.bind(this));
+                        $tr.find('[name="quantity"]').val(obj.quantity.toFixed(2));
+                        $tr.find('[name="net_price"]').val(obj.net_price.toFixed(2));
+                        $tr.find('[name="location"]').val(obj.location);
+                        $tr.find('[name="delivery_date"]').datepicker('setDate', obj.delivery_date);
+                    } else {
+                        // PERMISSION cannot write
+                        var from = 'pr_view';
+                        var unique = matCode + ' rev' + revString;
+
+                        $tr.find('[name="materialcode"]').replaceWith('<a href="javascript:;" class="interact" data-type="materialcodewithrev" data-unique="' + unique + '" data-from="' + from + '">' + matCode + '</span>');
+                        $tr.find('[name="revision"]').replaceWith('<a href="javascript:;" class="interact" data-type="materialcodewithrev" data-unique="' + unique + '" data-from="' + from + '">' + (obj.revision || '') + '</span>');
+                        if(common.isEmpty(obj.size)) {
+                            $tr.find('[name="size"]').replaceWith('');
+                        } else {
+                            $tr.find('[name="size"]').replaceWith(Resolver.labelize(api.common.C.TRANS.LOV_SIZE, obj.size, '<span>{label}</span>'));
+                        }
+
+                        $tr.find('[name="quantity"]').replaceWith('<span>' + obj.quantity.formatMoney(2) + '</span>');
+                        $tr.find('[name="net_price"]').replaceWith('<span>' + (obj.net_price || 0).formatMoney(2) + '</span>');
+                        for(var i = 0; i < choices.location.length; i++) {
+                            if(choices.location[i].value == obj.location) {
+                                $tr.find('[name="location"]').replaceWith(choices.location[i].label);
+                                break;
+                            }
+                        }
+                        $tr.find('[name="delivery_date"]').replaceWith(moment(obj.delivery_date).format('YYYY-MM-DD'));
+                    }
+
+                    // query uom for this material
+                    api.common.idLookup(matCode, 'material_master', function(success, data) {
+                        if(success) {
+                            if(data.length == 0) return;
+                            api.crud.single('material_master', data[0].fullCode, {}, function(suc, d2) {
+                                if(suc) {
+                                    var uom = choices.uom[d2.uom];
+                                    if(uom) {
+                                        $tr.find('td').eq(6).html(uom.label);
+                                    }
+                                } else {
+                                    Front.handleAjaxError(d2);
+                                }
+                            });
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                }
+
+                // PERMISSION cannot write
+                if(!Front.userCan('purchase_requisition+write')) {
+                    $tr.find('td').last().remove();
+                }
+
+                $('#listTable').append($tr);
+
+                this.recalculateItemNumbers();
+
+                return $tr;
+            },
+
+            // IMPORTANT List.recalculateItemNumbers
+            recalculateItemNumbers : function() {
+                var index = 1;
+                $('#listTable tbody tr').each(function() {
+                    $(this).find('td').first().html(index);
+                    index++;
+                });
+            },
+
+            // IMPORTANT Table.renderFromModel
+            renderFromModel : function() {
+                if(common.isEmpty(prId)) {
+                    for(var i = 0; i < 5; i++) {
+                        this.appendList();
+                    }
+                } else {
+                    for(var i = 0; i < pr.items.length; i++) {
+                        this.appendList(pr.items[i]);
+                    }
+                    // PERMISSION can write
+                    if(Front.userCan('purchase_requisition+write')) {
+                        var remainingSlot = 5 - pr.items.length;
+                        for (var i = 0; i < remainingSlot; i++) {
+                            this.appendList();
+                        }
+                    }
+                }
+            },
+
+            // IMPORTANT List.onMaterialChange
+            onMaterialChange : function($tr, mat, callback) {
+                if(common.isEmpty(mat)) {
+                    $tr.find('[name="revision"], [name="size"]').attr('disabled', 'disabled').find('option').remove();
+                    if(callback) {
+                        callback();
+                    }
+                } else {
+                    this.doQueryRevisionsAndSizes($tr, mat, callback);
+                }
+            },
+
+            // IMPORTANT List.doQueryRevisionsAndSizes
+            doQueryRevisionsAndSizes : function($tr, materialCode, callback) {
+                var o = this;
+                $tr.find('[name="revision"] option').remove();
+                api.helper.material_revisions('stock-' + materialCode, function(success, data) {
+                    if(success) {
+                        if(data.length == 0) { // no revision
+                            $tr.find('[name="revision"], [name="size"]').attr('disabled', 'disabled');
+                        } else {
+                            data.sort(function(a, b) {
+                                return parseInt(b.rev_id) - parseInt(a.rev_id);
+                            });
+
+                            data.forEach(function(revEntry) {
+                                var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                                $opt.data('context', revEntry);
+                                $tr.find('[name="revision"]').append($opt);
+                            });
+                            $tr.find('[name="revision"]').removeAttr('disabled');
+
+                            o.onRevisionChange($tr, $tr.find('[name="revision"]').val());
+                        }
+
+                        if(callback) {
+                            callback();
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                        $tr.find('[name="revision"], [name="size"]').attr('disabled', 'disabled');
+                        if(callback) {
+                            callback();
+                        }
+                    }
+                });
+            },
+
+            // IMPORTANT List.onRevisionChange
+            onRevisionChange : function($tr, rev) {
+                $tr.find('[name="size"] option').remove();
+                if(common.isEmpty(rev)) {
+                    $tr.find('[name="size"]').attr('disabled', 'disabled');
+                } else {
+                    var revEntry = $tr.find('[name="revision"] option:selected').data('context');
+                    if(!revEntry) {
+                        console.error('revision context not found!');
+                        return;
+                    }
+                    if(revEntry.conf_size && revEntry.conf_size.length > 0) {
+                        revEntry.conf_size.forEach(function(size) {
+                            $tr.find('[name="size"]').append(Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, size));
+                        });
+                        $tr.find('[name="size"]').removeAttr('disabled');
+                    } else {
+                        $tr.find('[name="size"]').attr('disabled', 'disabled');
+                    }
+                }
+            }
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                Front.buildOptions('prType', choices.pr_type);
+                Front.buildOptions('prCurrency', choices.pr_currency);
+
+                Header.init();
+                List.init();
+
+                if(!common.isEmpty(prId)) {
+                    pr.load(prId, function(success, data) {
+                        if(success) {
+                            prepareInititalData();
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                } else {
+                    prepareInititalData();
+                }
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                /**
+                 * New Doc
+                 * */
+                if(common.isEmpty(prId)) {
+                    $('#viewLogButton, .created-parent, .prno-parent').remove();
+                } else {
+
+                }
+
+                Header.renderFromModel();
+                List.renderFromModel();
+
+                // PERMISSION cannot write
+                if(!Front.userCan('purchase_requisition+write')) {
+                    $('#savePRButton, .additem-parent, .deleteitem').remove();
+                    $('input[type="text"], input[type="number"], select, textarea').attr('readonly', 'readonly');
+                    $('select').attr('disabled', 'disabled');
+                    $('#listTable').removeClass('inline');
+                    $('#listTable thead th').last().remove();
+                } else {
+                    Front.enableInputChangesChecking();
+                }
+
+                common.unblockUI($('#main-content'));
+            }
+
+        })(jQuery);
+    </script>
+{% endblock %}

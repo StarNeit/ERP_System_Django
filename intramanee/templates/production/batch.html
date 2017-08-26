@@ -1,0 +1,164 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+{% block page %}
+    <section class="panel" id="listPanel">
+        <div class="panel-heading text-right">
+            <div class="btn-group btn-group-sm" data-toggle="buttons">
+                <label class="btn btn-default active">
+                    <input type="radio" name="view" id="tilesView" value="tiles" checked="checked" class="skipchecking" /> {% trans 'T_TILES' %}
+                </label>
+                <label class="btn btn-default">
+                    <input type="radio" name="view" id="listView" value="list" class="skipchecking" /> {% trans 'T_LIST' %}
+                </label>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="group-creator">
+                <div class="row button-layer">
+                    <div class="col-xs-12"><button class="btn btn-primary" id="showCreateGroupButton">{% trans 'BUTTON_CREATE_NEW_GROUP' %}</button></div>
+                </div>
+                <div class="row create-layer" style="display: none;">
+                    <div class="col-xs-12">
+                        <button class="btn btn-primary" id="createGroupButton">{% trans 'BUTTON_CREATE' %}</button>
+                        <button class="btn btn-default" id="cancelCreateGroupButton">{% trans 'BUTTON_CANCEL' %}</button>
+                    </div>
+                </div>
+            </div>
+            <div id="tilesViewContainer">
+            </div>
+            <div id="listViewContainer" style="display: none;"></div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript">
+        var Data = {
+            // IMPORTANT Data.init
+            init : function() {
+                $('#showCreateGroupButton').click(function() {
+                    $('.button-layer').hide();
+                    $('.create-layer').show();
+                });
+
+                $('#cancelCreateGroupButton').click(function() {
+                    // TODO clear values
+                    $('.create-layer').hide();
+                    $('.button-layer').show();
+                });
+            }
+        };
+
+        var Tiles = {
+            // IMPORTANT Tiles.init
+            init : function() {
+
+            },
+
+            // IMPORTANT Tiles.renderFromModel
+            renderFromModel : function() {
+                $('#tilesViewContainer > *').remove();
+
+                for(var i = 0; i < 3; i++) {
+                    var $group = this.buildGroupRenderer({});
+                    $('#tilesViewContainer').append($group);
+                }
+            },
+
+            // IMPORTANT Tiles.buildGroupRenderer
+            buildGroupRenderer : function(obj) {
+                var $ret = $('<div class="group-renderer">\
+                    <div class="row">\
+                        <div class="col-xs-2">\
+                            <div class="group-icon"></div>\
+                        </div>\
+                        <div class="col-xs-3">\
+                            <div class="progress progress-striped active progress-sm">\
+                                <div class="progress-bar progress-bar-success"></div>\
+                            </div>\
+                            <div class="common-materials"></div>\
+                        </div>\
+                        <div class="col-xs-7 op-list">\
+                        </div>\
+                    </div>\
+                    <a href="javascript:;" class="cancel-group-button" title="{% trans 'T_CANCEL_GROUP' %}"><i class="fa fa-times"></i></a>\
+                </div>');
+
+                $ret.find('.group-icon').html('<span class="fa-stack"><i class="fa fa-circle fa-stack-2x text-danger"></i><i class="fa fa-exclamation fa-stack-1x fa-inverse"></i></span><br/><span class="helptext">Needs Attention</span>');
+                $ret.find('.progress-bar').css('width', '45%');
+                $ret.find('.common-materials').html('SILV 500g');
+
+                var $po = $('<div class="op-entry">\
+                </div>');
+
+                $ret.find('.op-list').append($po);
+
+                return $ret;
+            }
+        };
+
+        var List = {
+            // IMPORTANT List.init
+            init : function() {
+
+            },
+
+            // IMPORTANT List.renderFromModel
+            renderFromModel : function() {
+
+            }
+        };
+
+        (function($) {
+            $(document).ready(function () {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                // view switcher
+                $('input[name="view"]').change(function() {
+                    var view = $(this).val();
+                    // TODO view switcher
+                    if(view == 'tiles') {
+                        Tiles.renderFromModel();
+                    } else {
+                        List.renderFromModel();
+                    }
+                });
+
+                Data.init();
+                Tiles.init();
+                List.init();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                onReadyToUse();
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+
+                // FIXME
+                Tiles.renderFromModel();
+
+                common.unblockUI($('#main-content'));
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

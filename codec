@@ -1,0 +1,95 @@
+CODE = [
+	COMPONENT('company', 3, SOURCE_LOV(group=Company)),
+	'-',
+	COMPONENT('category', 1, [
+		KV(0, 'raw material', [
+			COMPONENT('raw material type', 1, [
+				KV(0, 'Gem Stone', [
+					COMPONENT('type', 1, [
+						KV(1, 'Crystal', [
+							COMPONENT('Crystal Grade', 1, [
+								KV(0, 'Swarovski'),
+								KV(1, 'Preciosia'),
+								KV(2, 'Other')
+							]),
+							COMPONENT('Swarovski Color', 4, SOURCE_LOV(group=SwarovskiColor)),
+							COMPONENT('Swarovski Cut', 4, SOURCE_LOV(group=SwarvoskiCut)),
+							COMPONENT('Swarovski Size', 4, SOURCE_LOV(group=SwarovskiSize))
+						]),
+						KV(2, 'CZ', [
+							COMPONENT('Shade', 1, [
+								KV(0, 'white', [
+									COMPONENT('White color', 2, SOURCE_LOV(group=ColorWhite))
+								]),
+								KV(1, 'red', [
+									COMPONENT('Red color', 2, SOURCE_LOV(group=ColorRed))
+								]),
+								KV(2, 'orange', [
+									COMPONENT('Orange color', 2, SOURCE_LOV(group=ColorOrange))
+								]),
+								KV(3, 'yellow', [
+									...
+								]),
+								KV(4, 'green', [
+									...
+								]),
+								KV(5, 'blue', [
+									...
+								]),
+								KV(6, 'purple', [
+									...
+								]),
+								KV(7, 'brown', [
+									...
+								]),
+								KV(8, 'black', [
+									...
+								]),
+							]),
+							COMPONENT('Shape', 4, [
+								KV('BAGU', 'Baguette'),
+								KV('BALL', 'Ball'),
+								KV('BUTT', 'Button'),
+								KV('CHIP', 'Chip'),
+								KV('CONE', 'Cone'),
+								KV('CORN', 'Corn'),
+								...
+							]),
+							COMPONENT('Finishing', 2, SOURCE_LOV(group=Finishing))
+						]),
+						KV(3, 'Marcasite', [
+							COMPONENT('Marcasite Grade', 1, SOURCE_LOV(group=MarcasiteGrade)),
+							COMPONENT('Swarovski Cut', 4, SOURCE_LOV(group=SwarvoskiCut)),
+							COMPONENT('Swarovski Size', 4, SOURCE_LOV(group=SwarovskiSize))
+						]),
+						KV(4, 'Synthesize', []),
+						KV(5, 'Authentic', []),
+						KV(6, 'Diamond', [])
+					])
+				]),
+				KV(1, 'Metal', [
+					COMPONENT('material form', 1, [
+						KV(1, 'ball'),
+						KV(2, 'rod'),
+						KV(3, 'plate'),
+						KV(4, 'wire'),
+						KV(5, 'others')
+					]),
+					COMPONENT('material type', 4, [
+						KV('S999', 'SILVER 99.99%'),
+						KV('S925', 'SILVER 92.5%'),
+						KV('SILV', 'SILVER 90%'),
+						KV('SXXX', 'SILVER other compound'),
+						KV('G999', 'GOLD 99.99%'),
+						KV('GY18', 'GOLD 18K'),
+						...
+					])
+				])
+			])
+		]), 
+		KV(1, 'finish product', []), 
+		KV(2, 'by product', []),
+		KV(3, 'office supply', []), 
+		KV(4, 'equipment', [])
+	])),
+]

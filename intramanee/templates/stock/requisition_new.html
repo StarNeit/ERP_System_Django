@@ -1,0 +1,429 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section id="basic" class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right">
+                <a class="btn btn-success" id="confirmButton" href="javascript:;"><i class="fa fa-check"></i><span class="hidden-xs"> {% trans 'BUTTON_CONFIRM' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+            <div class="position-center">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <div class="col-sm-4 form-control-static">
+                            <input type="radio" name="type" id="fromGeneral" value="general" /> <label for="fromGeneral">{% trans 'T_REQUISITION_FOR_GENERAL' %}</label>
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control" id="costCenterInput" placeholder="{% trans 'PLACEHOLDER_COST_CENTER' %}" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-4 form-control-static">
+                            <input type="radio" name="type" id="fromProduction" value="production" /> <label for="fromProduction">{% trans 'T_REQUISITION_FOR_TASK' %}</label>
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control" id="opInput" placeholder="{% trans 'PLACEHOLDER_OPERATION_DOC_NO' %}" />
+                        </div>
+                    </div>
+                </div>
+
+                <table id="listTable" class="table table-bordered inline">
+                    <thead>
+                        <tr>
+                            <th class="text-center minimized-padding" width="55">#</th>
+                            <th>{% trans 'TH_MATERIAL' %}</th>
+                            <th width="120">{% trans 'TH_REVISION' %}</th>
+                            <th width="120">{% trans 'TH_SIZE' %}</th>
+                            <th class="text-right" width="160">{% trans 'TH_QUANTITY' %}</th>
+                            <th class="text-center" width="120">{% trans 'TH_COUNTER' %}</th>
+                            <th width="35">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <p class="text-right additem-parent"><a class="btn btn-default btn-sm additem" href="javascript:;"><i class="fa fa-plus"></i> {% trans 'BUTTON_ADD_ROW' %}</a></p>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript">
+        var choices = {% choices 'uom' %};
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }};
+
+        var Form = {
+            // IMPORTANT Form.init
+            init : function() {
+                var o = this;
+
+                $('#opInput, #costCenterInput').attr('disabled', 'disabled');
+
+                $('input[type="radio"][name="type"]').change(function() {
+                    var val = $(this).val();
+
+                    if(val == 'production') {
+                        $('#opInput').removeAttr('disabled');
+                        $('#costCenterInput').attr('disabled', 'disabled').val('');
+                    } else {
+                        $('#costCenterInput').removeAttr('disabled');
+                        $('#opInput').attr('disabled', 'disabled').val('');
+                    }
+                });
+
+                $('#fromGeneral').prop('checked', true).trigger('change');
+
+                $(document).on('click', '.additem', function() {
+                    this.appendList();
+                }.bind(this));
+                $(document).on('click', '#listTable .deleteitem', function() {
+                    $(this).closest('tr').remove();
+                    o.recalculateItemNumbers();
+                });
+
+                $(document).on('change', '#listTable [name="revision"]', function() {
+                    var $tr = $(this).closest('tr');
+                    o.onRevisionChange($tr, $(this).val());
+                });
+
+                $('#confirmButton').click(function() {
+                    if(this.doValidate()) {
+                        this.doSubmit();
+                    }
+                }.bind(this));
+
+                for(var i = 0; i < 5; i++) {
+                    this.appendList();
+                }
+            },
+
+            // IMPORTANT Form.appendList
+            appendList : function(obj) {
+                var o = this;
+
+                var $tr = $('<tr>\
+                    <td class="text-center minimized-padding"></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td></td>\
+                    <td class="text-right"></td>\
+                    <td class="text-center static"></td>\
+                    <td class="text-center minimized-padding"><a href="javascript:;" class="deleteitem" title="{% trans 'T_DELETE_ROW' %}" tabindex="-1"><i class="fa fa-trash fa-lg text-muted"></i></a></td>\
+                </tr>');
+
+                // material
+                var $input = $('<input type="text" name="materialcode" class="form-control" style="text-transform:uppercase;" />');
+                $tr.find('td').eq(1).append($input);
+                // revision
+                $input = $('<select name="revision" class="form-control"></select>');
+                $input.attr('disabled', 'disabled');
+                $tr.find('td').eq(2).append($input);
+                // size
+                $input = $('<select name="size" class="form-control"></select>');
+                $input.attr('disabled', 'disabled');
+                $tr.find('td').eq(3).append($input);
+                // quantity
+                $input = $('<input type="number" name="quantity" class="form-control text-right" min="0.01" max="99999999" step="0.01" />');
+                $tr.find('td').eq(4).append($input);
+
+                $tr.find('input[name="materialcode"]').autocomplete({
+                    autoFocus : true,
+                    minLength : 3,
+                    source : function(request, response) {
+                        api.common.idLookup(request.term, 'material_master', function(success, data) {
+                            if(success) {
+                                data.forEach(function(item) {
+                                    item.label = item.label.substr('stock-'.length);
+                                });
+                                response(data);
+                            } else {
+                                response([]);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        console.log('select item', ui.item);
+                        $(this).val(ui.item.label);
+                        o.onMaterialChange($(this).closest('tr'), ui.item.label);
+
+                        if(ui.item.info) {
+                            if(!common.isEmpty(ui.item.info.uom)) {
+                                $(this).data('uom', ui.item.info.uom);
+                                // show uom
+                                if(choices.uom[ui.item.info.uom]) {
+                                    var label = choices.uom[ui.item.info.uom].label;
+                                    $(this).closest('tr').find('td').eq(5).html(label);
+                                }
+                            } else {
+                                $(this).data('uom', '');
+                            }
+                        }
+                    },
+                    change : function(event, ui) {
+                        if(!ui.item) {
+                            $(this).val('').data('uom', '');
+                            o.onMaterialChange($(this).closest('tr'), '');
+                            $(this).closest('tr').find('td').eq(5).html('');
+                        }
+                    }
+                });
+
+                $('#listTable').append($tr);
+
+                this.recalculateItemNumbers();
+
+                return $tr;
+            },
+
+            // IMPORTANT Form.recalculateItemNumbers
+            recalculateItemNumbers : function() {
+                var index = 1;
+                $('#listTable tbody tr').each(function() {
+                    $(this).find('td').first().html(index);
+                    index++;
+                });
+            },
+
+            // IMPORTANT Form.onMaterialChange
+            onMaterialChange : function($tr, mat, callback) {
+                if(common.isEmpty(mat)) {
+                    $tr.find('[name="revision"], [name="size"]').attr('disabled', 'disabled').find('option').remove();
+                    if(callback) {
+                        callback();
+                    }
+                } else {
+                    this.doQueryRevisionsAndSizes($tr, mat, callback);
+                }
+            },
+
+            // IMPORTANT Form.onRevisionChange
+            onRevisionChange : function($tr, rev) {
+                $tr.find('[name="size"] option').remove();
+                if(common.isEmpty(rev)) {
+                    $tr.find('[name="size"]').attr('disabled', 'disabled').find('option').remove();
+                } else {
+                    var revEntry = $tr.find('[name="revision"] option:selected').data('context');
+                    if(!revEntry) {
+                        console.error('revision context not found!');
+                        return;
+                    }
+                    if(revEntry.conf_size && revEntry.conf_size.length > 0) {
+                        revEntry.conf_size.forEach(function(size) {
+                            $tr.find('[name="size"]').append(Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, size));
+                        });
+                        $tr.find('[name="size"]').removeAttr('disabled');
+                    } else {
+                        $tr.find('[name="size"]').attr('disabled', 'disabled').find('option').remove();
+                    }
+                }
+            },
+
+            // IMPORTANT Form.doQueryRevisionsAndSizes
+            doQueryRevisionsAndSizes : function($tr, materialCode, callback) {
+                var o = this;
+                $tr.find('[name="revision"] option').remove();
+                api.helper.material_revisions('stock-' + materialCode, function(success, data) {
+                    if(success) {
+                        if(data.length == 0) { // no revision
+                            $tr.find('[name="revision"], [name="size"]').attr('disabled', 'disabled').find('option').remove();
+                        } else {
+                            data.sort(function(a, b) {
+                                return parseInt(b.rev_id) - parseInt(a.rev_id);
+                            });
+
+                            var currentRev = null;
+                            data.forEach(function(revEntry) {
+                                var $opt = $('<option value="' + revEntry.rev_id + '">' + revEntry.rev_id + '</option>');
+                                $opt.data('context', revEntry);
+                                if(currentRev == null || revEntry.default) {
+                                    currentRev = revEntry.rev_id;
+                                }
+                                $tr.find('[name="revision"]').append($opt);
+                            });
+                            $tr.find('[name="revision"]').removeAttr('disabled').val(currentRev);
+
+                            o.onRevisionChange($tr, $tr.find('[name="revision"]').val());
+                        }
+
+                        if(callback) {
+                            callback();
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                        $tr.find('[name="revision"], [name="size"]').attr('disabled', 'disabled').find('option').remove();
+                        if(callback) {
+                            callback();
+                        }
+                    }
+                });
+            },
+
+            // IMPORTANT Form.doValidate
+            doValidate : function() {
+                Front.clearNotifications([403]);
+                common.resetValidate($('.invalid'));
+
+                var errors = [];
+
+                var type = $('[name="type"]').val();
+                if(type == 'production') {
+                    var opDocNo = $.trim($('#opInput').val());
+                    if(common.isEmpty(opDocNo)) {
+                        errors.push('{% trans 'ERROR_EMPTY_OPERATION_DOC_NO' %}');
+                        common.setInvalid($('#opInput'));
+                    }
+                } else {
+                    // TODO validate general purpose
+                }
+
+                $('#listTable tbody tr').each(function() {
+                    var material = $(this).find('[name="materialcode"]').val();
+                    var revision = $(this).find('[name="revision"]').val();
+                    var size = $(this).find('[name="size"]').val();
+                    var quantity = $(this).find('[name="quantity"]').val();
+                    var uom = $(this).find('[name="materialcode"]').data('uom');
+                    if (common.isEmpty(material) && common.isEmpty(quantity) && common.isEmpty(revision) && common.isEmpty(size)) {
+                        // if all empty, pass
+                    } else {
+                        if(common.isEmpty(material)) {
+                            errors.push('{% trans 'ERROR_EMPTY_MATERIAL' %}');
+                            common.setInvalid($(this).find('[name="materialcode"]'));
+                        }
+                        quantity = parseFloat(quantity);
+                        if(isNaN(quantity)) {
+                            errors.push('{% trans 'ERROR_EMPTY_QUANTITY' %}');
+                            common.setInvalid($(this).find('[name="quantity"]'));
+                        }
+                    }
+                });
+
+                var items = this.commit();
+                if(errors.length == 0) {
+                    if(items.length == 0) {
+                        errors.push('{% trans 'ERROR_EMPTY_ITEMS' %}');
+                    }
+                }
+
+                if(errors.length > 0) {
+                    var param = { status : 403, content : common.unique(errors).join('<br/>') };
+                    Front.handleAjaxError(param);
+                }
+
+                return errors.length == 0;
+            },
+
+            // IMPORTANT Form.commit
+            commit : function() {
+                // this will be called after validation, so you don't have to check
+                var items = [];
+                $('#listTable tbody tr').each(function() {
+                    var material = $(this).find('[name="materialcode"]').val();
+                    var uom = $(this).find('[name="materialcode"]').data('uom');
+                    var revision = $(this).find('[name="revision"]').val();
+                    var size = $(this).find('[name="size"]').val();
+                    var quantity = parseFloat($(this).find('[name="quantity"]').val());
+                    if(common.isEmpty(material)) return;
+
+                    if(common.isEmpty(revision)) {
+                        revision = null;
+                    }
+                    if(common.isEmpty(size)) {
+                        size = null;
+                    }
+
+                    var item = {
+                        material : material,
+                        uom : uom,
+                        quantity : quantity,
+                        revision : revision,
+                        size : size
+                    };
+                    items.push(item);
+                });
+
+                return items;
+            },
+
+            // IMPORTANT Form.doSubmit
+            doSubmit : function() {
+                var items = this.commit();
+
+                common.blockUI($('#main-content'));
+
+                // FIXME how about general purpose?
+
+                api.inventory.create_material_requisition($('#opInput').val(), items, function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        Front.unblockBackButton();
+                        window.location = common.addParam(window.location.href, 'op', 'created');
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            }
+        };
+
+        (function($) {
+            $(document).ready(function () {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                Form.init();
+
+                var operation = common.getParam(window.location.href, 'op');
+                Front.removeParamFromAddressBar('op');
+                if(operation == 'created') {
+                    Front.notify('success', '{% trans 'NOTI_MATERIAL_REQUESTED' %}', '');
+                }
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                delayStartTimer = setInterval(function() {
+                    if(choices != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                var taskNo = common.getParam(window.location.href, 'task');
+                if(!common.isEmpty(taskNo)) {
+                    $('#opInput').val(taskNo);
+                    $('#fromProduction').prop('checked', true).trigger('change');
+                }
+
+                Front.enableInputChangesChecking();
+
+                common.unblockUI($('#main-content'));
+            }
+
+        })(jQuery);
+    </script>
+    {% block extended_script %}
+    {% endblock %}
+{% endblock %}

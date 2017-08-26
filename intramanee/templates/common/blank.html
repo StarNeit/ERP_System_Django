@@ -1,0 +1,113 @@
+{% load i18n %}
+{% load templatetags %}
+<!DOCTYPE html>
+<html lang="en">
+{% include 'common/head.html' %}
+{% load staticfiles %}
+<body>
+    <section id="container" >
+    {% include 'common/header.html' %}
+    {% include 'common/sidebar.html' %}
+        <!--main content start-->
+        <section id="main-content" class="{% if collapse_on_start %}merge-left{% endif %}">
+            <section class="wrapper">
+            <!-- page start-->
+                {% if breadcrumb %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <!--breadcrumbs start -->
+                            <ul class="breadcrumb">
+                                {% for item in breadcrumb %}
+                                    {% if item.url and not forloop.last %}
+                                        <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+                                    {% else %}
+                                        <li {% if forloop.last %} class="active" {% endif %}>{{ item.label }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                            <!--breadcrumbs end -->
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% block pre_page %}
+                {% endblock %}
+
+                {% block page %}
+                <div class="row">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <header class="panel-heading">
+                                Heading goes here..
+                                <span class="tools pull-right">
+                                    <a href="javascript:;" class="fa fa-chevron-down"></a>
+                                    <a href="javascript:;" class="fa fa-cog"></a>
+                                    <a href="javascript:;" class="fa fa-times"></a>
+                                 </span>
+                            </header>
+                            <div class="panel-body">
+                                This is a sample page
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                {% endblock %}
+
+            <!-- page end-->
+            </section>
+        </section>
+        <!--main content end-->
+
+    </section>
+
+    {% include 'common/foot.html' %}
+
+    {% block end_of_body %}
+    {% endblock %}
+
+    <script type="text/javascript">
+        var userPermissions = {{ user.permissions|jsonify }};
+        var URL = {
+            randd_design_edit : function(objId) {
+                return '{% url 'randd:design_edit' 'sylli' %}'.replace('sylli', objId);
+            },
+            stock_material_edit : function(objId) {
+                return '{% url 'stock:material_edit' 'sylli' %}'.replace('sylli', objId);
+            },
+            stock_movement_detail : function(objId) {
+                return '{% url 'stock:movement_detail' 'sylli' %}'.replace('sylli', objId);
+            },
+            sales_order_edit : function(objId) {
+                return '{% url 'sales:sales_order_edit' 'sylli' %}'.replace('sylli', objId);
+            },
+            production_order_edit : function(objId) {
+                return '{% url 'production:production_order_edit' 'sylli' %}'.replace('sylli', objId);
+            },
+            production_operation : function(poId, opId) {
+                return '{% url 'production:production_order_operation' 'sylli1' 'sylli2' %}'.replace('sylli1', poId).replace('sylli2', opId);
+            },
+            staging_form_print : function(objId) {
+                return '{% url 'production:staging_form_print' 'sylli' %}'.replace('sylli', objId);
+            },
+            staging_form : function(objId) {
+                return '{% url 'production:staging_form' 'sylli' %}'.replace('sylli', objId);
+            },
+            pr_view : function(objId) {
+                return '{% url 'purchasing:pr_view' 'sylli' %}'.replace('sylli', objId);
+            },
+            tool : function() {
+                return '{% url 'production:planning_tool' %}';
+            },
+            requisition : function(opDocNo) {
+                var url = '{% url 'stock:requisition' %}';
+                if(common.isEmpty(opDocNo)) {
+                    return url;
+                }
+                return common.addParam(url, 'task', opDocNo);
+            }
+        };
+    </script>
+</body>
+</html>
+
+

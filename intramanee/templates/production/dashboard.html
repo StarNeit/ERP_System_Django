@@ -1,0 +1,670 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section class="panel action-bar">
+        <div class="panel-body">
+            <div class="row">
+                <div id="standByCmds" class="col-xs-12 text-right context-cmds">
+                    <button class="btn btn-primary" id="scanJobTagButton"><i class="fa fa-barcode"></i> {% trans 'BUTTON_SCAN_JOB_TAG' %}</button>
+                </div>
+                <div id="todoCmds" class="col-xs-12 text-right context-cmds" style="display: none;">
+                    <button class="btn btn-primary" id="receiveMaterialsButton"><i class="fa fa-cubes"></i> {% trans 'BUTTON_RECEIVE_MATERIALS' %}</button>
+                </div>
+                <div id="ongoingCmds" class="col-xs-12 text-right context-cmds" style="display: none;">
+                    <div class="btn-group">
+                        <button id="pauseButton" class="btn btn-primary"><i class="fa fa-pause"></i> {% trans 'BUTTON_PAUSE' %}</button>
+                        <button id="resumeButton" class="btn btn-primary"><i class="fa fa-play"></i> {% trans 'BUTTON_RESUME' %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <!-- Task Queue -->
+            <section id="taskQueue" class="panel">
+                <header class="panel-heading withtools">{% trans 'PANEL_TITLE_TASK_QUEUE' %}
+                    <span class="badge bg-info" style="display: none;"></span>
+                </header>
+                <div class="panel-body">
+                    <p class="no-task-message">{% trans 'T_NO_TASK' %}</p>
+                    <div class="queue-wrapper"></div>
+                    <input type="hidden" id="refresh" value="no" />
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-6">
+            <!-- Ongoing Tasks -->
+            <section id="ongoingQueue" class="panel">
+                <header class="panel-heading withtools">{% trans 'PANEL_TITLE_ONGOING_TASKS' %}</header>
+                <div class="panel-body">
+                    <p class="no-task-message">{% trans 'T_NO_TASK' %}</p>
+                    <div class="queue-wrapper"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="deliverableTasksModal" class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{% trans 'T_DELIVERABLE_OPERATIONS' %}</h4>
+                </div>
+                <div class="modal-body">
+                    <p>{% trans 'T_DELIVERABLE_OPERATIONS_MESSAGE' %}</p>
+                    <div class="task-list"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">{% trans 'BUTTON_CANCEL' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript">
+        var roomId = '{{ room_id }}';
+        var choices = {% choices 'uom' %};
+        var tasks = {{ tasks|safe }};
+        var delayStartTimer = null;
+
+        var TaskQueue = {
+            INTERVAL : 15 * 1000,
+            timer : null,
+            cachedDocNos : {},
+            raw : {},
+            selected : [],
+            lastSelected : [],
+
+            barcodeInput : null,
+
+            // IMPORTANT TaskQueue.init
+            init : function() {
+                var o = this;
+                $(document).on('click', '#taskQueue .task .alert-icon', function() {
+                    if(OngoingQueue.selected.length > 0) {
+                        OngoingQueue.deselectAll();
+                    }
+                    o.toggleSelect($(this).closest('.task'));
+                });
+
+                $('#receiveMaterialsButton').click(function() {
+                    this.doCreateStagingForm(window.open());
+                }.bind(this));
+
+                $('#scanJobTagButton').click(function() {
+                    this.barcodeInput.show();
+                }.bind(this));
+
+                $(document).on('click', '#deliverableTasksModal .makedeliver', function() {
+                    $('#deliverableTasksModal').modal('hide');
+                    var docNo = $(this).data('docno');
+                    if(common.isEmpty(docNo)) return;
+                    o.makeDelivered(docNo);
+                });
+
+                this.barcodeInput = new BarcodeInput({
+                    message : '{% trans 'BARCODE_PLEASE_SCAN_JOB_TAG' %}',
+                    placeholder : '{% trans 'PLACEHOLDER_JOB_TAG' %}',
+                    callback : function(productionDocNo) {
+                        this.getDeliverableTasks(productionDocNo);
+                    }.bind(this)
+                });
+            },
+
+            // IMPORTANT TaskQueue.getDeliverableTasks
+            getDeliverableTasks : function(productionDocNo) {
+                api.production.room_dashboard_deliverable(roomId, productionDocNo, function(success, data) {
+                    if(success) {
+                        if(data.length == 0) {
+                            Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_NO_DELIVERABLE_OPERATIONS' %}' });
+                        } else {
+                            this.openDeliverableTasksModal(data);
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                }.bind(this));
+            },
+
+            // IMPORTANT TaskQueue.openDeliverableTasksModal
+            openDeliverableTasksModal : function(tasks) {
+                $('#deliverableTasksModal .modal-body .task-list > *').remove();
+
+                for(var i = 0; i < tasks.length; i++) {
+                    $('#deliverableTasksModal .modal-body .task-list').append('<p><a href="javascript:;" class="btn btn-primary btn-block makedeliver" data-docno="' + tasks[i].doc_no + '">' + tasks[i].task + ' (' + tasks[i].doc_no + ')</a></p>');
+                }
+
+                $('#deliverableTasksModal').modal('show');
+            },
+
+            // IMPORTANT TaskQueue.makeDelivered
+            makeDelivered : function(operationDocNo) {
+                api.production.room_dashboard_deliver(roomId, operationDocNo, function(success, data) {
+                    if(success) {
+                        Front.notify('success', '{% trans 'NOTI_MATERIAL_RECEIVED' %}', '');
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                }.bind(this));
+            },
+
+            // IMPORTANT TaskQueue.query
+            query : function() {
+                var o = this;
+
+                api.production.room_dashboard(roomId, function(success, data) {
+                    console.log(data);
+                    this.lastSelected = this.selected;
+                    this.selected = [];
+
+                    OngoingQueue.lastSelected = OngoingQueue.selected;
+                    OngoingQueue.selected = [];
+
+                    common.unblockUI($('#main-content'));
+                    $('#taskQueue .panel-body .queue-wrapper, #ongoingQueue .panel-body .queue-wrapper').html('');
+                    $('#taskQueue .panel-heading .badge, #ongoingQueue .panel-heading .badge').hide();
+                    $('#taskQueue .no-task-message, #ongoingQueue .no-task-message').hide();
+                    if(success) {
+                        this.raw = data;
+                        this.cachedDocNos = data.orders;
+
+                        data.tasks.sort(function(a, b) {
+                            return a.planned_start - b.planned_start;
+                        });
+
+                        var queueCount = 0;
+                        var ongoingCount = 0;
+                        for(var i = 0; i < data.tasks.length; i++) {
+                            var task = data.tasks[i];
+
+                            var ongoingFound = data.activities.filter(function(activity) {
+                                return activity.operation == task._id;
+                            });
+
+                            var $entry = o.renderEntry(task, ongoingFound.length > 0 ? ongoingFound[0] : null);
+
+                            if((task.materials.length == 0 || task.clerk_confirmed == 1) && ongoingFound.length == 1) {
+                                ongoingCount++;
+                                $('#ongoingQueue .panel-body .queue-wrapper').append($entry);
+
+                                var found = OngoingQueue.lastSelected.filter(function(a) {
+                                    return a._id == task._id;
+                                });
+                                if(found.length > 0) {
+                                    OngoingQueue.toggleSelect($entry);
+                                }
+                            } else {
+                                queueCount++;
+                                $('#taskQueue .panel-body .queue-wrapper').append($entry);
+
+                                var found = this.lastSelected.filter(function(a) {
+                                    return a._id == task._id;
+                                });
+                                if(found.length > 0) {
+                                    this.toggleSelect($entry);
+                                }
+                            }
+                        }
+
+                        this.lastSelected = [];
+
+                        if(queueCount > 0) {
+                            $('#taskQueue .panel-heading .badge').html(queueCount).show();
+                        } else {
+                            $('#taskQueue .no-task-message').show();
+                            $('#taskQueue .panel-heading .badge').hide();
+                        }
+
+                        if(ongoingCount > 0) {
+                            $('#ongoingQueue .panel-heading .badge').html(ongoingCount).show();
+                        } else {
+                            $('#ongoingQueue .no-task-message').show();
+                            $('#ongoingQueue .panel-heading .badge').hide();
+                        }
+
+                        $('.alert.task [data-toggle="tooltip"]').tooltip();
+                        this.checkButtonState();
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                }.bind(this));
+            },
+
+            // IMPORTANT TaskQueue.renderEntry
+            renderEntry : function(obj, activity) {
+                var $ret = $('<div class="alert alert-info clearfix task">\
+                    <span class="alert-icon"><i class="fa"></i></span>\
+                    <div class="notification-info">\
+                        <ul class="clearfix notification-meta">\
+                            <li class="pull-left notification-sender"><a class="title interact" data-type="operation" data-unique="" data-from="production-dashboard" href="javascript:;"></a></li>\
+                            <li class="pull-right notification-time"></li>\
+                        </ul>\
+                        <div class="row">\
+                            <div class="col-sm-6 mat-list-l">\
+                            </div>\
+                            <div class="col-sm-6 mat-list-r">\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>');
+
+                var opText = obj.task.substr('task-'.length) + ' ' + Front.getTaskLabel(obj.task) + ' {% trans 'T_FROM' %} ' + this.cachedDocNos[obj.ref_doc[0]];
+
+                $ret.attr('data-id', obj._id).data('context', obj);
+                $ret.find('[data-type="operation"]').attr('data-unique', obj.ref_doc[0] + '/' + obj._id);
+                $ret.find('.title').html(opText);
+
+                // check if this task is in pausing state
+                if(activity != null) {
+                    // since activity for this page will be queried only the ones that is not already confirmed
+                    // having even number of duration means pause
+                    if(activity.duration.length % 2 == 0) {
+                        $ret.removeClass('alert-info').addClass('paused alert-danger');
+                    } else if(activity.duration.length % 2 == 1) { // odd number = ongoing
+                        $ret.addClass('ongoing');
+                    }
+                }
+
+                var lMax = Math.ceil(obj.materials.length / 2);
+                var lArr = [];
+                var rArr = [];
+                for(var i = 0; i < obj.materials.length; i++) {
+                    var arr = lArr;
+                    if(i >= lMax) arr = rArr;
+
+                    var mat = obj.materials[i];
+
+                    if(mat.quantity < 0) continue;
+
+                    var revSizeText = '';
+                    if(mat.revision != null) {
+                        if(!common.isEmpty(mat.size)) {
+                            revSizeText = ' (r' + mat.revision + ', <span class="labelize" data-type="' + api.common.C.TRANS.LOV_SIZE + '" data-code="' + mat.size + '" data-pattern="{label}">' + mat.size + '</span>)';
+                        } else {
+                            revSizeText = ' (r' + mat.revision + ')';
+                        }
+                    }
+
+                    var qtyString = mat.quantity;
+                    if(mat.quantity % 1 != 0) {
+                        qtyString = parseFloat(mat.quantity).toFixed(2);
+                    } else {
+                        qtyString = parseInt(mat.quantity);
+                    }
+
+                    arr.push(mat.material.substr('stock-'.length) + revSizeText + ' (' + qtyString + ' ' + mat.uom + ')');
+                }
+
+                if(lArr.length > 0) {
+                    $ret.find('.mat-list-l').append('<p>' + lArr.join('<br/>') + '</p>');
+                }
+                if(rArr.length > 0) {
+                    $ret.find('.mat-list-r').append('<p>' + rArr.join('<br/>') + '</p>');
+                }
+
+                $ret.find('.labelize').each(function() {
+                    Resolver.translate($(this));
+                });
+
+                if(lArr.length > 0 || rArr.length > 0) { // has materials to receive from store
+                    var labelStatus = 'default';
+                    if(obj.clerk_confirmed == 1) {
+                        labelStatus = 'success';
+                    }
+                    $ret.find('.title').after(' <span class="label label-' + labelStatus + '"><i class="fa fa-cube"></i> {% trans 'T_MATERIAL_RECEIVED_FROM_STORE' %}</span>');
+                }
+
+                for(var i = 0; i < obj.previous_ops.length; i++) {
+                    var labelStatus = 'default';
+                    if(obj.previous_ops[i].status == OP_STATUS_CONFIRMED) {
+                        labelStatus = 'warning';
+                    } else if(obj.previous_ops[i].status == OP_STATUS_DELIVERED) {
+                        labelStatus = 'success';
+                    }
+                    $ret.find('.title').after(' <span class="label label-' + labelStatus + '" data-toggle="tooltip" data-title="' + obj.previous_ops[i].doc_no + '" data-container="body"><i class="fa fa-exchange"></i> ' + obj.previous_ops[i].task + '</span>');
+                }
+
+                if(((lArr.length == 0 && rArr.length == 0) || obj.clerk_confirmed == 1) &&
+                        (obj.status == OP_STATUS_READY || obj.previous_ops.length == 0)) {
+                    $ret.removeClass('alert-info').addClass('material-ready alert-success');
+                }
+
+                var plannedStart = obj.planned_start * 1000;
+                var dateText = moment(plannedStart).fromNow();
+                $ret.find('.notification-time').html(dateText);
+
+                return $ret;
+            },
+
+            // IMPORTANT TaskQueue.toggleSelect
+            toggleSelect : function($task) {
+                if($task.is('.material-ready')) return;
+                var obj = $task.data('context');
+                if($task.is('.selected')) {
+                    $task.removeClass('selected alert-warning alert-success alert-danger alert-info');
+                    if($task.is('.material-ready')) {
+                        $task.addClass('alert-success');
+                    } else if($task.is('.paused')) {
+                        $task.addClass('alert-danger');
+                    } else {
+                        $task.addClass('alert-info');
+                    }
+                    for(var i = 0; i < this.selected.length; i++) {
+                        if(this.selected[i]._id == obj._id) {
+                            this.selected.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    $task.removeClass('alert-info alert-warning alert-success alert-danger').addClass('selected alert-warning');
+                    var found = this.selected.filter(function(a) {
+                        return a._id == obj._id;
+                    });
+                    if(found.length == 0) {
+                        this.selected.push(obj);
+                    }
+                }
+
+                this.checkButtonState();
+            },
+
+            // IMPORTANT TaskQueue.deselectAll
+            deselectAll : function() {
+                this.selected = [];
+                $('#taskQueue .task.selected').each(function() {
+                    TaskQueue.toggleSelect($(this));
+                });
+            },
+
+            // IMPORTANT TaskQueue.checkButtonState
+            checkButtonState : function() {
+                if($('#taskQueue .task.selected').length > 0) {
+                    Front.showContextCmds('#todoCmds');
+                } else if($('#ongoingQueue .task.selected').length > 0) {
+                    Front.showContextCmds('#ongoingCmds');
+                } else {
+                    Front.showContextCmds('#standByCmds');
+                }
+            },
+
+            // IMPORTANT TaskQueue.doCreateStagingForm
+            doCreateStagingForm : function(win) {
+                var ids = [];
+                $('#taskQueue .task.selected').each(function() {
+                    var id = $(this).data('id');
+                    var context = $(this).data('context');
+                    if(common.isEmpty(id)) return;
+                    if(common.isEmpty(context)) return;
+                    if(context.clerk_confirmed == 1) return;
+                    ids.push(id);
+                });
+
+                if(ids.length == 0) {
+                    win.close();
+                    return;
+                }
+
+                common.blockUI($('#taskQueue'));
+                api.production.create_material_staging_form(ids, function(success, data) {
+                    common.unblockUI($('#taskQueue'));
+                    if(success) {
+                        this.lastSelected = [];
+                        this.selected = [];
+                        $('#taskQueue .task.selected').removeClass('selected alert-warning').addClass('alert-info');
+
+                        win.location.href = URL.staging_form_print(data);
+                    } else {
+                        win.close();
+                        Front.handleAjaxError(data);
+                    }
+                }.bind(this));
+            },
+
+            start : function() {
+                var o = this;
+                this.stop();
+                this.timer = setInterval(function() {
+                    o.query();
+                }, this.INTERVAL);
+            },
+
+            stop : function() {
+                if(this.timer) {
+                    clearInterval(this.timer);
+                }
+                this.timer = null;
+            }
+        };
+
+        var OngoingQueue = {
+
+            selected : [],
+            lastSelected : [],
+
+            // IMPORTANT OngoingQueue.init
+            init : function() {
+                var o = this;
+                $(document).on('click', '#ongoingQueue .task .alert-icon', function() {
+                    if(TaskQueue.selected.length > 0) {
+                        TaskQueue.deselectAll();
+                    }
+                    o.toggleSelect($(this).closest('.task'));
+                });
+
+                $('#resumeButton').click(function() {
+                    this.doResumeAll();
+                }.bind(this));
+
+                $('#pauseButton').click(function() {
+                    this.doPauseAll();
+                }.bind(this));
+            },
+
+            // IMPORTANT OngoingQueue.doResumeAll
+            doResumeAll : function() {
+                var params = [];
+                var temp = [].concat(this.selected);
+
+                for(var i = 0; i < temp.length; i++) {
+                    var task = temp[i];
+
+                    var ongoingFound = TaskQueue.raw.activities.filter(function(activity) {
+                        return activity.operation == task._id;
+                    });
+
+                    // if this task is not yet started, skip it
+                    if(ongoingFound.length == 0) continue;
+
+                    var activity = ongoingFound[0];
+                    // if this task is ongoing, skip it
+                    if(activity.duration.length % 2 == 1) continue;
+                    // start it with the same user that is paused before
+                    params.push([temp[i]._id ]);
+                }
+
+                if(params.length == 0) {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_TASK_IS_ALREADY_STARTED' %}' });
+                    return;
+                }
+
+                TaskQueue.stop();
+
+                common.blockUI($('#ongoingQueue'));
+
+                api.BATCH({
+                    args : params,
+                    method : api.activity.resume.bind(api.activity),
+                    done : function(results) {
+                        common.unblockUI($('#ongoingQueue'));
+
+                        var passed = results.filter(function(entry) {
+                            return entry.result[0] && entry.result[1];
+                        });
+                        if(passed.length > 0) {
+                            this.selected = [];
+                        }
+
+                        // report fail cases
+                        results.filter(function(entry) {
+                            return !entry.result[0] && entry.result[1];
+                        }).forEach(function(entry) {
+                            Front.handleAjaxError(entry.result[1]);
+                        });
+
+                        TaskQueue.query();
+                        TaskQueue.start();
+                    }.bind(this)
+                });
+            },
+
+            // IMPORTANT OngoingQueue.doPauseAll
+            doPauseAll : function() {
+                var params = [];
+                var temp = [].concat(this.selected);
+
+                for(var i = 0; i < temp.length; i++) {
+                    var task = temp[i];
+
+                    var ongoingFound = TaskQueue.raw.activities.filter(function(activity) {
+                        return activity.operation == task._id;
+                    });
+
+                    // if this task is not yet started, skip it
+                    if(ongoingFound.length == 0) continue;
+
+                    var activity = ongoingFound[0];
+                    // if this task is on pause, skip it
+                    if(activity.duration.length % 2 == 0) continue;
+                    // start it with the same user that is paused before
+                    params.push([temp[i]._id ]);
+                }
+
+                if(params.length == 0) {
+                    Front.handleAjaxError({ status : 403, content : '{% trans 'ERROR_TASK_IS_ALREADY_PAUSED' %}' });
+                    return;
+                }
+
+                TaskQueue.stop();
+
+                common.blockUI($('#ongoingQueue'));
+
+                api.BATCH({
+                    args : params,
+                    method : api.activity.pause.bind(api.activity),
+                    done : function(results) {
+                        common.unblockUI($('#ongoingQueue'));
+
+                        var passed = results.filter(function(entry) {
+                            return entry.result[0] && entry.result[1];
+                        });
+                        if(passed.length > 0) {
+                            this.selected = [];
+                        }
+
+                        // report fail cases
+                        results.filter(function(entry) {
+                            return !entry.result[0] && entry.result[1];
+                        }).forEach(function(entry) {
+                            Front.handleAjaxError(entry.result[1]);
+                        });
+
+                        TaskQueue.query();
+                        TaskQueue.start();
+                    }.bind(this)
+                });
+            },
+
+            // IMPORTANT OngoingQueue.toggleSelect
+            toggleSelect : function($task) {
+                var obj = $task.data('context');
+                if($task.is('.selected')) {
+                    $task.removeClass('selected alert-warning alert-success alert-danger alert-info');
+                    if($task.is('.material-ready')) {
+                        $task.addClass('alert-success');
+                    } else if($task.is('.paused')) {
+                        $task.addClass('alert-danger');
+                    } else {
+                        $task.addClass('alert-info');
+                    }
+                    for(var i = 0; i < this.selected.length; i++) {
+                        if(this.selected[i]._id == obj._id) {
+                            this.selected.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    $task.removeClass('alert-info alert-success alert-warning alert-danger').addClass('selected alert-warning');
+                    var found = this.selected.filter(function(a) {
+                        return a._id == obj._id;
+                    });
+                    if(found.length == 0) {
+                        this.selected.push(obj);
+                    }
+                }
+
+                TaskQueue.checkButtonState();
+            },
+
+            // IMPORTANT OngoingQueue.deselectAll
+            deselectAll : function() {
+                this.selected = [];
+                $('#ongoingQueue .task.selected').each(function() {
+                    OngoingQueue.toggleSelect($(this));
+                });
+            }
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                Front.checkRefresh();
+
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                TaskQueue.init();
+                OngoingQueue.init();
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                onReadyToUse();
+            }
+
+            function onReadyToUse() {
+                // PERMISSION user cannot write
+                console.log('task+write@' + roomId);
+                if(Front.userCan('task+write@' + roomId)) {
+                    TaskQueue.query();
+                    TaskQueue.start();
+                } else {
+                    common.unblockUI($('#main-content'));
+                    $('.action-bar').hide();
+                }
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

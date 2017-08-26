@@ -1,0 +1,1982 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="panel-heading-inliner">|</span>
+            <strong id="designCode" class="panel-heading-inliner"></strong>
+            <span class="tools pull-right">
+                <a class="btn btn-warning hide" id="submitDesignButton" href="javascript:;"><i class="fa fa-mail-forward"></i><span class="hidden-xs"> {% trans 'BUTTON_SUBMIT_FOR_APPROVAL' %}</span></a>
+                <a class="btn btn-success" id="duplicateDesignButton" href="javascript:;" title="{% trans 'T_COPY' %}"><i class="fa fa-copy"></i></a>
+                <div class="btn-group">
+                    <a class="btn btn-success" id="saveDesignButton" href="javascript:;"><i class="fa fa-save"></i><span class="hidden-xs"> {% trans 'BUTTON_SAVE' %}</span></a>
+                    <a data-toggle="dropdown" class="btn btn-success dropdown-toggle" href="javascript:;" aria-expanded="false"><span class="caret"></span></a>
+                    <ul role="menu" class="dropdown-menu" style="left:auto; right:0px;">
+                        <li><a href="javascript:;" id="saveDesignAsNewRevisionButton">{% trans 'BUTTON_SAVE_AS_NEW_REVISION' %}</a></li>
+                    </ul>
+                </div>
+            </span>
+            <span class="tools pull-right" style="margin-right: 1.5em;">
+                <a class="btn btn-default" id="viewLogButton" href="javascript:;" style="margin-right:">{% trans 'BUTTON_VIEW_HISTORY' %}</a>
+            </span>
+        </header>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div id="thumbnail" class="designthumb"></div>
+                        </div>
+                        <div class="col-sm-8">
+                            <div class="rowspace">
+                                <p id="lastModified" style="display: none;">{% trans 'T_LAST_MODIFIED' %}: <span class="doe"></span> {% trans 'T_BY' %} <span class="by"></span></p>
+                                <!-- The fileinput-button span is used to style the file input field as button -->
+                                <p><span class="btn btn-default fileinput-button">
+                                    <span>{% trans 'BUTTON_UPLOAD' %}</span>
+                                    <!-- The file input field used as target for the file upload widget -->
+                                    <input id="fileupload" type="file" name="files[]" multiple />
+                                </span></p>
+                                <!-- The global progress bar -->
+                                <div id="uploadProgress" class="progress progress-striped active progress-xxs" style="margin-bottom:0px; display:none;">
+                                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                        <span class="sr-only">0% Complete</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="attachments" class="table table-bordered attachmenttable" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'TH_FILE' %}</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="highlighted-formrow salesmanifestrow rowspace">
+                        <p class="legend"><small>{% trans 'T_SAMPLE_CREATION_INFO' %}</small></p>
+                        <p class="showondesigncode hide"><a href="javascript:;" class="btn btn-xs btn-primary">Create Sales Order</a></p>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p>{% trans 'T_DUE_DATE' %}</p>
+                                <input id="dueDate" class="form-control default-date-picker" size="16" type="text" value="" />
+                            </div>
+                            <div class="col-sm-6">
+                                <p>{% trans 'T_QUANTITY' %}</p>
+                                <input id="quantity" class="form-control" type="number" value="" min="0" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row rowspace">
+                        <div class="col-sm-4 col-sm-zeropadright hideondesigncode">
+                            <p>{% trans 'T_DESIGN_NO' %}</p>
+                            <input type="text" class="form-control" id="designNumber" maxlength="4" style="text-transform:uppercase;" />
+                        </div>
+                        <div class="col-sm-4 col-sm-zeropadright hideonnew hideondesigncode">
+                            <p>UID</p>
+                            <input type="text" class="form-control" id="designUID" readonly="readonly" />
+                        </div>
+                        <div class="col-sm-8 col-sm-zeropadright showondesigncode hide">
+                            <p>{% trans 'T_DESIGN_CODE' %}</p>
+                            <input type="text" class="form-control" id="designCodeInput" readonly="readonly" style="border:2px solid #666;" />
+                        </div>
+                        <div class="col-sm-4 hideonnew">
+                            <p>{% trans 'T_REVISION' %}</p>
+                            <select id="revision" class="form-control skipchecking"></select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4 col-sm-zeropadright">
+                            <p>{% trans 'T_CUSTOMER' %}</p>
+                            <input type="text" id="customer" class="form-control" />
+                        </div>
+                        <div class="col-sm-4 col-sm-zeropadright">
+                            <p>{% trans 'T_COLLECTION' %}</p>
+                            <input type="text" id="collection" class="form-control" />
+                        </div>
+                        <div class="col-sm-4">
+                            <p>{% trans 'T_BASE_UOM' %}</p>
+                            <select id="uom" class="form-control req"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <header class="panel-heading text-right" style="padding: 7px;">&nbsp;
+            <label for="activeSizeSwitcher" class="size-switcher-control" style="display: none; text-transform: none;">{% trans 'T_VIEW_ON_SIZE' %}</label>
+            <select id="activeSizeSwitcher" class="form-control size-switcher-control input-sm" style="margin-right:1em; display:none; width:auto;"></select>
+            <button class="btn btn-info btn-sm" id="recalculateGanttButton" style="margin-right: 1em; display:none;"><i class="fa fa-sort-amount-asc"></i> {% trans 'BUTTON_READJUST_TASKS' %}</button>
+            <div class="btn-group btn-group-sm" data-toggle="buttons">
+                <label class="btn btn-default active">
+                    <input type="radio" name="view" id="tileView" value="tiles" checked="checked" /> {% trans 'T_TILES' %}
+                </label>
+                <label class="btn btn-default">
+                    <input type="radio" name="view" id="tableView" value="table" /> {% trans 'T_TABLE' %}
+                </label>
+                <label class="btn btn-default">
+                    <input type="radio" name="view" id="ganttView" value="gantt" /> {% trans 'T_GANTT' %}
+                </label>
+            </div>
+        </header>
+        <div class="panel-body">
+            <div id="tilesViewContainer">
+                <div class="row" style="margin-bottom: 25px;">
+                    <div class="col-xs-12"><input type="text" id="idLookup" placeholder="Type here..." /></div>
+                </div>
+                <div id="identification">
+                    <h4>{% trans 'T_IDENTIFICATION' %}</h4>
+                    <div class="row rowspace">
+                        <div class="col-md-3 compcol" id="metalsCol" data-type="metal">
+                            <h4>{% trans 'METALS' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment">
+                            </div>
+                        </div>
+                        <div class="col-md-2 compcol" id="styleCol" data-type="style">
+                            <h4>{% trans 'STYLE' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment">
+                            </div>
+                        </div>
+                        <div class="col-md-3 compcol" id="stonesCol" data-type="stone">
+                            <h4>{% trans 'STONES' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment"></div>
+                        </div>
+                        <div class="col-md-2 compcol" id="finishesCol" data-type="finish">
+                            <h4>{% trans 'FINISHES' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment"></div>
+                        </div>
+                        <div class="col-md-2 compcol" id="platingsCol" data-type="plating">
+                            <h4>{% trans 'PLATINGS' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment"></div>
+                        </div>
+                    </div>
+                    <h4>{% trans 'T_SPECIFICATION' %}</h4>
+                    <div class="row rowspace">
+                        <div class="col-md-3 compcol" id="metalComponentsCol" data-type="metalComponents">
+                            <h4>{% trans 'METAL_COMPONENTS' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment">
+                            </div>
+                        </div>
+                        <div class="col-md-3 compcol" id="otherComponentsCol" data-type="otherComponents">
+                            <h4>{% trans 'OTHER_COMPONENTS' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment">
+                            </div>
+                        </div>
+                        <div class="col-md-3 compcol" id="stampingCol" data-type="stamping">
+                            <h4>{% trans 'STAMPING' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment"></div>
+                        </div>
+                        <div class="col-md-3 compcol" id="sizeCol" data-type="size">
+                            <h4>{% trans 'SIZE' %} <a href="javascript:;" class="text-muted openlookup"><i class="fa fa-search-plus"></i></a></h4>
+                            <div class="segment"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <p>{% trans 'T_MISCELLANEOUS' %}</p>
+                            <textarea id="misc" class="form-control" rows="5"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tableViewContainer" style="display: none;">
+            </div>
+
+            <div id="ganttViewContainer" style="display: none;">
+                <div id="gantt"></div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <div id="customerModal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label>Code</label>
+                                <input type="text" class="form-control req" name="code" placeholder="Customer Code" />
+                            </div>
+                        </div>
+                        <div class="col-sm-8 col-sm-zeropadleft">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control req" name="label" placeholder="Customer Name" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button class="btn btn-info okbutton">Add</button>
+                        <button class="btn btn-default cancelbutton" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.design.full.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.number-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.tokenizer-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.ajaxcomplete-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/handsontable/handsontable.array-editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-tokenfield/bootstrap-tokenfield.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/id-lookup-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/component-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/size-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/stamping-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/component-tokenizer-selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/components/configurable-setter.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxgantt.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/gantt_locale_th.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/design.js' %}"></script>
+    <script type="text/javascript">
+        var designId = '{{ design_id }}';
+        var uoms = null;
+        var revisions = [];
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }}
+
+        var Header = {
+            activeSize : null,
+            eventLogViewer : null,
+
+            init : function() {
+                Rules.init();
+
+                $('body').bind('codeInvalidated', function() {
+                    Header.codeObserver();
+                });
+
+                $('#dueDate').datepicker({
+                    format : 'yyyy-mm-dd',
+                    autoclose : true,
+                    language : '{% trans 'DATEPICKER_LOCALE' %}'
+                }).on('changeDate', function(e) {
+                    if(e.date) {
+                        Design.salesManifest.dueDate = e.date;
+                    }
+                });
+
+                $('#quantity').keyup(function() {
+                    var val = parseInt($(this).val());
+                    if(isNaN(val)) return;
+                    Design.salesManifest.quantity = val;
+                });
+
+                $('#designNumber').autocomplete({
+                    autoFocus : true,
+                    source : function(request, response) {
+                        response(['1234']);
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    select : function(event, ui) {
+                        Design.designNumber = ui.item.value.toUpperCase();
+                        Design._updateCode();
+                    }
+                }).change(function() {
+                    Design.designNumber = $(this).val();
+                    Design._updateCode();
+                });
+
+                $('#customer').autocomplete({
+                    autoFocus : true,
+                    source : function(request, response) {
+                        api.common.next_token('cust-', request.term, function(success, data) {
+                            api.verbose && console.log("Customer auto completed choices: ", data);
+                            if(success) {
+                                var results = [];
+                                for(var i = 0; i < data.suggestion.length; i++) {
+                                    // { code : 'xxx', label : 'xxx' }
+                                    results.push({ label : data.suggestion[i].label, code : data.suggestion[i].code });
+                                }
+                                response(results);
+                            }
+                        });
+                    },
+                    position : { my : 'left top', at : 'left bottom+5' },
+                    response : function(event, ui) {
+                        console.log(event, ui);
+                        if(ui.content.length == 0) {
+                            ui.content.push('add');
+                        }
+                    },
+                    select : function(event, ui) {
+                        if(ui.item == 'add') {
+                            $('#customerModal input[name="label"]').val($('#customer').data('typedtext'));
+                            $('#customerModal').modal('show');
+                        } else {
+                            Design.customerCode = 'cust-' + ui.item.code;
+                            Header.customerCodeObserver();
+                        }
+                    }
+                }).autocomplete('instance')._renderItem = function(ul, item) {
+                    var $li = $('<li></li>');
+                    if(item == 'add') {
+                        $li.addClass('addthisitem text-center');
+                        var typedText = $('#customer').val();
+                        $('#customer').data('typedtext', typedText);
+                        $li.append("{% trans 'T_ADD_$' %}".replace('$', typedText));
+                    } else {
+                        console.log(item);
+                        $li.append('<strong>' + item.code + '</strong> ' + item.label);
+                    }
+                    return $li.appendTo(ul);
+                };
+
+                $('#collection').keyup(function() {
+                    Design.collectionName = $(this).val();
+                });
+
+                $('#customerModal').on('shown.bs.modal', function() {
+                    $(this).find('input[name="code"]').focus();
+                });
+
+                $('#customerModal .okbutton').click(function() {
+                    var valid = common.autoValidate($('#customerModal .req'));
+                    if(!valid) return;
+                    var code = $('#customerModal [name="code"]').val();
+                    var label = $('#customerModal [name="label"]').val();
+                    common.blockUI($('#customerModal .modal-content'));
+                    api.common.add_token('cust-', code, label, null, function(success, data) {
+                        common.unblockUI($('#customerModal .modal-content'));
+                        if(success) {
+                            Design.customerCode = 'cust-' + code;
+                            $('#customerModal').modal('hide');
+                            Header.customerCodeObserver();
+                        } else {
+                            api.version && console.log("Add token", data);
+                        }
+                    });
+                });
+
+                $('#fileupload').fileupload({
+                    url : '{% url 'ajax.common:upload' %}',
+                    dataType : 'json',
+                    sequentialUploads : true,
+                    formData : {
+                        domain : 'randd',
+                        sub_domain : 'design'
+                    },
+                    paramName : 'file',
+                    done : function(e, data) {
+                        $('#uploadProgress').stop(true, true).slideUp('fast');
+                        if (data.result.status != 200) {
+                            alert('Failed to upload file: ' + data.result.content);
+                            return;
+                        }
+                        data.result.content.doc = ModelUtils.Converters.$date(data.result.content.doc);
+                        Design.attachments.push(data.result.content);
+                        Header.attachmentsObserver();
+                    },
+                    progressall : function(e, data) {
+                        $('#uploadProgress').stop(true, true).slideDown('fast');
+                        var progress = parseInt(data.loaded / data.total * 100, 10);
+                        $('#uploadProgress .progress-bar').css('width', progress + '%')
+                                .attr('aria-valuenow', progress)
+                                .find('.sr-only').html(progress + '% Complete');
+                    },
+                    fail : function(e, data) {
+                        api.verbose && console.log("Upload failed", e, data);
+                        Front.notify('danger', '{% trans 'T_ERROR' %}', '{% trans 'ERROR_UPLOADING_FAILED' %}', -1);
+                        $('#uploadProgress').stop(true, true).slideUp('fast');
+                    }
+                }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+                $(document).on('change', 'input[name="markthumbnail"]', function() {
+                    Design.thumbnailId = $(this).val();
+                    Header.thumbnailObserver();
+                });
+
+                $(document).on('click', '.removeattachment', function() {
+                    var context = $(this).data('context');
+                    if(!context) return;
+                    var removeIndex = Design.attachments.indexOf(context);
+                    if(removeIndex == -1) return;
+
+                    if(!confirm('{% trans 'ALERT_DELETE_ATTACHMENT' %}')) return;
+
+                    if(Design.thumbnailId == Design.attachments[removeIndex].id) {
+                        Design.thumbnailId = '';
+                    }
+                    Design.attachments.splice(removeIndex, 1);
+                    Header.attachmentsObserver();
+                });
+
+                $('#uom').change(function() {
+                    Design.counter = $(this).val();
+                });
+
+                $('#revision').change(function() {
+                    var revId = $(this).val();
+                    if(revId == Design.revId) return;
+                    var matched = revisions.filter(function(a) {
+                        return a.revId == revId;
+                    });
+                    if(matched.length == 0) return;
+                    var newUrl = '{% url 'randd:design_edit' 'sylli' %}'.replace('sylli', matched[0].objectId);
+                    window.location = newUrl;
+                });
+
+                // IMPORTANT save button
+                $('#saveDesignButton').click(function() {
+                    if(!Header.doValidate()) return;
+                    if(common.isEmpty(designId)) {
+                        Header.doSave();
+                    } else {
+                        Front.confirm('{% trans 'T_UPDATE_DESIGN_REVISION_WARNING' %}',
+                                '{% trans 'BUTTON_YES' %}', '{% trans 'BUTTON_NO' %}',
+                        function() {
+                            Header.doSave();
+                        });
+                    }
+                });
+
+                // IMPORTANT save new revision button
+                $('#saveDesignAsNewRevisionButton').click(function() {
+                    if(!Header.doValidate()) return;
+                    Front.confirm('{% trans 'T_CREATE_DESIGN_REVISION_WARNING' %}',
+                            '{% trans 'BUTTON_YES' %}', '{% trans 'BUTTON_NO' %}',
+                    function() {
+                        Header.doSaveAsNewRevision();
+                    });
+                });
+
+                // IMPORTANT duplicate button
+                $('#duplicateDesignButton').click(function() {
+                    Front.unblockBackButton();
+                    var newUrl = '{% url 'randd:design_new' %}';
+                    window.location = common.addParam(newUrl, 'ref', designId);
+                });
+
+                // IMPORTANT create as new button
+                $(document).on('click', '.btn.createasnew', function() {
+                    Header.doSaveAsNew();
+                });
+
+                // IMPORTANT submit button
+                $('#submitDesignButton').click(function() {
+                    if(!Header.doValidate()) return;
+                        Front.confirm('{% trans 'T_SUBMIT_FOR_APPROVAL_WARNING' %}',
+                                '{% trans 'BUTTON_SUBMIT' %}',
+                                '{% trans 'BUTTON_CANCEL' %}',
+                                function() {
+                                    Header.doSubmitForApproval();
+                                });
+                });
+
+                // IMPORTANT approve button
+                $(document).on('click', '#approveDesign', function() {
+                    if(!Header.doValidate()) return;
+                    Front.confirm('{% trans 'T_APPROVE_WARNING' %}',
+                                '{% trans 'BUTTON_APPROVE' %}',
+                                '{% trans 'BUTTON_CANCEL' %}',
+                                function() {
+                                    Header.doApprove();
+                                });
+                });
+
+                this.eventLogViewer = new EventLogViewer({
+                    model : 'design',
+                    objectId : designId
+                });
+
+                $('#viewLogButton').click(function() {
+                    Header.eventLogViewer.show();
+                });
+            },
+
+            // IMPORTANT Header.renderFromModel()
+            renderFromModel : function() {
+                if(Design.designNumber) {
+                    $('#designNumber').val(Design.designNumber);
+                } else {
+                    $('#designNumber').val('');
+                }
+
+                if(Design.designUid) {
+                    $('#designUID').val(Design.designUid);
+                } else {
+                    $('#designUID').val('');
+                }
+
+                if(revisions.length > 0) {
+                    revisions.sort(function(a, b) {
+                        return b.revId - a.revId;
+                    });
+
+                    $('#revision option').remove();
+                    revisions.forEach(function(entry) {
+                        $('#revision').append('<option value="' + entry.revId + '">' + entry.revId + '</option>');
+                    });
+                }
+
+                if(Design.revId) {
+                    $('#revision').val(Design.revId);
+                }
+
+                if(Design.salesManifest && Design.salesManifest.dueDate) {
+                    $('#dueDate').datepicker('setDate', Design.salesManifest.dueDate);
+                } else {
+                    $('#dueDate').datepicker('setDate', '');
+                }
+
+                if(Design.salesManifest && Design.salesManifest.quantity) {
+                    $('#quantity').val(Design.salesManifest.quantity);
+                } else {
+                    $('#quantity').val('');
+                }
+
+                if(!common.isEmpty(Design.counter)) {
+                    $('#uom').val(Design.counter);
+                } else {
+                    $('#uom').val('pc');
+                }
+
+                this.lastModifiedObserver();
+                this.attachmentsObserver();
+                this.thumbnailObserver();
+                this.customerCodeObserver();
+                this.collectionNameObserver();
+            },
+
+            toValidationString : function(err) {
+                if(err.status == 500 || err.status == 404) {
+                    return null;
+                }
+
+                var errArrays = err.content;
+                var errStrings = [];
+                for(var i = 0; i < errArrays.length; i++) {
+                    if(errArrays[i].length > 0) {
+                        var thisErrors = [];
+                        var key = '';
+                        switch(i) {
+                            case 0: key = 'drawing'; break;
+                            case 1: key = 'masterModeling'; break;
+                            case 2: key = 'production'; break;
+                            case 3: key = 'pricing'; break;
+                        }
+                        if(key == '') {
+                            if(errStrings.length > 0) {
+                                thisErrors.push('<strong>{% trans 'T_GENERIC' %}</strong>');
+                            }
+                        } else {
+                            thisErrors.push('<strong>' + gettext('DESIGN_PROGRESS_' + key) + '</strong>');
+                        }
+                        var tempArray = common.unique(errArrays[i]);
+                        for(var k = 0; k < tempArray.length; k++) {
+                            thisErrors.push(common.nl2br(tempArray[k]));
+                        }
+                        errStrings.push(thisErrors.join('<br/>'));
+                    }
+                }
+                return errStrings.join('<br/>');
+            },
+
+            // IMPORTANT save logic
+            doSave : function() {
+                var o = this;
+                common.blockUI($('#main-content'));
+
+                var currentStatus = Design.status;
+                var stausToBeSaved = null;
+                if(currentStatus == Design.C.STATUS.APPROVED) {
+                    stausToBeSaved = Design.C.STATUS.EDITED;
+                }
+
+                Design.save(stausToBeSaved, function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        var operation = 'saved';
+                        // create operation, reload
+                        if(!Design.id) {
+                            operation = 'created';
+                            var newUrl = '{% url 'randd:design_edit' 'sylli' %}'.replace('sylli', data);
+                            Front.unblockBackButton();
+                            window.location = common.addParam(newUrl, 'op', operation);
+                        } else {
+                            // If status is changed (case: A -> E)
+                            if(currentStatus != Design.status) {
+                                operation = 'updated';
+                                var newUrl = '{% url 'randd:design_edit' 'sylli' %}'.replace('sylli', Design.id);
+                                Front.unblockBackButton();
+                                window.location = common.addParam(newUrl, 'op', operation);
+                            } else {
+                                Front.notify('success', '{% trans 'NOTI_DESIGN_SAVED' %}', '');
+                                Front.unblockBackButton();
+                                Design.lastEdited.when = new Date();
+                                o.lastModifiedObserver();
+                            }
+                        }
+                    } else {
+                        Front.handleAjaxError(data, o.toValidationString);
+                    }
+                });
+            },
+
+            // IMPORTANT new revision logic
+            doSaveAsNewRevision : function() {
+                var o = this;
+                common.blockUI($('#main-content'));
+                Design._nextRevisionId(function(success, nextRevId) {
+                    if(success) {
+                        // copy out the current value just in case the saving failure so we can put it back
+                        var currentDesignId = Design.id;
+                        var currentRevId = Design.revId;
+                        var currentStatus = Design.status;
+                        Design.id = null;
+                        Design.revId = nextRevId;
+                        Design.status = Design.C.STATUS.NEW;
+                        Design.save(null, function(suc, data) {
+                            common.unblockUI($('#main-content'));
+                            if(suc) {
+                                var newUrl = '{% url 'randd:design_edit' 'sylli' %}'.replace('sylli', data);
+                                Front.unblockBackButton();
+                                window.location = common.addParam(newUrl, 'op', 'revisioned');
+                            } else {
+                                Design.id = currentDesignId;
+                                Design.revId = currentRevId;
+                                Design.status = currentStatus;
+                                Front.handleAjaxError(data, o.toValidationString);
+                            }
+                        });
+                    } else {
+                        common.unblockUI($('#main-content'));
+                        Front.handleAjaxError(nextRevId);
+                    }
+                });
+            },
+
+            // IMPORTANT save as new logic
+            doSaveAsNew : function() {
+                var o = this;
+
+                var currentDesignUid = Design.designUid;
+                var currentDesignId = Design.id;
+                var currentRevId = Design.revId;
+                var currentStatus = Design.status;
+                Design.designUid = null;
+                Design.id = null;
+                Design.revId = null;
+                Design.status = Design.C.STATUS.NEW;
+
+                common.blockUI($('#main-content'));
+                Design.save(null, function(success, data) {
+                    common.unblockUI($('#main-content'));
+                    if(success) {
+                        var newUrl = '{% url 'randd:design_edit' 'sylli' %}'.replace('sylli', data);
+                        Front.unblockBackButton();
+                        window.location = common.addParam(newUrl, 'op', 'created');
+                    } else {
+                        Design.designUid = currentDesignUid;
+                        Design.id = currentDesignId;
+                        Design.revId = currentRevId;
+                        Design.status = currentStatus;
+                        Front.handleAjaxError(data, o.toValidationString);
+                    }
+                });
+            },
+
+            // IMPORTANT submit logic
+            doSubmitForApproval : function() {
+                var o = this;
+                common.blockUI($('#main-content'));
+                Design.save(Design.C.STATUS.WAIT_FOR_APPROVAL, function(success, data) {
+                    if(success) {
+                        Front.unblockBackButton();
+                        window.location.reload();
+                    } else {
+                        common.unblockUI($('#main-content'));
+                        Front.handleAjaxError(data, o.toValidationString);
+                    }
+                });
+            },
+
+            // IMPORTANT approve logic
+            doApprove : function() {
+                var o = this;
+                common.blockUI($('#main-content'));
+                Design.save(Design.C.STATUS.APPROVED, function(success, data) {
+                   if(success) {
+                       Front.unblockBackButton();
+                       window.location.reload();
+                   } else {
+                       common.unblockUI($('#main-content'));
+                       Front.handleAjaxError(data, o.toValidationString);
+                   }
+                });
+            },
+
+            // IMPORTANT validate logic
+            doValidate : function() {
+                Front.clearNotifications([403]);
+
+                Table.commit(false);
+                Gantt.commit(false);
+
+                var errors = [];
+
+                // required uom
+                if(!common.autoValidate($('#uom'))) {
+                    errors.push('{% trans 'ERROR_EMPTY_UOM' %}');
+                }
+
+                // validate design number digits
+                var designNumber = $('#designNumber').val();
+                if(!common.isEmpty(designNumber) && designNumber.length != 4) {
+                    errors.push('{% trans 'ERROR_DESIGN_NUMBER_MUST_BE_FOUR_DIGITS' %}');
+                }
+
+                // 5 significant identifications must not be changed after approved
+                if(Design.designCode && Design.designCode.code != Design.code) {
+                    errors.push('{% trans 'ERROR_DESIGN_CODE_CANNOT_BE_CHANGED' %}<br/><br/><a href="javascript:;" class="btn btn-xs btn-primary createasnew">{% trans 'BUTTON_CREATE_AS_NEW_DESIGN' %}</a><br/>');
+                }
+
+                // validate last leaf of sample creation (leaf must be the last process)
+                var getChildrenOperations = function(parentId) {
+                    return Design.process.sampleCreation.filter(function(entry) {
+                        return entry.source.indexOf(parentId) != -1;
+                    });
+                };
+
+                var leaves = Design.process.sampleCreation.filter(function(item) {
+                    var children = getChildrenOperations(item.id);
+                    return children.length == 0;
+                });
+
+                if(leaves.length > 1) {
+                    errors.push('{% trans 'ERROR_DESIGN_UNCONNECTED_PROCESS' %}');
+                }
+
+                if(errors.length > 0) {
+                    var param = { status : 403, content : common.unique(errors).join('<br/>') };
+                    Front.handleAjaxError(param);
+                }
+
+                return errors.length == 0;
+            },
+
+            lastModifiedObserver : function() {
+                if(Design.lastEdited && Design.lastEdited.who) {
+                    var editBy = displayName(Design.lastEdited.who.first_name, Design.lastEdited.who.last_name);
+                    var editWhen = moment(Design.lastEdited.when).format('YYYY-MM-DD HH:mm');
+                    $('#lastModified .doe').html(editWhen);
+                    $('#lastModified .by').html(editBy);
+                    $('#lastModified').show();
+                } else {
+                    $('#lastModified').hide();
+                }
+            },
+
+            attachmentsObserver : function() {
+                $('#attachments tbody > *').remove();
+                if(Design.attachments.length == 0) {
+                    // If does not have attachments, hide table and remove thumbnail
+                    $('#attachments').hide();
+                    $('#thumbnail').css('background-image', 'none');
+                } else {
+                    // allowing thumbnail file extension
+                    var imageExt = ['.png', '.jpg', '.gif'];
+                    var firstImage = null;
+                    for (var i = 0; i < Design.attachments.length; i++) {
+                        var fileParts = Design.attachments[i].file.split('/');
+                        var fname = fileParts[fileParts.length - 1];
+
+                        // check if this is an image
+                        var isImage = imageExt.indexOf(fname.substr(-4).toLowerCase()) != -1;
+                        if(!firstImage && isImage) {
+                            firstImage = Design.attachments[i];
+                        }
+
+                        // append attachment row
+                        var $tr = $('<tr>\
+                            <td>\
+                                <input id="mark' + Design.attachments[i].id + '" type="radio" name="markthumbnail" value="' + Design.attachments[i].id + '" />\
+                                <label for="mark' + Design.attachments[i].id + '"><i class="fa fa-star-o fa-lg"></i></label>\
+                                <a href="{{ MEDIA_URL }}' + Design.attachments[i].file + '" target="_blank">' + fname + '</a><br/>\
+                                <span class="utc">' + Design.attachments[i].doc + '</span> {% trans 'T_BY' %} <span class="attachmentauthor"></span>\
+                            </td>\
+                            <td class="text-center"><a class="removeattachment text-muted" href="javascript:;"><i class="fa fa-trash fa-lg"></i></a></td>\
+                        </tr>');
+
+                        $tr.find('.attachmentauthor').append(Resolver.labelize(api.common.C.TRANS.USERS, Design.attachments[i].author, '<span>{first_name} {last_name}</span>'));
+
+                        $tr.find('a.removeattachment').data('context', Design.attachments[i]);
+
+                        if(!isImage) {
+                            $tr.find('input, label').remove();
+                        }
+
+                        $('#attachments tbody').append($tr);
+                    }
+                    // show attachments table
+                    $('#attachments').show();
+                }
+
+                if(!Design.thumbnailId && firstImage) {
+                    Design.thumbnailId = firstImage.id;
+                    this.thumbnailObserver();
+                }
+            },
+
+            thumbnailObserver : function() {
+                var imageExt = ['.png', '.jpg', '.gif'];
+                var imageAttachments = Design.attachments.filter(function(a) {
+                    if(Design.thumbnailId) {
+                        return a.id == Design.thumbnailId;
+                    } else {
+                        return imageExt.indexOf(a.file.substr(-4).toLowerCase()) != -1;
+                    }
+                });
+
+                $('input[name="markthumbnail"]').prop('checked', false);
+                if(imageAttachments.length > 0) { // set thumbnail and mark checkbox
+                    $('#mark' + imageAttachments[0].id).prop('checked', true);
+                    $('#thumbnail').css('background-image', 'url(\'{{ MEDIA_URL }}' + imageAttachments[0].file + '\')');
+                } else {
+                    $('#thumbnail').css('background-image', 'none');
+                }
+            },
+
+            customerCodeObserver : function() {
+                if(Design.customerCode) {
+                    Resolver.labelizeValue($('#customer'), api.common.C.TRANS.TYPED_CODES, Design.customerCode, '{label}');
+                    $('#collection').removeAttr('disabled');
+                } else {
+                    $('#customer').val('');
+                    $('#collection').val('').attr('disabled', 'disabled');
+                }
+            },
+
+            collectionNameObserver : function() {
+                if(Design.collectionName) {
+                    $('#collection').val(Design.collectionName);
+                } else {
+                    $('#collection').val('');
+                }
+            },
+
+            codeObserver : function() {
+                if(common.isEmpty(Design.code)) {
+                    $('#designCode').hide();
+                } else {
+                    $('#designCode').html(Design.code).show();
+                }
+
+                if(Design.designCode) {
+                    $('#designCodeInput').val(Design.designCode.code);
+                }
+            }
+        };
+
+        var Tiles = {
+
+            metalSelector : null,
+            stoneSelector : null,
+            styleSelector : null,
+            finishSelector : null,
+            platingSelector : null,
+            stampingSelector : null,
+            sizeSelector : null,
+            metalCompSelector : null,
+            otherCompSelector : null,
+
+            init : function() {
+
+                this.metalSelector = new IDLookUpSelector({
+                    id : 'metalSelector',
+                    model : 'metal',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.stoneSelector = new IDLookUpSelector({
+                    id : 'stoneSelector',
+                    model : 'stone',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.styleSelector = new ComponentTokenizerSelector({
+                    id : 'styleSelector',
+                    preCode : 'style-',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode({ code : item, fullCode : item, type : 'style' });
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.finishSelector = new IDLookUpSelector({
+                    id : 'finishSelector',
+                    model : 'finish',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.platingSelector = new IDLookUpSelector({
+                    id : 'platingSelector',
+                    model : 'plating',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.stampingSelector = new StampingSelector({
+                    id : 'stampingSelector',
+                    uploadUrl : '{% url 'ajax.common:upload' %}',
+                    mediaRootUrl : '{{ MEDIA_URL }}',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.sizeSelector = new SizeSelector({
+                    id : 'sizeSelector',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.metalCompSelector = new ComponentTokenizerSelector({
+                    id : 'metalCompSelector',
+                    preCode : 'stock-',
+                    pattern : 'stock-###04',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode({code: item, fullCode: item, type: 'metal component'});
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                this.otherCompSelector = new ComponentTokenizerSelector({
+                    id : 'otherCompSelector',
+                    preCode : 'stock-',
+                    pattern : 'stock-###05',
+                    onSelect : function(item) {
+                        try {
+                            Rules.addCode({ code : item, fullCode : item, type : 'other component' });
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            Front.notify('danger', '{% trans 'T_ERROR' %}', error.message);
+                        }
+                    }
+                });
+
+                $('#idLookup').idLookup({
+                    onSelect : function(item, index) {
+                        try {
+                            Rules.addCode(item);
+                            Tiles.identificationObserver();
+                        } catch(error) {
+                            $('#idLookup').blur();
+                            Front.notify('warning', '{% trans 'T_WARNING' %}', error.message);
+                        }
+                    },
+                    source : 'spec'
+                });
+
+                $(document).on('click', '.segment .component button.close', function() {
+                    var context = $(this).closest('.component').data('context');
+                    if(!context) return;
+                    context.forEach(function(item) {
+                        item.onDispose();
+                    });
+                    Tiles.identificationObserver();
+                });
+
+                $(document).on('click', '.segment .component', function(e) {
+                    if($(e.target).closest('button.close').length > 0) return;
+                    Tiles.onComponentOpen($(this));
+                });
+
+                $('#metalsCol .openlookup').click(function() {
+                    Tiles.metalSelector.show();
+                });
+                $('#stonesCol .openlookup').click(function() {
+                    Tiles.stoneSelector.show();
+                });
+                $('#styleCol .openlookup').click(function() {
+                    Tiles.styleSelector.show();
+                });
+                $('#finishesCol .openlookup').click(function() {
+                    Tiles.finishSelector.show();
+                });
+                $('#platingsCol .openlookup').click(function() {
+                    Tiles.platingSelector.show();
+                });
+                $('#metalComponentsCol .openlookup').click(function() {
+                    Tiles.metalCompSelector.show();
+                });
+                $('#otherComponentsCol .openlookup').click(function() {
+                    Tiles.otherCompSelector.show();
+                });
+                $('#stampingCol .openlookup').click(function() {
+                    Tiles.stampingSelector.show();
+                });
+                $('#sizeCol .openlookup').click(function() {
+                    Tiles.sizeSelector.show();
+                });
+
+                $('#misc').keyup(function() {
+                    var timer = $(this).data('timer');
+                    if(timer) {
+                        clearTimeout(timer);
+                    }
+                    var val = $(this).val();
+                    timer = setTimeout(function() {
+                        Design.misc = val;
+                    }, 600);
+                    $(this).data('timer', timer);
+                });
+            },
+
+            renderFromModel : function() {
+                this.identificationObserver();
+
+                // misc
+                $('#misc').val(Design.misc);
+            },
+
+            onComponentOpen : function($component) {
+                var item = $component.data('context');
+                if(!item) {
+                    console.error('context not found', item);
+                    return;
+                }
+                api.verbose && console.log('component open!', item);
+                if(item[0].material.indexOf(Design.C.$stamp_file) == 0) {
+                    var fname = '{{ MEDIA_URL }}' + item[0].material.substr(Design.C.$stamp_file.length);
+                    Front.lightbox(fname);
+                }
+            },
+
+            identificationObserver : function() {
+                // IMPORTANT build options for size switcher
+                if(Design.spec_size.length > 0) {
+                    $('#activeSizeSwitcher option').remove();
+                    Design.spec_size.forEach(function(size) {
+                        var $opt = Resolver.labelizeOption(api.common.C.TRANS.LOV_SIZE, size);
+                        $('#activeSizeSwitcher').append($opt);
+                    });
+                    Header.activeSize = Design.spec_size[0];
+                } else {
+                    Header.activeSize = null;
+                }
+
+                $('#identification .component').remove();
+
+                for(var key in Design.spec) {
+                    if(!Design.spec.hasOwnProperty(key)) return;
+                    for(var i = 0; i < Design.spec[key].length; i++) {
+                        var item = Design.spec[key][i];
+                        var $col = $('.compcol[data-type="' + key + '"]');
+                        if($col.length == 0) {
+                            console.log('Cannot find a proper column to insert', key);
+                            continue;
+                        }
+
+                        var $existingComp = $col.find('.component[data-code="' + item.material + '"]');
+                        if($existingComp.length > 0) {
+                            console.log('Duplicated component. Skip: ' + item.material);
+
+                            var items = $existingComp.data('context');
+                            items.push(item);
+                            $existingComp.data('context', items);
+                        } else {
+                            var $component = $('<div class="component" data-code="' + item.material + '">\
+                                <button class="close close-sm" type="button"><i class="fa fa-times"></i></button>\
+                                <span class="title"></span>\
+                            </div>');
+
+                            var pattern = '<span><strong>{code}</strong> {label}</span>';
+                            var translationType = api.common.C.TRANS.TYPED_CODES;
+                            if(key == 'size') {
+                                translationType = api.common.C.TRANS.LOV_SIZE;
+                            } else if(key == 'stamping') {
+                                translationType = null;
+                                if(item.material.indexOf(Design.C.$stamp_file) == 0) {
+                                    var fname = '{{ MEDIA_URL }}' + item.material.substr(Design.C.$stamp_file.length);
+                                    var $thumbnail = $('<div class="stamping-thumbnail"></div>');
+                                    $thumbnail.css('background-image', 'url(\'' + fname + '\')');
+                                    $component.find('.title').append($thumbnail);
+                                } else {
+                                    $component.find('.title').append('<strong>' + item.material + '</strong>');
+                                }
+                            }
+
+                            if(translationType != null) {
+                                $component.find('.title').append(Resolver.labelize(translationType, item.material, pattern));
+                            }
+
+                            $component.data('context', [item]);
+                            $col.find('.segment').append($component);
+                        }
+                    }
+                }
+            }
+        };
+
+        var Table = {
+
+            handsontable : null,
+            tempData : null,
+            configurableSetter : null,
+            sourceMap : {},
+
+            init : function() {
+                var o = this;
+                this.configurableSetter = new ConfigurableSetter({
+                    onShow : function() {
+                        o.handsontable.addHook('beforeKeyDown', o.onBeforeKeyDown);
+                    },
+                    onHide : function() {
+                        o.handsontable.removeHook('beforeKeyDown', o.onBeforeKeyDown);
+                    }
+                });
+            },
+
+            onBeforeKeyDown : function(event) {
+                Handsontable.Dom.enableImmediatePropagation(event);
+
+                switch(event.keyCode) {
+                    case Handsontable.helper.keyCode.ARROW_UP:
+                    case Handsontable.helper.keyCode.ARROW_DOWN:
+                    case Handsontable.helper.keyCode.ARROW_LEFT:
+                    case Handsontable.helper.keyCode.ARROW_RIGHT:
+                    case Handsontable.helper.keyCode.TAB:
+                    case Handsontable.helper.keyCode.BACKSPACE:
+                    case Handsontable.helper.keyCode.ENTER:
+                        // prevent EditorManager from processing this event
+                        event.stopImmediatePropagation();
+                        break;
+                }
+            },
+
+            recalculateStepNo : function(needsUpdateCells) {
+                var counter = 1;
+                this.sourceMap = {};
+
+                for(var i = 0; i < this.tempData.length; i++) {
+                    var row = this.tempData[i];
+                    var stepNo = '';
+                    // header rows
+                    if (row.readOnly) {
+                        counter = 1;
+                    } else if (common.isEmpty(row.process)) { // not a process row
+
+                    } else {
+                        stepNo = counter;
+                        counter++;
+                    }
+
+                    if (row.id) {
+                        this.sourceMap[row.id] = stepNo;
+                    }
+
+                    row.stepNo = stepNo;
+                    if (needsUpdateCells) {
+                        this.handsontable.render();
+                    }
+                }
+            },
+
+            // IMPORTANT Table.renderFromModel
+            renderFromModel : function() {
+                var o = this;
+
+                // IMPORTANT size switcher event for table
+                $('#activeSizeSwitcher').unbind('change').change(function() {
+                    Header.activeSize = $(this).val();
+                    o.handsontable.render();
+                });
+
+                this.tempData = Design.handson;
+                this.recalculateStepNo();
+
+                var $table = $('<div id="handsontable"></div>').appendTo($('#tableViewContainer'));
+
+                /**
+                 * CRITICAL NOTE
+                 * Change header text will need to check the copy-paste condition in handsontable.design.full.js
+                 * */
+                var columnHeaders = [
+                    '{% trans 'TH_STEP_NO' %}',
+                    '{% trans 'TH_PROCESS' %}',
+                    ' ',
+                    '{% trans 'TH_MATERIALS' %}',
+                    '{% trans 'TH_IS_CONFIGURABLE' %}',
+                    '{% trans 'TH_QUANTITY' %}',
+                    '{% trans 'TH_COUNTER' %}',
+                    '{% trans 'TH_PREVIOUS_STEPS' %}',
+                    '{% trans 'TH_STAGING_TIME' %}',
+                    '{% trans 'TH_STANDARD_TIME' %}',
+                    '{% trans 'TH_MATERIAL_COST_EST' %}',
+                    '{% trans 'TH_LABOUR_COST_EST' %}',
+                    '{% trans 'TH_MARKUP' %}',
+                    '{% trans 'TH_REMARK' %}'
+                ];
+
+                var uomOptions = [];
+                for(group in uoms) {
+                    if(!uoms.hasOwnProperty(group)) continue;
+                    var groupObj = { label : group, value : [] };
+                    uoms[group].forEach(function(item) {
+                        groupObj.value.push({ label : item.label, value : item.code });
+                    });
+                    uomOptions.push(groupObj);
+                }
+
+                var columns = [
+                    {
+                        data : 'stepNo',
+                        className : 'htCenter htGrey',
+                        renderer : o.stepNoRenderer
+                    },
+                    {
+                        data : 'process',
+                        editor : 'ajaxcomplete',
+                        minLength : 0,
+                        source : function(request, response) {
+                            var query = request.term;
+                            if(request.term.indexOf('task-') == 0) {
+                                query = request.term.substr('task-'.length);
+                            }
+                            response(Front.taskLookup(query));
+                        },
+                        renderer : o.processRenderer
+                    },
+                    {
+                        data : 'cp',
+                        editor : 'select',
+                        selectOptions : [
+                            { label : '{% trans 'T_CONSUME' %}', value : 'consume' },
+                            { label : '{% trans 'T_PRODUCE' %}', value : 'produce' },
+                            { label : '{% trans 'T_BORROW' %}', value : 'borrow' }
+                        ],
+                        className : 'htCenter',
+                        renderer : o.cpRenderer
+                    },
+                    {
+                        data : 'material',
+                        editor : 'tokenizer',
+                        editorOptions : {
+                            preCode : 'stock-'
+                        },
+                        renderer : o.materialRenderer
+                    },
+                    {
+                        data : 'isConfigurable',
+                        className : 'htCenter',
+                        editor : 'checkbox',
+                        renderer : o.configurableRenderer
+                    },
+                    {
+                        data : 'qty',
+                        className : 'htCenter',
+                        editor : 'array',
+                        renderer : o.configDependantRenderer
+                    },
+                    {
+                        data : 'counter',
+                        editor : 'select',
+                        selectOptions : uomOptions,
+                        className : 'htCenter'
+                    },
+                    {
+                        data : 'source',
+                        className : 'htCenter htGrey',
+                        renderer : o.sourceRenderer
+                    },
+                    {
+                        data : 'stagingTime',
+                        className : 'htCenter',
+                        editor : 'array',
+                        renderer : o.configDependantRenderer
+                    },
+                    {
+                        data : 'duration',
+                        className : 'htCenter',
+                        editor : 'array',
+                        renderer : o.configDependantRenderer
+                    },
+                    {
+                        data : 'materialCost',
+                        className : 'htCenter'
+                    },
+                    {
+                        data : 'laborCost',
+                        className : 'htCenter'
+                    },
+                    {
+                        data : 'markup'
+                    },
+                    {
+                        data : 'remark'
+                    }
+                ];
+
+                if(Design.spec_size.length < 2) {
+                    columnHeaders.splice(4, 1);
+                    columns.splice(4, 1);
+                }
+
+                if(Design.spec_size.length > 0) {
+                    $('.size-switcher-control').show().css('display', 'inline-block');
+                } else {
+                    $('.size-switcher-control').hide();
+                }
+
+                this.handsontable = $table.handsontable({
+                    data : this.tempData,
+                    colHeaders : columnHeaders,
+                    columns : columns,
+                    rowHeaders : false,
+                    manualRowMove : false,
+                    contextMenu : ['row_above', 'row_below', '---------', 'remove_row', '---------', 'undo', 'redo'],
+                    stretchH : 'all',
+                    onBeginEditing : function(row, prop, value) {
+                        var rowData = Table.tempData[row];
+                        if(rowData.isConfigurable && (prop == 'qty' || prop == 'duration' || prop == 'stagingTime')) {
+                            o.configurableSetter.settings.onSelect = function(obj) {
+                                console.log('from configurable setter', obj);
+                                o.handsontable.setDataAtRowProp(row, 'qty', obj.qty);
+                                if(obj.hasOwnProperty('duration')) {
+                                    o.handsontable.setDataAtRowProp(row, 'duration', obj.duration);
+                                }
+                                if(obj.hasOwnProperty('stagingTime')) {
+                                    o.handsontable.setDataAtRowProp(row, 'stagingTime', obj.stagingTime);
+                                }
+                            };
+                            // Find previous rows that has process
+                            var rowIndex = row;
+                            var parentProcessName = rowData.process;
+                            while(common.isEmpty(parentProcessName)) {
+                                rowIndex--;
+                                if(rowIndex == 0) {
+                                    break;
+                                }
+                                parentProcessName = o.handsontable.getData()[rowIndex].process;
+                            }
+                            o.configurableSetter.show(parentProcessName, rowData, Design.spec_size);
+                            return false;
+                        }
+                        return true;
+                    },
+                    afterChange : function(changes, source) {
+                        if(!changes) return;
+                        var needRecalculation = changes.some(function(ch) {
+                            var affectStep = ch[1] == 'process' && common.isEmpty(ch[3]);
+                            affectStep = affectStep || (ch[1] == 'process' && common.isEmpty(ch[2]) && !common.isEmpty(ch[3]));
+                            return affectStep;
+                        });
+                        if(needRecalculation) {
+                            o.recalculateStepNo(true);
+                        }
+
+                        // set material from blank, set consume by default
+                        // remove material, set cp to blank
+                        changes.forEach(function(ch) {
+                            if(ch[1] == 'material') {
+                                if(common.isEmpty(ch[3])) { // clear material
+                                    Table.tempData[ch[0]].cp = '';
+                                    Table.tempData[ch[0]].qty = '';
+                                    Table.tempData[ch[0]].materialCost = '';
+                                    Table.tempData[ch[0]].counter = '';
+                                    Table.handsontable.render();
+                                } else if(common.isEmpty(ch[2]) && !common.isEmpty(ch[3])) { // set material from empty
+                                    if(common.isEmpty(Table.tempData[ch[0]].cp)) {
+                                        Table.tempData[ch[0]].cp = 'consume';
+                                        Table.handsontable.render();
+                                    }
+                                }
+                            } else if(ch[1] == 'cp') {
+                                if(ch[3] == 'produce') {
+                                    Table.tempData[ch[0]].materialCost = '';
+                                    Table.handsontable.render();
+                                }
+                            } else if(ch[1] == 'process') {
+                                if(common.isEmpty(ch[3])) { // clear process
+                                    Table.tempData[ch[0]].duration = '';
+                                    Table.tempData[ch[0]].stagingTime = '';
+                                    Table.tempData[ch[0]].source = '';
+                                    Table.tempData[ch[0]].laborCost = '';
+                                    Table.tempData[ch[0]].remark = '';
+                                    Table.handsontable.render();
+                                } else if(!common.isEmpty(ch[3])) { // process change
+                                    var task = Front.getTask(ch[3]);
+                                    var calcTime = task.standard_time;
+                                    var defaultStagingTime = task.staging_duration || 0;
+                                    var dur = [ calcTime ];
+                                    var stagingTime = [ defaultStagingTime ];
+                                    if(Table.tempData[ch[0]].isConfigurable) {
+                                        for(var i = 1; i < Design.spec_size.length; i++) {
+                                            dur.push(calcTime);
+                                            stagingTime.push(defaultStagingTime);
+                                        }
+                                    }
+                                    Table.tempData[ch[0]].duration = dur;
+                                    Table.tempData[ch[0]].stagingTime = stagingTime;
+                                    Table.handsontable.render();
+                                }
+                            }
+                        });
+                    },
+                    afterRemoveRow : function(indexOfStart, amount) {
+                        o.recalculateStepNo(false);
+                        Table.handsontable.render();
+                    },
+                    cells : function(row, col, prop) {
+                        var cellProperties = {};
+                        var data = o.tempData;
+                        if(data.length == 0) return cellProperties;
+                        var dataRow = o.tempData[row];
+                        cellProperties.readOnly = dataRow.readOnly || false;
+
+                        if(prop == 'duration' || prop == 'stagingTime') {
+                            if(common.isEmpty(dataRow.process) || dataRow.process == 'task-5331') {
+                                cellProperties.readOnly = true;
+                            } else if(prop == 'duration') {
+                                var task = Front.getTask(dataRow.process);
+                                if(task && task.fixed_duration) {
+                                    cellProperties.readOnly = true;
+                                }
+                            }
+                        }
+                        if(['remark', 'laborCost'].indexOf(prop) != -1 && common.isEmpty(dataRow.process)) {
+                            cellProperties.readOnly = true;
+                        }
+                        if(['materialCost', 'qty', 'counter'].indexOf(prop) != -1 && common.isEmpty(dataRow.material)) {
+                            cellProperties.readOnly = true;
+                        }
+                        if((prop == 'materialCost')) {
+                            if(dataRow.cp == 'produce' || common.isEmpty(dataRow.material)) {
+                                cellProperties.readOnly = true;
+                            }
+                        }
+                        if(['stepNo', 'source'].indexOf(prop) != -1) {
+                            cellProperties.readOnly = true;
+                        }
+                        return cellProperties;
+                    }
+                }).handsontable('getInstance');
+
+                this.handsontable.updateSettings({ width : '100%' });
+            },
+
+            stepNoRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html(value);
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            processRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(instance.getData()[row].readOnly) {
+                    $(td).html('<strong>' + value + '</strong>');
+                } else if(value) {
+                    var task = Front.getTask(value);
+                    if(task) {
+                        $(td).html('<strong>' + task.code + '</strong> ' + task.label);
+                    } else {
+                        $(td).html('<span class="text-danger">' + value + '</span>');
+                    }
+                }
+                return $(td).get(0);
+            },
+
+            cpRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('').removeClass('producefield consumefield borrowfield');
+                if(value == 'produce') {
+                    $(td).html('{% trans 'T_PRODUCE' %}').addClass('producefield');
+                } else if(value == 'consume') {
+                    $(td).html('{% trans 'T_CONSUME' %}').addClass('consumefield');
+                } else if(value == 'borrow') {
+                    $(td).html('{% trans 'T_BORROW' %}').addClass('borrowfield');
+                } else {
+                    $(td).html(value);
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            materialRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    $(td).append(Resolver.labelize(api.common.C.TRANS.TYPED_CODES, value, '<span><strong class="small">{code}</strong> {label}</span>'));
+                }
+                return $(td).get(0);
+            },
+
+            configurableRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(!cellProperties.readOnly) {
+                    $checkbox = $('<input type="checkbox" class="configcheckbox" />').change(function() {
+                        instance.setDataAtRowProp(row, prop, $(this).prop('checked') ? 1 : 0);
+                    });
+                    var parsedVal = parseInt(value);
+                    if(!isNaN(parsedVal) && parsedVal == 1) {
+                        $checkbox.prop('checked', true);
+                    } else {
+                        $checkbox.prop('checked', false);
+                    }
+                    $(td).append($checkbox);
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            sourceRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                if(common.isEmpty(value)) {
+                    $(td).html('');
+                } else {
+                    var labels = [];
+                    value.forEach(function(id) {
+                        labels.push(Table.sourceMap[id]);
+                    });
+                    $(td).html(labels.join(', '));
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            configDependantRenderer : function(instance, td, row, col, prop, value, cellProperties) {
+                $(td).html('');
+                if(value) {
+                    var rowData = instance.getData()[row];
+                    var index = 0;
+                    if(rowData.isConfigurable) {
+                        if (!common.isEmpty(Header.activeSize)) {
+                            index = Design.spec_size.indexOf(Header.activeSize);
+                            if(index == -1 || index >= value.length) {
+                                index = 0;
+                            }
+                        }
+                    }
+                    $(td).html(value[index]);
+                }
+                $(td).addClass(cellProperties.className);
+                return $(td).get(0);
+            },
+
+            commit : function(destroy) {
+                if(this.handsontable) {
+                    var dataToPass = this.handsontable.getData();
+
+                    dataToPass.forEach(function(row) {
+                        if(row.qty && row.qty.constructor === Array) {
+                            row.qty = row.qty.map(function(val) {
+                                return parseFloat(val);
+                            });
+                        }
+                        if(row.duration && row.duration.constructor === Array) {
+                            row.duration = row.duration.map(function(val) {
+                                return parseFloat(val);
+                            });
+                        }
+                        if(row.stagingTime && row.stagingTime.constructor === Array) {
+                            row.stagingTime = row.stagingTime.map(function(val) {
+                                return parseFloat(val);
+                            });
+                        }
+                    });
+
+                    Design.handson = dataToPass;
+                    if(destroy) {
+                        this.handsontable.destroy();
+                    }
+                }
+
+                if(destroy) {
+                    this.handsontable = null;
+                    $('#handsontable').remove();
+                }
+            }
+
+        };
+
+        var Gantt = {
+
+            data : null,
+            isHoldData : false,
+
+            init : function() {
+                Front.configGanttForBOM();
+
+                /* HOW TO CUSTOM DETAIL DIALOG
+                 * See dhtmlxgantt.js:5264 - :5272
+                 * See gantt._save_lightbox();
+                 * See gantt._cancel_lightbox();
+                 *
+                 * To edit
+                 * set gantt.config.details_on_dblclick = false;
+                 * See onTaskDblClick in doc
+                 * */
+                gantt.init('gantt');
+
+                $('#recalculateGanttButton').click(function() {
+                    Gantt.commit(true);
+                    Gantt.renderFromModel();
+                });
+            },
+
+            // IMPORTANT Gantt.renderFromModel
+            renderFromModel : function() {
+                this.isHoldData = true;
+
+                var activeSizeIndex = 0;
+                if(!common.isEmpty(Header.activeSize)) {
+                    activeSizeIndex = Design.spec_size.indexOf(Header.activeSize);
+                    if (activeSizeIndex == -1) {
+                        activeSizeIndex = 0;
+                    }
+                }
+
+                this.data = Design.getGantt(activeSizeIndex);
+                api.verbose && console.log('gantt data', this.data);
+
+                $('#ganttViewContainer .alert').remove();
+
+                if(this.data.data.length == 0) {
+                    $('#recalculateGanttButton').hide();
+                    $('.size-switcher-control').hide();
+                    $('#gantt').hide();
+                    $('#ganttViewContainer').prepend('<div class="alert alert-warning fade in text-center">{% trans 'T_NOT_ENOUGH_TO_DISPLAY' %}</div>');
+                } else {
+                    // IMPORTANT size switcher event for gantt
+                    $('#activeSizeSwitcher').unbind('change').change(function() {
+                        Header.activeSize = $(this).val();
+                        Gantt.renderFromModel();
+                    });
+
+                    if(Design.spec_size.length > 0) {
+                        $('.size-switcher-control').show().css('display', 'inline-block');
+                    } else {
+                        $('.size-switcher-control').hide();
+                    }
+
+                    $('#recalculateGanttButton').show();
+
+                    this.data.data.forEach(function(obj, index) {
+                        obj.order = index;
+                    });
+
+                    this.data.data.filter(function(obj) {
+                        return obj.hasOwnProperty('start_date');
+                    }).forEach(function(obj) {
+                        obj.duration = obj.duration / gantt.config.duration_step;
+                        if(obj.materials && obj.materials.length > 0) {
+                            var items = [];
+                            for(var i = 0; i < obj.materials.length; i++) {
+                                var lineItem = '<span class="labelize" data-type="' + api.common.C.TRANS.TYPED_CODES + '" data-code="' + obj.materials[i].material + '" data-pattern="{label}">' + obj.materials[i].material + '</span>';
+                                if(obj.materials[i].qty && obj.materials[i].qty.constructor === Array) {
+                                    var materialQuantityIndex = 0;
+                                    if(obj.materials[i].is_configurable) {
+                                        materialQuantityIndex = activeSizeIndex;
+                                    }
+                                    var qtyText = obj.materials[i].qty[materialQuantityIndex];
+                                    if(!common.isEmpty(obj.materials[i].counter)) {
+                                        qtyText = qtyText + ' ' + obj.materials[i].counter;
+                                    }
+                                    lineItem = lineItem + ' (' + qtyText + ')';
+                                }
+                                items.push(lineItem);
+                            }
+                            obj.tooltip = {
+                                title : items.join('<br/>'),
+                                delay : { show : 400, hide : 0 }
+                            };
+                        }
+                    });
+
+                    $('#gantt').show();
+
+                    gantt.clearAll();
+                    gantt.parse(this.data);
+                    gantt.render();
+                    gantt.sort();
+                }
+            },
+
+            commit : function(destroy) {
+                if(this.isHoldData) {
+                    var activeSizeIndex = 0;
+                    if(!common.isEmpty(Header.activeSize)) {
+                        activeSizeIndex = Design.spec_size.indexOf(Header.activeSize);
+                        if (activeSizeIndex == -1) {
+                            activeSizeIndex = 0;
+                        }
+                    }
+
+                    Design.setGantt(gantt.serialize(), activeSizeIndex);
+                }
+                if(destroy) {
+                    this.isHoldData = false;
+                }
+            }
+
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                api.common.uoms(function(success, data) {
+                    if(success) {
+                        uoms = data;
+
+                        $('#uom > *').remove();
+                        for(group in uoms) {
+                            if(!uoms.hasOwnProperty(group)) continue;
+                            var $optgroup = $('<optgroup label="' + group + '"></optgroup>');
+                            uoms[group].forEach(function(uomItem) {
+                                $optgroup.append('<option value="' + uomItem.code + '">' + uomItem.label + '</option>');
+                            });
+                            $('#uom').append($optgroup);
+                        }
+                    } else {
+                        Front.handleAjaxError(data);
+                        api.verbose && console.log("Failed to retrieve uoms", data);
+                    }
+                });
+
+                // view switcher
+                $('input[name="view"]').change(function() {
+                    var view = $(this).val();
+                    if(view == 'gantt') {
+                        $('#tilesViewContainer').hide();
+                        $('#tableViewContainer').hide();
+                        $('#ganttViewContainer').show();
+                        Table.commit(true);
+                        Gantt.renderFromModel();
+                    } else if(view == 'tiles') {
+                        $('#tableViewContainer, .size-switcher-control, #recalculateGanttButton').hide();
+                        $('#ganttViewContainer').hide();
+                        $('#tilesViewContainer').show();
+                        Table.commit(true);
+                        Gantt.commit(true);
+                        Tiles.renderFromModel();
+                    } else if(view == 'table') {
+                        $('#recalculateGanttButton').hide();
+                        $('#tilesViewContainer').hide();
+                        $('#ganttViewContainer').hide();
+                        $('#tableViewContainer').show();
+                        Gantt.commit(true);
+                        Table.renderFromModel();
+                    }
+                });
+
+                Header.init();
+                Tiles.init();
+                Table.init();
+                Gantt.init();
+
+                if(!common.isEmpty(designId)) {
+                    // IMPORTANT notification on ready
+                    var operation = common.getParam(window.location.href, 'op');
+                    Front.removeParamFromAddressBar();
+                    if(operation == 'created') {
+                        Front.notify('success', '{% trans 'NOTI_DESIGN_CREATED' %}', '');
+                    } else if(operation == 'revisioned') {
+                        Front.notify('success', '{% trans 'NOTI_DESIGN_REVISION_CREATED' %}', '');
+                    } else if(operation == 'updated') {
+                        Front.notify('success', '{% trans 'NOTI_DESIGN_SAVED' %}', '');
+                    }
+
+                    Design.load(designId, function(success, data) {
+                        if(success) {
+                            Design._revisionIds(function(suc, revs) {
+                                if(suc) {
+                                    revisions = [];
+                                    for(var rid in revs) {
+                                        if(!revs.hasOwnProperty(rid)) continue;
+                                        revisions.push({ revId : rid, objectId : revs[rid] });
+                                    }
+                                    prepareInititalData();
+                                } else {
+                                    Front.handleAjaxError(revs);
+                                }
+                            });
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                } else {
+                    var ref = common.getParam(window.location.href, 'ref');
+                    // IMPORTANT load reference design for duplication
+                    if(!common.isEmpty(ref)) {
+                        Design.load(ref, function(success, data) {
+                            if(success) {
+                                Design.id = null;
+                                Design.designUid = null;
+                                Design.revId = null;
+                                delete Design['designCode'];
+                                delete Design['salesManifest'];
+                                Design.status = Design.C.STATUS.NEW;
+                                Design.lastEdited = null;
+                                Design.createdBy = null;
+                                prepareInititalData();
+                            } else {
+                                Front.handleAjaxError(data);
+                            }
+                        });
+                    } else {
+                        prepareInititalData();
+                    }
+                }
+            });
+
+            function prepareInititalData() {
+                // prefetch all codes in process
+                var codes = [];
+                Design.process.masterModeling.forEach(function(process) {
+                    codes.push(process.process);
+                    process.materials.forEach(function(mat) {
+                        codes.push(mat.material);
+                    });
+                });
+                Design.process.sampleCreation.forEach(function(process) {
+                    codes.push(process.process);
+                    process.materials.forEach(function(mat) {
+                        codes.push(mat.material);
+                    });
+                });
+                Resolver.prefetch(api.common.C.TRANS.TYPED_CODES, codes);
+
+                delayStartTimer = setInterval(function() {
+                    if(uoms != null) {
+                        clearInterval(delayStartTimer);
+                        delayStartTimer = null;
+                        onReadyToUse();
+                    }
+                }, 300);
+            }
+
+            function onReadyToUse() {
+                Header.renderFromModel();
+
+                $('input[name="view"]:checked').trigger('change');
+
+                // IMPORTANT UI data based setup
+                /**
+                 * New Design
+                 * */
+                if(common.isEmpty(designId)) {
+                    $('#saveDesignButton').parent().replaceWith($('#saveDesignButton'));
+                    $('#duplicateDesignButton, #viewLogButton').remove();
+                    $('#submitDesignButton, .hideonnew').remove();
+                }
+
+                /**
+                 * Design that is approved once
+                 * */
+                if(Design.designCode) {
+                    $('.hideondesigncode').remove();
+                    $('.showondesigncode').removeClass('hide').show();
+                }
+
+                // PERMISSION cannot write
+                if(!Front.userCan('design+write')) {
+                    $('#saveDesignButton, #submitDesignButton, #duplicateDesignButton, .fileinput-button, .openlookup, .idlookup, .removeattachment').remove();
+                    $('#saveDesignAsNewRevisionButton').closest('.btn-group').remove();
+                    $('input[type="text"], input[type="number"], select, textarea').attr('readonly', 'readonly');
+                } else {
+                    Front.enableInputChangesChecking();
+                }
+
+                /**
+                 * Please see https://bitbucket.org/syllistudio/intraman/wiki/Design%20Approval%20Logic
+                 **/
+                if (Design.status == Design.C.STATUS.WAIT_FOR_APPROVAL) {
+                    $('#submitDesignButton').remove();
+                    var message = '{% trans 'NOTI_PENDING_FOR_APPROVAL_MESSAGE' %}';
+                    // PERMISSION can approve design
+                    if (Front.userCan('design+write@approve')) {
+                        // FIXME how about rejecting?
+                        message = message + ' <a class="btn btn-info btn-sm first" id="approveDesign" href="javascript:;"><i class="fa fa-check"></i> {% trans 'BUTTON_APPROVE' %}</a>';
+                    }
+                    Front.notifyTop('info', '{% trans 'NOTI_PENDING_FOR_APPROVAL' %}', message, -1);
+                } else if (Design.status == Design.C.STATUS.APPROVED) {
+                    $('#submitDesignButton').removeClass('hide');
+                    Front.notifyTop('success', '{% trans 'NOTI_APPROVED' %}', '{% trans 'NOTI_APPROVED_MESSAGE' %}', -1);
+                } else if (Design.status == Design.C.STATUS.REJECTED) {
+                    // TODO show notification and reason
+                    $('#submitDesignButton').removeClass('hide');
+                } else if (Design.status == Design.C.STATUS.EDITED) {
+                    $('#submitDesignButton').removeClass('hide');
+                    Front.notifyTop('warning', '{% trans 'NOTI_EDITED' %}', '{% trans 'NOTI_EDITED_MESSAGE' %}', -1);
+                } else {
+                    $('#submitDesignButton').removeClass('hide');
+                }
+
+                common.unblockUI($('#main-content'));
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

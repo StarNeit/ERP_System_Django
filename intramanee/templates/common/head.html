@@ -1,0 +1,53 @@
+{% load staticfiles %}
+{% load i18n %}
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Sylli Studio">
+    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}">
+
+    <title>{{ page_title|default:_('APP_NAME') }}</title>
+
+    <!--Core CSS -->
+    <link href="{% static 'bs3/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-reset.css' %}" rel="stylesheet">
+    <link href="{% static 'font-awesome-4.6.3/css/font-awesome.css' %}" rel="stylesheet">
+    <link href="{% static 'js/iCheck/skins/square/green.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style-responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'syjscss/bootstrap-extended.css' %}" rel="stylesheet">
+    <link href="{% static 'js/jquery-ui-1.11.4.custom/jquery-ui.css' %}" rel="stylesheet">
+    <link href="{% static 'js/bootstrap-fileupload/bootstrap-fileupload.css' %}" rel="stylesheet">
+    <link href="{% static 'js/bootstrap-datepicker/css/datepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'js/bootstrap-timepicker/css/timepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'js/bootstrap-datetimepicker/css/datetimepicker.css' %}" rel="stylesheet"  />
+    <link href="{% static 'js/select2/select2.css' %}" rel="stylesheet">
+    <link href="{% static 'js/gritter/css/jquery.gritter.css' %}" rel="stylesheet">
+    <link href="{% static 'js/file-uploader/css/jquery.fileupload.css' %}" rel="stylesheet">
+    <link href="{% static 'css/jquery.id-lookup-helper.css' %}" rel="stylesheet">
+    <link href="{% static 'js/handsontable/handsontable.css' %}" rel="stylesheet">
+    <link href="{% static 'js/dhtmlx/dhtmlxscheduler.css' %}" rel="stylesheet">
+    <link href="{% static 'js/dhtmlx/dhtmlxgantt.css' %}" rel="stylesheet">
+    <link href="{% static 'js/dhtmlx/dhtmlxmenu.css' %}" rel="stylesheet">
+    <link href="{% static 'js/bootstrap-tokenfield/bootstrap-tokenfield.css' %}" rel="stylesheet">
+    <link href="{% static 'js/fuelux/css/tree-style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/custom.less' %}" rel="stylesheet/less" type="text/css">
+
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]>
+    <script src="{% static 'js/ie8-responsive-file-warning.js' %}"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript">
+        var STATIC = '{% static '' %}';
+    </script>
+</head>

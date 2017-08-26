@@ -1,0 +1,2377 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block page %}
+    <div id="scheduler_here" class="dhx_cal_container" style="width:100%; height:600px;">
+		<div class="dhx_cal_navline">
+			<div class="dhx_cal_prev_button">&nbsp;</div>
+			<div class="dhx_cal_next_button">&nbsp;</div>
+			<div class="dhx_cal_today_button"></div>
+			<div class="dhx_cal_date"></div>
+            <button id="savePlanButton" class="btn btn-sm btn-success" style="position: absolute; top: 14px; left: 15px;"><i class="fa fa-save"></i> {% trans 'BUTTON_SAVE' %}</button>
+            <div id="backButtonGroup" class="btn-group btn-group-sm" style="position:relative; top: 14px; left: 90px; display: none;">
+                <a class="btn btn-white" id="zoomOutButton" href="javascript:;"><i class="fa fa-chevron-left"></i> {% trans 'BUTTON_BACK' %}</a>
+                <a data-toggle="dropdown" class="btn btn-white dropdown-toggle" href="javascript:;" aria-expanded="false"><span class="caret"></span></a>
+                <ul role="menu" class="dropdown-menu">
+                    <li><a href="javascript:;" id="backToRootViewButton">{% trans 'BUTTON_BACK_TO_ROOT_VIEW' %}</a></li>
+                </ul>
+            </div>
+            <div id="proposalAlert" class="alert alert-warning" style="position: absolute; top: 13px; left: 187px; display:none;">
+                <strong>{% trans 'T_NOTI_PROPOSAL' %}</strong> <span class="inner-msg"></span>
+            </div>
+            <div id="exceptions" class="nav notify-row" style="margin: 0px 0px; position:absolute; right: 365px; display:none;">
+                <!--  notification start -->
+                <ul class="nav top-menu">
+                    <li class="dropdown">
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                            <i class="fa fa-warning"></i>
+                            <span class="badge">0</span>
+                        </a>
+                        <ul class="dropdown-menu extended"></ul>
+                    </li>
+                </ul>
+            </div>
+            <div id="loadToggleButton" class="btn-group btn-group-sm" data-toggle="buttons" style="position: absolute; top: 15px; right: 215px;">
+                <label class="btn btn-default btn-sm active">
+                    <input type="radio" name="matrixview" value="" checked="checked" /> {% trans 'BUTTON_LOAD' %}
+                </label>
+                <label class="btn btn-default btn-sm">
+                    <input type="radio" name="matrixview" value="showcount" /> {% trans 'BUTTON_TASK_COUNT' %}
+                </label>
+                <label class="btn btn-default btn-sm">
+                    <input type="radio" name="matrixview" value="gridview" /> {% trans 'BUTTON_GRID' %}
+                </label>
+            </div>
+		</div>
+		<div class="dhx_cal_header">
+		</div>
+		<div class="dhx_cal_data">
+		</div>
+	</div>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/api.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/worktime.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/tool-validators.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/models/production-order.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxscheduler.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/scheduler_locale_th.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxscheduler_grid_view.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxscheduler_timeline.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxscheduler_treetimeline.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxscheduler_tooltip.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dhtmlx/dhtmlxmenu.js' %}"></script>
+    <script type="text/javascript">
+        var choices = {% choices 'uom' 'production_order_status' 'task-group' %};
+        var delayStartTimer = null;
+        var tasks = {{ tasks|safe }};
+        var users = {{ operators|jsonify }};
+        var usersByTaskGroup = {};
+        var machines = {{ machines|jsonify }};
+        var machinesByTaskGroup = {};
+        var ordersAndGroups = {{ orders_and_groups|jsonEncoder }};
+        var proposal = {{ proposal|jsonEncoder }};
+        var isProposalMode = false;
+
+        var Data = {
+            groups : [],
+            resources : {},
+            orders : [],
+            operationGroups : [],
+            SAVE_LOT : 5,
+            saveQueue : [],
+            readTimestamp : new Date(),
+
+            filters : {},
+
+            init : function() {
+                var o = this;
+
+                // index users by task group, index machines by task group
+                for(var code in users) {
+                    if(!users.hasOwnProperty(code)) continue;
+                    var responsibleTask = (code + '').substr(0, 4);
+                    if(!usersByTaskGroup.hasOwnProperty(responsibleTask)) {
+                        usersByTaskGroup[responsibleTask] = [];
+                    }
+                    usersByTaskGroup[responsibleTask].push(users[code]);
+                }
+                for(var code in machines) {
+                    if(!machines.hasOwnProperty(code)) continue;
+                    if(machines[code].availability !== 0) continue;
+                    var responsibleTask = (code + '').substr(0, 4);
+                    if(!machinesByTaskGroup.hasOwnProperty(responsibleTask)) {
+                        machinesByTaskGroup[responsibleTask] = [];
+                    }
+                    machinesByTaskGroup[responsibleTask].push(machines[code]);
+                }
+
+                // reformat task groups
+                this.groups = [];
+                for(key in choices['task-group']) {
+                    if(!choices['task-group'].hasOwnProperty(key)) continue;
+                    if((key + '').indexOf('4') != 0 && (key + '').indexOf('5') != 0) continue;
+
+                    var room = {
+                        key : 'group' + key,
+                        label : choices['task-group'][key].label
+                    };
+
+                    this.resources[room.key] = [
+                        {
+                            key : 'room' + key,
+                            label : choices['task-group'][key].label
+                        }
+                    ];
+
+                    // allocate users to room
+                    for(code in users) {
+                        if(!users.hasOwnProperty(code)) continue;
+
+                        var matchedPerms = users[code].permissions.filter(function(permString) {
+                            return permString.indexOf('task+write@' + key) == 0;
+                        });
+
+                        if(matchedPerms.length > 0) {
+                            var newUser = {
+                                key : 'room' + key + 'user' + code,
+                                label : displayName(users[code].first_name, users[code].last_name),
+                                room : key
+                            };
+                            this.resources[room.key].push(newUser);
+                        }
+                    }
+
+                    // FIXME for testing
+                    var enableTest = false;
+                    var whitelist = ['414', '417', '529', '533', '539', '546'];
+                    if(!enableTest || whitelist.indexOf(room.label) != -1) {
+                        this.groups.push(room);
+                    }
+                }
+            },
+
+            getMatrixSections : function() {
+                return this.groups;
+            },
+
+            getTimelineSections : function(key) {
+                return this.resources[key];
+            },
+
+            // IMPORTANT Data.parseData
+            parseData : function() {
+                if(isProposalMode) {
+                    // read live data
+                    this.orders = this.formatOrders(ordersAndGroups[0]);
+                    // apply proposal data start from proposal start time and so on
+                    var proposalOrders = this.formatOrders(proposal.data.orders);
+                    for(var i = 0; i < proposalOrders.length; i++) {
+                        var ops = proposalOrders[i].operation;
+                        for(var j = 0; j < ops.length; j++) {
+                            var op = this.getOperationById(ops[j].id);
+                            if(op != null) {
+                                op.plannedStart = moment(ops[j].plannedStart).toDate();
+                                op.plannedEnd = moment(ops[j].plannedEnd).toDate();
+                                op.assignee = ops[j].assignee;
+                            }
+                        }
+                    }
+
+                    this.operationGroups = ordersAndGroups[1];
+                    // apply proposal data start from proposal start time and so on
+                    var proposalGroups = proposal.data.groups;
+                    for(var i = 0; i < proposalGroups.length; i++) {
+                        var group = this.getGroupById(proposalGroups[i]._id);
+                        if(group != null) {
+                            group.planned_start = proposalGroups[i].planned_start;
+                            group.planned_end = proposalGroups[i].planned_end;
+                            group.assignee = proposalGroups[i].assignee;
+                        }
+                    }
+                } else {
+                    this.orders = this.formatOrders(ordersAndGroups[0]);
+                    this.operationGroups = ordersAndGroups[1];
+                }
+                Scheduler.render();
+            },
+
+            // IMPORTANT Data.formatOrders
+            formatOrders : function(rawOrders) {
+                var o = this;
+                var orders = [];
+
+                var counter = [0, 0, 0, 0];
+
+                rawOrders.forEach(function(obj) {
+                    var order = new ProductionOrder();
+                    order.serialize = obj;
+                    order.colorClass = 'po' + order.status + '' + counter[order.status];
+                    counter[order.status]++;
+                    if(counter[order.status] > 3) {
+                        counter[order.status] = 0;
+                    }
+                    order.operation.forEach(function(op, index) {
+                        op.step = index + 1;
+                    });
+                    orders.push(order);
+                });
+                return orders;
+            },
+
+            // IMPORTANT Data.formatOperation
+            formatOperation : function(op) {
+                var task = Front.getTask(op.task);
+                if(task) {
+                    op.text = '<strong>' + task.code + '</strong> ' + task.label;
+                } else {
+                    op.text = op.task;
+                }
+                op.text = op.text + '&nbsp;&nbsp; - <a href="javascript:;" class="viewtask interact" data-from="tool" data-type="operation" data-unique="' + op.refDoc[0] + '/' + op.id + '" data-target="_blank">{% trans 'T_VIEW_TASK' %}</a>';
+                if(op.status == OP_STATUS_CONFIRMED || op.status == OP_STATUS_DELIVERED) {
+                    op.start_date = op.actualStart;
+                    op.end_date = op.actualEnd;
+                } else {
+                    op.start_date = op.plannedStart;
+                    op.end_date = op.plannedEnd;
+                }
+                op.dataType = 'operation';
+            },
+
+            formatOperationGroup : function(group) {
+                var task = Front.getTask(group.task);
+                if(task) {
+                    group.text = '<strong>BATCH ' + task.code + ' ' + task.label + '</strong>';
+                } else {
+                    group.text = '<strong>BATCH ' + group.task + '</strong>';
+                }
+                group.id = group._id;
+                group.text = group.text + '&nbsp;&nbsp; - <a href="javascript:;" class="viewtask">{% trans 'T_VIEW_TASK' %}</a>';
+                group.start_date = new Date(group.planned_start * 1000);
+                group.end_date = new Date(group.planned_end * 1000);
+                group.dataType = 'group';
+            },
+
+            dataByRoom : function() {
+                var o = this;
+                var ret = [];
+                var opGroupIds = [];
+                this.orders.forEach(function(order) {
+                    order.operation.forEach(function(op) {
+                        var taskCode = op.task.substr('task-'.length);
+                        op.section_id = 'group' + taskCode.substr(0, 3);
+                        o.formatOperation(op);
+                        if(!common.isEmpty(op.group)) {
+                            opGroupIds.push(op.group);
+                        } else {
+                            ret.push(op);
+                        }
+                    });
+                });
+
+                opGroupIds = common.unique(opGroupIds);
+                opGroupIds.forEach(function(id) {
+                    var opGroup = o.getGroupById(id);
+                    if(opGroup != null) {
+                        var taskCode = opGroup.task.substr('task-'.length);
+                        opGroup.section_id = 'group' + taskCode.substr(0, 3);
+                        o.formatOperationGroup(opGroup);
+                        ret.push(opGroup);
+                    }
+                });
+
+                return ret;
+            },
+
+            dataByResource : function() {
+                var o = this;
+                var ret = [];
+                var opGroupIds = [];
+                this.orders.forEach(function(order) {
+                    order.operation.forEach(function(op) {
+                        var taskCode = op.task.substr('task-'.length);
+                        var groupNumber = taskCode.substr(0, 3);
+                        if(common.isEmpty(op.assignee)) {
+                            op.section_id = 'room' + groupNumber;
+                        } else {
+                            if(op.assignee.length == 3) {
+                                op.section_id = 'room' + op.assignee;
+                            } else {
+                                op.section_id = 'room' + groupNumber + 'user' + op.assignee;
+                            }
+                        }
+                        o.formatOperation(op);
+
+                        if(!common.isEmpty(op.group)) {
+                            opGroupIds.push(op.group);
+                        } else {
+                            ret.push(op);
+                        }
+                    });
+                });
+
+                opGroupIds = common.unique(opGroupIds);
+                opGroupIds.forEach(function(id) {
+                    var opGroup = o.getGroupById(id);
+                    if(opGroup != null) {
+                        var taskCode = opGroup.task.substr('task-'.length);
+                        var groupNumber = taskCode.substr(0, 3);
+                        if(common.isEmpty(opGroup.assignee)) {
+                            opGroup.section_id = 'room' + groupNumber;
+                        } else {
+                            if(opGroup.assignee.length == 3) {
+                                opGroup.section_id = 'room' + opGroup.assignee;
+                            } else {
+                                opGroup.section_id = 'room' + groupNumber + 'user' + opGroup.assignee;
+                            }
+                        }
+                        o.formatOperationGroup(opGroup);
+                        ret.push(opGroup);
+                    }
+                });
+
+                return ret;
+            },
+
+            // IMPORTANT Data.getOrderById
+            getOrderById : function(id) {
+                var found = this.orders.filter(function(order) {
+                    return order.id == id;
+                });
+                if(found.length == 0) {
+                    return null;
+                }
+                return found[0];
+            },
+
+            // IMPORTANT Data.getOperationById
+            getOperationById : function(id) {
+                for(var i = 0; i < this.orders.length; i++) {
+                    var found = this.orders[i].operation.filter(function(op) {
+                        return op.id == id;
+                    });
+                    if(found.length > 0) {
+                        return found[0];
+                    }
+                }
+                return null;
+            },
+
+            // IMPORTANT Data.getGroupById
+            getGroupById : function(id) {
+                if(common.isEmpty(id)) return null;
+                var found = this.operationGroups.filter(function(group) {
+                    return group._id == id;
+                });
+                if(found.length == 0) {
+                    return null;
+                }
+                return found[0];
+            },
+
+            // IMPORTANT Data.getOperationsInGroup
+            getOperationsInGroup : function(groupId) {
+                var ret = [];
+                if(common.isEmpty(groupId)) return ret;
+                this.orders.forEach(function(order) {
+                    var found = order.operation.filter(function(op) {
+                        return op.group == groupId;
+                    });
+                    ret = ret.concat(found);
+                });
+                return ret;
+            },
+
+            // IMPORTANT Data.getNextOperations
+            getNextOperations : function(opId) {
+                if(common.isEmpty(opId)) return [];
+                for(var i = 0; i < this.orders.length; i++) {
+                    var found = this.orders[i].operation.filter(function(op) {
+                        return op.source.indexOf(opId) != -1;
+                    });
+                    if(found.length > 0) {
+                        return found;
+                    }
+                }
+                return [];
+            },
+
+            // IMPORTANT Data.getObjectsByAssignee
+            getObjectsByAssignee : function(assignee) {
+                var addedGroupIds = [];
+                var ret = [];
+                for(var i = 0; i < this.orders.length; i++) {
+                    for(var j = 0; j < this.orders[i].operation.length; j++) {
+                        if(this.orders[i].operation[j].assignee == assignee) {
+                            if(common.isEmpty(this.orders[i].operation[j].group)) {
+                                ret.push(this.orders[i].operation[j]);
+                            } else {
+                                if(addedGroupIds.indexOf(this.orders[i].operation[j].group) == -1) {
+                                    var group = this.getGroupById(this.orders[i].operation[j].group);
+                                    addedGroupIds.push(group._id);
+                                    ret.push(group);
+                                }
+                            }
+                        }
+                    }
+                }
+                ret.sort(function(a, b) {
+                    return a.start_date.getTime() - b.start_date.getTime();
+                });
+                return ret;
+            },
+
+            getTaskResources : function(taskCode) {
+                var ret = { users : [], machines : [] };
+
+                var task = null;
+                if(typeof taskCode == 'string') {
+                    task = Front.getTask(taskCode);
+                } else {
+                    task = taskCode;
+                }
+                if(!task) return ret;
+
+                var tc = task.code + '';
+
+                if(usersByTaskGroup.hasOwnProperty(tc)) {
+                    ret.users = [].concat(usersByTaskGroup[tc]);
+                }
+                if(machinesByTaskGroup.hasOwnProperty(tc)) {
+                    ret.machines = [].concat(machinesByTaskGroup[tc]);
+                }
+
+                return ret;
+            },
+
+            availableLoad : function(taskCode, date) {
+                var task = null;
+                if(typeof taskCode == 'string') {
+                    task = Front.getTask(taskCode);
+                } else {
+                    task = taskCode;
+                }
+
+                var resources = this.getTaskResources(task);
+                var availableDuration = 0;
+                var resourceCount = 0;
+                if(resources.machines.length > 0) {
+                    resourceCount = resources.machines.length;
+                } else {
+                    resourceCount = resources.users.length;
+                }
+
+                if(task.continue_on_break == 1) {
+                    availableDuration = 60 * 24; // 24 hours
+                } else {
+                    availableDuration = WorkTime.getWorkingDuration(moment(date).startOf('day').toDate(), moment(date).startOf('day').add(1, 'day').toDate());
+                }
+
+                return availableDuration * resourceCount;
+            },
+
+            // IMPORTANT Data.setFilter
+            setFilter : function(field, value) {
+                if(field == '') {
+                    this.filters = {};
+                } else {
+                    if (common.isEmpty(value + '')) {
+                        delete this.filters[field];
+                    } else {
+                        this.filters[field] = {
+                            field : field.toLowerCase(),
+                            value : value
+                        };
+                    }
+                }
+
+                this.applyFilters();
+            },
+
+            // IMPORTANT Data.applyFilters
+            applyFilters : function() {
+                $('.currentfilter').remove();
+                for(var i = 0; i < scheduler.grid_grid.columns.length; i++) {
+                    $temp = $('<div>' + scheduler.grid_grid.columns[i].label + '</div>');
+                    $temp.find('.currentfilter').remove();
+                    scheduler.grid_grid.columns[i].label = $temp.html();
+                }
+
+                if(Object.keys(this.filters).length == 0) {
+                    $('#activeStyle').replaceWith($('<style id="activeStyle" type="text/css"></style>'));
+                } else {
+                    var styleRules = [];
+
+                    for(var i = 0; i < this.orders.length; i++) {
+                        var order = this.orders[i];
+                        if (this.filters.hasOwnProperty('refDoc')) {
+                            if (order.docNo.toLowerCase().indexOf(this.filters.refDoc.value) == -1) {
+                                styleRules.push('.order' + order.id + ':not(.inbatch){ display:none; }');
+                            }
+                        }
+
+                        for (var j = 0; j < order.operation.length; j++) {
+                            var op = order.operation[j];
+                            if (this.filters.hasOwnProperty('task')) {
+                                if (op.task.indexOf(this.filters.task.value) == -1) {
+                                    styleRules.push('[event_id="' + op.id + '"]{ display:none; }');
+                                }
+                            }
+                            if (this.filters.hasOwnProperty('assignee')) {
+                                if (common.isEmpty(op.assignee) || op.assignee.length <= 3 || op.assignee.indexOf(this.filters.assignee.value) == -1) {
+                                    styleRules.push('[event_id="' + op.id + '"]{ display:none; }');
+                                }
+                            }
+                            if (this.filters.hasOwnProperty('status')) {
+                                var sText = gettext('OP_STATUS_' + op.status);
+                                if(sText.toLowerCase().indexOf(this.filters.status.value) == -1) {
+                                    styleRules.push('[event_id="' + op.id + '"]{ display:none; }');
+                                }
+                            }
+                        }
+                    }
+
+                    for(var i = 0; i < this.operationGroups.length; i++) {
+                        var group = this.operationGroups[i];
+                        var ops = this.getOperationsInGroup(group._id);
+                        var isMatched = false;
+
+                        if (this.filters.hasOwnProperty('task')) {
+                            if (group.task.indexOf(this.filters.task.value) == -1) {
+                                styleRules.push('.batch' + group._id + '{ display:none; }');
+                            }
+                        }
+                        if (this.filters.hasOwnProperty('assignee')) {
+                            if (common.isEmpty(group.assignee) || group.assignee.length <= 3 || group.assignee.indexOf(this.filters.assignee.value) == -1) {
+                                styleRules.push('.batch' + group._id + '{ display:none; }');
+                            }
+                        }
+                        if (this.filters.hasOwnProperty('status')) {
+                            var sText = gettext('GROUP_STATUS_' + group.status);
+                            if(sText.toLowerCase().indexOf(this.filters.status.value) == -1) {
+                                styleRules.push('.batch' + group._id + '{ display:none; }');
+                            }
+                        }
+                        for (var j = 0; j < ops.length; j++) {
+                            var op = ops[j];
+                            if (this.filters.hasOwnProperty('refDoc')) {
+                                if (op.refDoc && op.refDoc.length > 0) {
+                                    var order = this.getOrderById(op.refDoc[0]);
+                                    if (order) {
+                                        if (order.docNo.toLowerCase().indexOf(this.filters.refDoc.value) != -1) {
+                                            isMatched = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (this.filters.hasOwnProperty('refDoc')) {
+                            if (!isMatched) {
+                                styleRules.push('.batch' + group._id + '{ display:none; }');
+                            }
+                        }
+                    }
+
+                    $('#activeStyle').replaceWith($('<style id="activeStyle" type="text/css">' + styleRules.join(' ') + '</style>'));
+
+                    for(var field in this.filters) {
+                        $('.dhx_grid_line a.filter[data-field="' + field + '"]').after('<strong class="currentfilter"> ' + this.filters[field].value + '</strong>');
+                        for (var i = 0; i < scheduler.grid_grid.columns.length; i++) {
+                            if (scheduler.grid_grid.columns[i].id == field) {
+                                scheduler.grid_grid.columns[i].label = scheduler.grid_grid.columns[i].label + '<strong class="currentfilter"> ' + this.filters[field].value + '</strong>';
+                            }
+                        }
+                    }
+                }
+            },
+
+            // IMPORTANT Data.doSave
+            doSave : function() {
+                var originalProposal = proposal;
+
+                var serializedOrders = [];
+                Data.orders.forEach(function(order) {
+                    serializedOrders.push(order.serialize);
+                });
+
+                if(proposal == null) {
+                    // FIXME there is a bug with expire time because the database is saved with UTC, but from the discussion with Mah we will leave it this way.
+                    var proposalStart = moment(this.readTimestamp).add(2, 'hours').toDate();
+                    proposal = {
+                        start : proposalStart.getTime() / 1000,
+                        data : { orders : serializedOrders, groups : Data.operationGroups }
+                    };
+                } else {
+                    proposal = {
+                        _id : proposal._id,
+                        start : proposal.start,
+                        data: {orders: serializedOrders, groups: Data.operationGroups}
+                    };
+                }
+
+                common.blockUI($('#main-content'));
+                api.crud.write('proposal', proposal, null, function(success, data) {
+                    if(success) {
+                        Front.unblockBackButton();
+                        var newUrl = common.addParam(URL.tool(), 'proposal', 'true');
+                        newUrl = common.addParam(newUrl, 'op', 'saved');
+                        window.location = newUrl;
+                    } else {
+                        proposal = originalProposal;
+                        common.unblockUI($('#main-content'));
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            // IMPORTANT Data.doBatchSave
+            doBatchSave : function() {
+                var o = this;
+                var lot = this.saveQueue.splice(0, this.SAVE_LOT);
+                if(lot.length == 0) {
+                    Data.orders.filter(function(order) {
+                        return order.changed;
+                    }).forEach(function(order) {
+                        delete order.changed;
+
+                        order.operation.filter(function(op) {
+                            return op.changed;
+                        }).forEach(function(op) {
+                            delete op.changed;
+                        });
+                    });
+
+                    // trying to release all orders if possible
+                    var allOrderIds = [];
+                    for(var i = 0; i < Data.orders.length; i++) {
+                        allOrderIds.push(Data.orders[i].id);
+                    }
+
+                    api.production.release(allOrderIds, function(success, data) {
+                        if(success) {
+                            api.crud.del('proposal', proposal._id, function(s, d) {
+                                Front.unblockBackButton();
+                                var newUrl = URL.tool();
+                                newUrl = common.addParam(newUrl, 'op', 'approved');
+                                window.location = newUrl;
+                            });
+                        } else {
+                            Front.handleAjaxError(data);
+                            common.unblockUI($('#main-content'));
+                        }
+                    });
+                    return;
+                }
+
+                api.crud.update(lot, function(success, data) {
+                    if(success) {
+
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                    o.doBatchSave();
+                });
+            },
+
+            // IMPORTANT Data.doMergeProposal
+            doMergeProposal : function() {
+                if(!isProposalMode) return;
+                Scheduler.commit();
+
+                var timeFence = moment(new Date(proposal.start * 1000)).toDate();
+
+                var o = this;
+
+                this.saveQueue = [];
+
+                Data.orders.filter(function(order) {
+                    return order.plannedEnd.getTime() >= timeFence.getTime();
+                }).forEach(function(order) {
+                    o.saveQueue.push({
+                        id : order.id,
+                        model : 'production_order',
+                        status : order.status,
+                        planned_start : order.plannedStart.getTime() / 1000,
+                        planned_end : order.plannedEnd.getTime() / 1000
+                    });
+
+                    order.operation.filter(function(op) {
+                        return op.plannedStart.getTime() >= timeFence.getTime();
+                    }).forEach(function(op) {
+                        o.saveQueue.push({
+                            id : op.id,
+                            model : 'task:production_operation',
+                            planned_start : op.plannedStart.getTime() / 1000,
+                            planned_end : op.plannedEnd.getTime() / 1000,
+                            assignee : op.assignee
+                        });
+                    });
+                });
+
+                Data.operationGroups.filter(function(group) {
+                    return group.planned_start >= (timeFence.getTime() / 1000);
+                }).forEach(function(group) {
+                    o.saveQueue.push({
+                        id : group._id,
+                        model : 'operation_group',
+                        planned_start : group.planned_start,
+                        planned_end : group.planned_end
+                    });
+                });
+
+                //if(this.saveQueue.length == 0) return;
+
+                common.blockUI($('#main-content'));
+                this.doBatchSave();
+            }
+        };
+
+        var ValidatorManager = {
+
+            validators : [],
+
+            init : function() {
+                // IMPORTANT notification handler
+                $(document).on('click', '#exceptions .alert', function() {
+                    var context = $(this).data('context');
+                    if(!context) return;
+                    Scheduler.goTo(context);
+                });
+
+                this.validators.push(new Collision());
+                this.validators.push(new GroupMember());
+                this.validators.push(new Resource());
+            },
+
+            // IMPORTANT ValidatorManager.validate
+            validate : function() {
+                var errs = [];
+                this.validators.forEach(function(vd) {
+                    errs = errs.concat(vd.validateOrders(Data.orders));
+                    errs = errs.concat(vd.validateGroups(Data.operationGroups));
+                });
+
+                console.log(errs);
+
+                if(errs.length > 0) {
+                    $('#exceptions').show();
+                    $('#exceptions .dropdown-toggle').addClass('haserror');
+                    console.log(errs);
+                } else {
+                    $('#exceptions .dropdown-toggle').removeClass('haserror');
+                    $('#exceptions').stop(true, false).fadeOut('slow');
+                }
+
+                $('#exceptions .badge').html(errs.length);
+
+                $('#exceptions .dropdown-menu li').remove();
+                errs.forEach(function(err) {
+                    var $li = $('<li>\
+                        <div class="alert alert-danger clearfix">' + err.message + '</div>\
+                    </li>');
+                    $li.find('.alert').data('context', err.data);
+                    $('#exceptions .dropdown-menu').append($li);
+                });
+
+                return errs.length == 0;
+            }
+        };
+
+        var Scheduler = {
+            contextMenu : null,
+            windowOffsetStart : 0,
+            windowOffset : 0,
+            viewStack : [],
+
+            // IMPORTANT Scheduler.init
+            init : function() {
+                var o = this;
+
+                $('#savePlanButton').click(function() {
+                    Scheduler.commit();
+                    if(!ValidatorManager.validate()) return;
+                    if(!isProposalMode && proposal != null) {
+                        Front.confirm('{% trans 'T_CONFIRM_OVERRIDE_PROPOSAL_MESSAGE' %}',
+                            '{% trans 'BUTTON_YES' %}',
+                            '{% trans 'BUTTON_NO' %}',
+                            function() {
+                                Data.doSave();
+                            });
+                    } else {
+                        Data.doSave();
+                    }
+                });
+
+                $(document).on('click', '#approveProposalButton', function() {
+                    Front.confirm('{% trans 'T_CONFIRM_ACTION' %}',
+                            '{% trans 'BUTTON_CONFIRM' %}',
+                            '{% trans 'BUTTON_NO' %}',
+                            function() {
+                                Data.doMergeProposal();
+                            });
+                });
+
+                $('<style id="activeStyle" type="text/css"></style>').appendTo('head');
+
+                // FIXME for debug
+                $(document).on('click', '.dhx_cal_event_line', function(e) {
+                    var id = $(e.target).closest('.dhx_cal_event_line').attr('event_id');
+                    var ev = scheduler.getEvent(id);
+                    if(ev.dataType == 'operation') {
+                        console.log(ev);
+                    } else {
+                        var ops = Data.getOperationsInGroup(ev._id);
+                        console.log(ev, ops);
+                    }
+                });
+
+                this.initMoveModal();
+                this.initFilterModal();
+
+                this.onSchedulerResize();
+
+                scheduler.createTimelineView({
+                    name: 'matrix',
+                    x_unit: 'day',
+                    x_step: 1,
+                    x_size: 30,
+                    y_unit: Data.getMatrixSections(),
+                    y_property: 'section_id'
+                });
+
+                var allGroups = Data.getMatrixSections();
+                for(var i = 0; i < allGroups.length; i++) {
+                    scheduler.createTimelineView({
+                        name: 'overview' + allGroups[i].key,
+                        x_unit: 'day',
+                        x_step: 1,
+                        x_size: 30,
+                        folder_dy: 20,
+                        section_autoheight: false,
+                        event_dy : 23,
+                        event_min_dy : 23,
+                        y_unit: Data.getTimelineSections(allGroups[i].key),
+                        y_property: 'section_id',
+                        render: 'bar'
+                    });
+                    scheduler.createTimelineView({
+                        name: 'timeline' + allGroups[i].key,
+                        x_unit: 'minute',
+                        x_date: '%H:%i',
+                        x_step: 60,
+                        x_size: 24,
+                        x_start: 0,
+                        x_length: 24,
+                        folder_dy: 20,
+                        section_autoheight: false,
+                        event_dy : 23,
+                        event_min_dy : 23,
+                        y_unit: Data.getTimelineSections(allGroups[i].key),
+                        y_property: 'section_id',
+                        render: 'bar'
+                    });
+                    scheduler.createTimelineView({
+                        name: 'minute' + allGroups[i].key,
+                        x_unit: 'minute',
+                        x_date: '%i',
+                        x_step: 1,
+                        x_size: 60,
+                        x_start: 0,
+                        x_length: 60,
+                        folder_dy: 20,
+                        section_autoheight: false,
+                        event_dy : 23,
+                        event_min_dy : 23,
+                        y_unit: Data.getTimelineSections(allGroups[i].key),
+                        y_property: 'section_id',
+                        render: 'bar'
+                    });
+                }
+
+                scheduler.config.xml_date="%Y-%m-%d %H:%i";
+                scheduler.config.multi_day = true;
+                scheduler.config.dblclick_create = false;
+                scheduler.config.drag_create = false;
+                scheduler.config.drag_resize = false;
+                scheduler.config.fix_tab_position = false;
+                scheduler.config.time_step = 1;
+                scheduler.config.on_validate_drag = this.onValidateDrag.bind(this);
+
+                scheduler.templates.matrix_scalex_class = function(date) {
+                    if(WorkTime.isDayOff(date)) {
+                        return 'offhour';
+                    }
+                    return '';
+                };
+
+                scheduler.templates.matrix_cell_class = function(evs, x, y) {
+                    if(!evs || evs.length == 0) {
+                        return scheduler.templates.matrix_scalex_class(x);
+                    } else {
+                        var text = scheduler.templates.matrix_cell_value(evs, x);
+
+                        var $tempElem = $('<div>' + text + '</div>');
+                        var loadPercent = $tempElem.find('.load').text();
+
+                        if(loadPercent == '!') {
+                            return 'hastask';
+                        } else {
+                            var percent = parseInt(loadPercent.substr(0, loadPercent.length - 1));
+                            if(!isNaN(percent)) {
+                                if(percent <= 80) {
+                                    return 'chill';
+                                } else if(percent <= 100) {
+                                    return 'tight';
+                                } else {
+                                    return 'overload';
+                                }
+                            }
+                        }
+                        return scheduler.templates.matrix_scalex_class(x);
+                    }
+                };
+                scheduler.templates.matrix_cell_value = function(evs, date) {
+                    if(evs && evs.length > 0) {
+                        var group = evs[0].task.substr('task-'.length).substr(0, 3);
+                        var machineAvailables = {};
+                        var nonMachineAvailable = 0;
+                        for(var taskCode in tasks) {
+                            if(!tasks.hasOwnProperty(taskCode)) continue;
+                            var tg = (taskCode + '').substr(0, 3);
+                            if(tg != group) continue;
+
+                            var resources = Data.getTaskResources(tasks[taskCode]);
+                            if(resources.machines.length > 0) {
+                                machineAvailables[taskCode] = Data.availableLoad(tasks[taskCode], date);
+                            } else {
+                                nonMachineAvailable = nonMachineAvailable + Data.availableLoad(tasks[taskCode], date);
+                            }
+                        }
+
+                        var dayRange = moment.range(moment(date).startOf('day').toDate(), moment(date).startOf('day').add(1, 'day').toDate());
+                        var allLoads = [];
+                        var sumNonMachineConsume = 0;
+                        var hasLoadAgainstZeroAvailability = false;
+                        evs.forEach(function(ev) {
+                            var taskRange = moment.range(ev.start_date, ev.end_date);
+                            var taskInDayRange = dayRange.intersect(taskRange);
+                            var consume = taskInDayRange.diff('minutes');
+                            var task = Front.getTask(ev.task);
+                            if(ev.dataType == 'operation' && task.continue_on_break !== 1) {
+                                consume = WorkTime.getWorkingDuration(taskInDayRange.start.toDate(), taskInDayRange.end.toDate());
+                            }
+                            // IMPORTANT capacity based calculation
+                            // check if this task is has machine load or not
+                            var taskCode = ev.task.substr('task-'.length);
+                            if(machineAvailables.hasOwnProperty(taskCode)) {
+                                if(machineAvailables[taskCode] !== 0) {
+                                    allLoads.push(consume / machineAvailables[taskCode]);
+                                } else {
+                                    if(consume != 0) {
+                                        hasLoadAgainstZeroAvailability = true;
+                                    }
+                                }
+                            } else {
+                                sumNonMachineConsume = sumNonMachineConsume + consume;
+                            }
+                        });
+
+                        if(nonMachineAvailable != 0) {
+                            allLoads.push(sumNonMachineConsume / nonMachineAvailable);
+                        } else {
+                            if(sumNonMachineConsume != 0) {
+                                hasLoadAgainstZeroAvailability = true;
+                            }
+                        }
+
+                        var taskCount = evs.length;
+
+                        if(hasLoadAgainstZeroAvailability) {
+                            return '<span class="load">!</span><span class="count">' + taskCount + '</span>';
+                        }
+                        if(allLoads.length > 0) {
+                            var sum = 0;
+                            allLoads.forEach(function (load) {
+                                sum = sum + load;
+                            });
+                            var avgLoad = sum / allLoads.length;
+                            return '<span class="load">' + parseInt(Math.round(avgLoad * 100)) + '%</span><span class="count">' + taskCount + '</span>';
+                        }
+                    }
+                    return '';
+                };
+                scheduler.templates.matrix_date = function(start, end) {
+                    end = moment(end).subtract(1, 'day').toDate();
+                    if(moment(start).format('MMMM YYYY') == moment(end).format('MMMM YYYY')) {
+                        return moment(start).format('D') + ' - ' + moment(end).format('D MMMM YYYY');
+                    }
+                    if(moment(start).format('YYYY') == moment(end).format('YYYY')) {
+                        return moment(start).format('D MMMM') + ' - ' + moment(end).format('D MMMM YYYY');
+                    }
+                    return moment(start).format('D MMMM YYYY') + ' - ' + moment(end).format('D MMMM YYYY');
+                };
+                scheduler.templates.matrix_scale_date = function(date) {
+                    if(moment(date).startOf('day').toDate().getTime() == moment().startOf('day').toDate().getTime()) {
+                        return '<strong>' + moment(date).format('D/M') + '</strong>';
+                    }
+                    return moment(date).format('D/M');
+                };
+
+                var minute_date = function(start, end) {
+                    var hour = moment(start).format('H');
+                    return moment(start).format('D MMMM YYYY') + ' &nbsp;&nbsp;&nbsp;' + hour + ':00 - ' + hour + ':59';
+                };
+
+                this.overview_cell_class = function(evs, x, y) {
+                    return scheduler.templates.matrix_scalex_class(x);
+                };
+
+                for(var i = 0; i < allGroups.length; i++) {
+                    scheduler.templates['overview' + allGroups[i].key + '_scalex_class'] = scheduler.templates.matrix_scalex_class;
+                    scheduler.templates['overview' + allGroups[i].key + '_date'] = scheduler.templates.matrix_date;
+                    scheduler.templates['overview' + allGroups[i].key + '_scale_date'] = scheduler.templates.matrix_scale_date;
+                    scheduler.templates['overview' + allGroups[i].key + '_cell_class'] = this.overview_cell_class;
+                }
+
+                // IMPORTANT matrix tooltip
+                scheduler.templates.matrix_group_tooltip = function(evs) {
+                    var pos = {};
+                    evs.forEach(function(ev) {
+                        if(ev.dataType == 'group') {
+                            var ops = Data.getOperationsInGroup(ev._id);
+                            ops.forEach(function(op) {
+                                if (!op.refDoc || op.refDoc.length == 0) return;
+                                var order = Data.getOrderById(op.refDoc[0]);
+                                if (order) {
+                                    if (pos.hasOwnProperty(order.docNo)) {
+                                        pos[order.docNo].count++;
+                                    } else {
+                                        pos[order.docNo] = {count: 1, colorClass: order.colorClass};
+                                    }
+                                }
+                            });
+                        } else {
+                            if (!ev.refDoc || ev.refDoc.length == 0) return;
+                            var order = Data.getOrderById(ev.refDoc[0]);
+                            if (order) {
+                                if (pos.hasOwnProperty(order.docNo)) {
+                                    pos[order.docNo].count++;
+                                } else {
+                                    pos[order.docNo] = {count: 1, colorClass: order.colorClass};
+                                }
+                            }
+                        }
+                    });
+
+                    var posLines = [];
+                    for(var docNo in pos) {
+                        if(!pos.hasOwnProperty(docNo)) continue;
+                        posLines.push('<div class="dhx_tooltip_line ' + pos[docNo].colorClass + '"><strong>' + docNo + '</strong></div>');
+                    }
+
+                    return posLines.join('');
+                };
+
+                // IMPORTANT timeline/overview tooltip
+                scheduler.templates.tooltip_text = function(start, end, ev) {
+                    if(scheduler._mode == 'grid') return '';
+                    return this.getTooltip(ev);
+                }.bind(this);
+                scheduler.templates.event_class = function(start, end, ev) {
+                    var ret = 'po19';
+                    if(ev.refDoc && ev.refDoc.length > 0) {
+                        var order = Data.getOrderById(ev.refDoc[0]);
+                        if (order) {
+                            ret = order.colorClass + ' order' + order.id;
+                        }
+                    }
+
+                    ret = ret + ' group' + ev.task.substr('task-'.length, 3);
+
+                    var now = new Date().getTime();
+                    if(now >= start.getTime()) {
+                        ret = ret + ' past';
+                    }
+
+                    if(ev.dataType == 'group') {
+                        ret = ret + ' inbatch batch' + ev._id;
+                        var ops = Data.getOperationsInGroup(ev._id);
+                        for(var i = 0; i < ops.length; i++) {
+                            if(ops[i].refDoc && ops[i].refDoc.length > 0) {
+                                ret = ret + ' order' + ops[i].refDoc[0];
+                            }
+                        }
+                    }
+
+                    return ret;
+                };
+
+                var timeline_scalex_class = function(date) {
+                    if(WorkTime.isOffHour(date, true, false)) {
+                        return 'offhour';
+                    }
+                    return '';
+                };
+                var timeline_cell_class = function(evs, x, y) {
+                    return timeline_scalex_class(x);
+                };
+                var timeline_date = function(start, end) {
+                    return moment(start).format('D MMMM YYYY');
+                };
+                var timeline_scaley_class = function(key, label, value) {
+                    key = key + '';
+                    if(key.indexOf('group') == 0) {
+                        return key.replace('group', 'room');
+                    } else if(key.indexOf('room') == 0) {
+                        return key;
+                    } else if(key.indexOf('user') == 0) {
+                        return 'room' + value.room + ' userlevel';
+                    } else if(key.indexOf('resource') == 0) {
+                        return key.replace('resource', 'room') + ' resources';
+                    }
+                    return '';
+                };
+
+                for(var i = 0; i < allGroups.length; i++) {
+                    scheduler.templates['timeline' + allGroups[i].key + '_scalex_class'] = timeline_scalex_class;
+                    scheduler.templates['timeline' + allGroups[i].key + '_cell_class'] = timeline_cell_class;
+                    scheduler.templates['timeline' + allGroups[i].key + '_scaley_class'] = timeline_scaley_class;
+                    scheduler.templates['minute' + allGroups[i].key + '_scalex_class'] = timeline_scalex_class;
+                    scheduler.templates['minute' + allGroups[i].key + '_cell_class'] = timeline_cell_class;
+                    scheduler.templates['minute' + allGroups[i].key + '_scaley_class'] = timeline_scaley_class;
+                    scheduler.templates['minute' + allGroups[i].key + '_date'] = minute_date;
+                }
+
+                scheduler.createGridView({
+                    name : 'grid',
+                    paging : true,
+                    fields : [
+                        {
+                            id : 'refDoc',
+                            label : '<a href="javascript:;" class="filter" data-field="refDoc" data-label="{% trans 'TH_PO_DOC_NO' %}">{% trans 'TH_PO_DOC_NO' %}</a>',
+                            sort : 'str',
+                            template : function(start, end, ev) {
+                                var docs = [];
+                                if(ev.dataType == 'operation') {
+                                    if(ev.refDoc && ev.refDoc.length > 0) {
+                                        var order = Data.getOrderById(ev.refDoc[0]);
+                                        if(order) {
+                                            docs.push(order.docNo);
+                                        }
+                                    }
+                                } else {
+                                    var ops = Data.getOperationsInGroup(ev._id);
+                                    for(var i = 0; i < ops.length; i++) {
+                                        if(ops[i].refDoc && ops[i].refDoc.length > 0) {
+                                            var order = Data.getOrderById(ops[i].refDoc[0]);
+                                            if(order) {
+                                                docs.push(order.docNo);
+                                            }
+                                        }
+                                    }
+                                }
+                                docs = common.unique(docs);
+                                return docs.join('<br/>');
+                            }
+                        },
+                        {
+                            id : 'task',
+                            label : '<a href="javascript:;" class="filter" data-field="task" data-label="{% trans 'TH_TASK' %}">{% trans 'TH_TASK' %}</a>',
+                            sort : 'str',
+                            align : 'left',
+                            template : function(start, end, ev) {
+                                var task = Front.getTask(ev.task);
+                                if(task) {
+                                   return '<strong>' + task.code + '</strong> ' + task.label;
+                                }
+                                return ev.task;
+                            }
+                        },
+                        {
+                            id : 'status',
+                            label : '<a href="javascript:;" class="filter" data-field="status" data-label="{% trans 'TH_STATUS' %}">{% trans 'TH_STATUS' %}</a>',
+                            sort : 'str',
+                            width : 80,
+                            template : function(start, end, ev) {
+                                if(ev.dataType == 'group') {
+                                    return o.getGroupStatusLabel(ev.status);
+                                }
+                                return displayOperationStatusLabel(ev.status);
+                            }
+                        },
+                        {
+                            id : 'assignee',
+                            label : '<a href="javascript:;" class="filter" data-field="assignee" data-label="{% trans 'TH_ASSIGNEE' %}">{% trans 'TH_ASSIGNEE' %}</a>',
+                            sort : 'str',
+                            align : 'left',
+                            template : function(start, end, ev) {
+                                if(!common.isEmpty(ev.assignee)) {
+                                    if(users.hasOwnProperty(ev.assignee)) {
+                                        return '<strong>' + ev.assignee + '</strong> ' + displayName(users[ev.assignee].first_name, users[ev.assignee].last_name);
+                                    }
+                                }
+                                return '';
+                            }
+                        },
+                        {
+                            id : 'start_date',
+                            label : '{% trans 'TH_PLANNED_START' %}',
+                            sort : 'date',
+                            template : function(start, end, ev) {
+                                return moment(ev.start_date).format('YYYY-MM-DD HH:mm');
+                            }
+                        },
+                        {
+                            id : 'end_date',
+                            label : '{% trans 'TH_PLANNED_END' %}',
+                            sort : 'date',
+                            template : function(start, end, ev) {
+                                return moment(ev.start_date).format('YYYY-MM-DD HH:mm');
+                            }
+                        }
+                    ]
+                });
+
+                scheduler.templates.grid_date = scheduler.templates.matrix_date;
+
+                $('#sidebar').bind('showing hiding', function() {
+                    clearTimeout(scheduler._resize_timer);
+                    scheduler._resize_timer = setTimeout(function() {
+                        scheduler.update_view();
+                    }, 500);
+                });
+                $(window).resize(this.onSchedulerResize);
+                scheduler.attachEvent('onBeforeTodayDisplayed', this.onBeforeTodayDisplayed.bind(this));
+                scheduler.attachEvent('onCellClick', this.onCellClick.bind(this));
+                scheduler.attachEvent('onViewChange', this.onViewChange.bind(this));
+                scheduler.attachEvent('onBeforeDrag', this.onBeforeDrag.bind(this));
+                scheduler.attachEvent('onBeforeEventChanged', this.onBeforeEventChanged.bind(this));
+                scheduler.attachEvent('onClick', this.onEventClick.bind(this));
+                scheduler.attachEvent('onDblClick', this.onDblClick.bind(this));
+                scheduler.attachEvent('onContextMenu', this.onContextMenu.bind(this));
+
+                var refDate = moment().startOf('week').toDate();
+                this.windowOffsetStart = refDate.getTime();
+                this.windowOffset = 1000 * 60 *60 * 24 * 30; // days
+		        scheduler.init('scheduler_here', refDate, 'matrix');
+
+                this.contextMenu = new dhtmlXMenuObject();
+                this.contextMenu.renderAsContextMenu();
+
+                $('#zoomOutButton').click(this.onZoomOut.bind(this));
+                $('#backToRootViewButton').click(this.onBackToRootView.bind(this));
+                $('[name="matrixview"]').change(function() {
+                    var cls = $(this).val();
+                    if(cls == 'showcount') {
+                        $('.dhx_cal_container').addClass(cls);
+                        if(o.viewStack.length > 0) {
+                            var viewObj = o.viewStack.pop();
+                            scheduler.setCurrentView(viewObj.startDate, viewObj.mode);
+                            $('#backButtonGroup').hide();
+                        }
+                    } else if(cls == 'gridview') {
+                        o.openGridView();
+                    } else {
+                        $('.dhx_cal_container').removeClass('showcount');
+                        if(o.viewStack.length > 0) {
+                            var viewObj = o.viewStack.pop();
+                            scheduler.setCurrentView(viewObj.startDate, viewObj.mode);
+                            $('#backButtonGroup').hide();
+                        }
+                    }
+                });
+
+                $(document).on('click', '.dhx_grid_line a.filter', function() {
+                    var field = $(this).data('field');
+                    var label = $(this).data('label');
+                    o.showFilterModal(field, label);
+                });
+            },
+
+            // IMPORTANT Scheduler.initFilterModal
+            initFilterModal : function() {
+                var $modal = $('<div id="filterModal" class="modal fade filter-modal">\
+                    <div class="modal-dialog modal-sm">\
+                        <div class="modal-content">\
+                            <div class="modal-body">\
+                                <div class="modal-body text-center">\
+                                    <p>{% trans 'T_SEARCH' %} <strong class="fieldlabel"></strong></p>\
+                                    <p><input type="text" class="form-control text-center" /></p>\
+                                </div>\
+                                <div class="modal-footer" style="text-align: center;">\
+                                    <button type="button" class="btn btn-danger okbutton">{% trans 'BUTTON_APPLY' %}</button>\
+                                    <button type="button" data-dismiss="modal" class="btn cancelbutton">{% trans 'BUTTON_CANCEL' %}</button>\
+                                </div>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>');
+
+                $modal.appendTo('body');
+
+                $modal.find('[type="text"]').keypress(function(e) {
+                     if (e.which == 13) {
+                         $modal.find('.okbutton').trigger('click');
+                         return false;
+                     }
+                });
+
+                $modal.on('shown.bs.modal', function() {
+                    $modal.find('[type="text"]').focus();
+                });
+            },
+
+            // IMPORTANT Scheduler.showFilterModal
+            showFilterModal : function(field, label) {
+                var o = this;
+                var $modal = $('#filterModal');
+                $modal.find('.fieldlabel').html(label);
+                $modal.find('[type="text"]').val('');
+                if(Data.filters.hasOwnProperty(field)) {
+                    $modal.find('[type="text"]').val(Data.filters[field].value);
+                }
+                $modal.find('.okbutton').unbind('click').click(function() {
+                    var val = $modal.find('[type="text"]').val();
+                    Data.setFilter(field, val);
+                    $modal.modal('hide');
+                });
+
+                $modal.modal('show');
+            },
+
+            // IMPORTANT Scheduler.getTooltip
+            getTooltip : function(ev) {
+                if(ev.dataType == 'operation') {
+                    var order = Data.getOrderById(ev.refDoc[0]);
+                    var opSuffix = '';
+                    if(order) {
+                        opSuffix = ' {% trans 'T_OF' %} ' + order.operation.length + ' {% trans 'T_FROM' %} <strong class="po-line ' + order.colorClass + '">' + order.docNo + '</strong>';
+                    }
+                    var status = displayOperationStatusLabel(ev.status);
+                    var task = Front.getTask(ev.task);
+                    var taskText = ev.task;
+                    if(task) {
+                        taskText = task.code + ' ' + task.label;
+                    }
+
+                    if(ev.status == OP_STATUS_CONFIRMED || ev.status == OP_STATUS_DELIVERED) {
+                        return '<p>Op ' + ev.step + opSuffix + '<br/>\
+                                <strong>{% trans 'T_TASK' %}:</strong> ' + taskText + '<br/>\
+                                <strong>{% trans 'T_PLANNED_START' %}:</strong> ' + moment(ev.plannedStart).format('YYYY-MM-DD HH:mm') + '<br/>\
+                                <strong>{% trans 'T_PLANNED_END' %}:</strong> ' + moment(ev.plannedEnd).format('YYYY-MM-DD HH:mm') + '<br/>\
+                                <strong>{% trans 'T_PLANNED_DURATION' %}:</strong> ' + displayDuration(ev.duration) + '</p>\
+                            <p><strong>{% trans 'T_STARTED' %}:</strong> ' + moment(ev.start_date).format('YYYY-MM-DD HH:mm') + '<br/>\
+                                <strong>{% trans 'T_ENDED' %}:</strong> ' + moment(ev.end_date).format('YYYY-MM-DD HH:mm') + '<br/>\
+                                <strong>{% trans 'T_ACTUAL_DURATION' %}:</strong> ' + displayDuration(ev.actualDuration) + '</p>\
+                            <p><strong>{% trans 'T_STATUS' %}:</strong> ' + status + '</span></p>';
+                    } else {
+                        return '<p>Op ' + ev.step + opSuffix + '<br/>\
+                                <strong>{% trans 'T_TASK' %}:</strong> ' + taskText + '<br/>\
+                                <strong>{% trans 'T_START' %}:</strong> ' + moment(ev.start_date).format('YYYY-MM-DD HH:mm') + '<br/>\
+                                <strong>{% trans 'T_END' %}:</strong> ' + moment(ev.end_date).format('YYYY-MM-DD HH:mm') + '<br/>\
+                                <strong>{% trans 'T_DURATION' %}:</strong> ' + displayDuration(ev.duration) + '</p>\
+                            <p><strong>{% trans 'T_STATUS' %}:</strong> ' + status + '</span></p>';
+                    }
+                } else {
+                    var group = ev;
+                    var batchTypeLabel = '{% trans 'T_PLANNED_BATCH' %}';
+                    if(group.type === 1) {
+                        batchTypeLabel = '{% trans 'T_ACTUAL_BATCH' %}';
+                    }
+                    var task = Front.getTask(group.task);
+                    var taskText = group.task;
+                    if(task) {
+                        taskText = task.code + ' ' + task.label;
+                    }
+                    var status = this.getGroupStatusLabel(group.status);
+                    var pos = [];
+                    var ops = Data.getOperationsInGroup(group._id);
+                    ops.forEach(function(op) {
+                        if(op.refDoc && op.refDoc.length > 0) {
+                            var od = Data.getOrderById(op.refDoc[0]);
+                            if (od) {
+                                pos.push('<li class="' + od.colorClass + '">' + od.docNo + '</li>');
+                            }
+                        }
+                    });
+                    // FIXME what if this has actual values
+                    return '<p>' + batchTypeLabel + ' {% trans 'T_OF' %} <strong>' + taskText + '</strong><br/>\
+                            <strong>{% trans 'T_START' %}:</strong> ' + moment(group.start_date).format('YYYY-MM-DD HH:mm') + '<br/>\
+                            <strong>{% trans 'T_END' %}:</strong> ' + moment(group.end_date).format('YYYY-MM-DD HH:mm') + '<br/>\
+                            <strong>{% trans 'T_DURATION' %}:</strong> ' + displayDuration(group.planned_duration) + '<br/>\
+                        </p>\
+                        <p><strong>{% trans 'T_STATUS' %}:</strong> ' + status + '</span></p>\
+                        <ul class="batchpolist">' + pos.join('') + '</ul>';
+                }
+            },
+
+            getGroupStatusLabel : function(stat) {
+                switch(stat) {
+                    case GROUP_STATUS_PARTIAL_CONFIRMED:
+                    case GROUP_STATUS_CONFIRMED:
+                        statusClass = 'success';
+                    case GROUP_STATUS_CANCELLED:
+                        statusClass = 'danger';
+                        break;
+                    case GROUP_STATUS_OPEN:
+                    default:
+                        statusClass = 'primary';
+                }
+                return '<span class="label label-' + statusClass + '" style="vertical-align:2px;">' + gettext('GROUP_STATUS_' + stat) + '</span>';
+            },
+
+            onBeforeTodayDisplayed : function() {
+                if(scheduler._mode.indexOf('timeline') === 0 || scheduler._mode.indexOf('minute') === 0) return true;
+                scheduler.setCurrentView(this.getWindowStart(scheduler._currentDate()));
+                return false;
+            },
+
+            getWindowStart : function(refDate) {
+                var refTime = refDate.getTime();
+                var windowIndex = Math.floor((refTime - this.windowOffsetStart) / this.windowOffset);
+                var newStartTime = (windowIndex * this.windowOffset) + this.windowOffsetStart;
+                return new Date(newStartTime);
+            },
+
+            onSchedulerResize : function() {
+                var height = $(window).height() - $('#scheduler_here').offset().top - 15;
+                if(height < 300) {
+                    height = 300;
+                }
+                $('#scheduler_here').css('height', height);
+                return true;
+            },
+
+            // IMPORTANT Scheduler.onEventClick
+            onEventClick : function(id, e) {
+                var ev = scheduler.getEvent(id);
+                console.log(ev);
+                if(scheduler._mode == 'grid') return;
+                if(ev.dataType != 'operation') return;
+                if(ev.refDoc && ev.refDoc.length > 0) {
+                    var order = Data.getOrderById(ev.refDoc[0]);
+                    if(!order) return;
+
+                    var viewName = 'order' + order.id + 'step' + ev.step;
+                    if(viewName == scheduler._mode) return;
+
+                    var foundGroups = [];
+                    var sections = [];
+                    for(var i = 0; i < order.operation.length; i++) {
+                        var op = order.operation[i];
+                        if(op.step < ev.step) continue;
+                        var groupKey = 'group' + op.task.substr('task-'.length, 3);
+                        //console.log('step ' + op.step, groupKey);
+                        if(foundGroups.indexOf(groupKey) == -1) {
+                            foundGroups.push(groupKey);
+                            var groupSections = Data.getTimelineSections(groupKey);
+                            if(op.step != ev.step) {
+                                sections.push(groupSections[0]);
+                            } else {
+                                sections = sections.concat(groupSections);
+                            }
+                        }
+                    }
+
+                    if(sections.length <= 1) return;
+
+                    scheduler.createTimelineView({
+                        name: viewName,
+                        x_unit: 'day',
+                        x_step: 1,
+                        x_size: 30,
+                        folder_dy: 20,
+                        section_autoheight: false,
+                        event_dy : 23,
+                        event_min_dy : 23,
+                        y_unit: sections,
+                        y_property: 'section_id',
+                        render: 'bar'
+                    });
+
+                    scheduler.templates[viewName + '_scalex_class'] = scheduler.templates.matrix_scalex_class;
+                    scheduler.templates[viewName + '_date'] = scheduler.templates.matrix_date;
+                    scheduler.templates[viewName + '_scale_date'] = scheduler.templates.matrix_scale_date;
+                    scheduler.templates[viewName + '_cell_class'] = function(evs, x, y) {
+                        var yGroupKey = y.key.replace('room', 'group');
+                        if(yGroupKey == foundGroups[0] || foundGroups.indexOf(yGroupKey) == -1) {
+                            return scheduler.templates.matrix_scalex_class(x);
+                        }
+
+                        for(var i = 0; i < order.operation.length; i++) {
+                            var op = order.operation[i];
+                            if (op.step < ev.step) continue;
+                            var groupKey = 'group' + op.task.substr('task-'.length, 3);
+                            if(groupKey != yGroupKey) continue;
+                            var xRange = moment.range(moment(x), moment(x).endOf('day'));
+                            var opRange = moment.range(moment(op.start_date), moment(op.end_date));
+                            if(xRange.overlaps(opRange)) {
+                                return 'hastaskinsameorder';
+                            }
+                        }
+
+                        return scheduler.templates.matrix_scalex_class(x);
+                    };
+
+                    this.addViewStack();
+                    scheduler.setCurrentView(scheduler._date, viewName);
+                }
+
+                return false;
+            },
+
+            // IMPORTANT Scheduler.addViewStack
+            addViewStack : function() {
+                this.viewStack.push({
+                    mode: scheduler._mode,
+                    startDate : moment(scheduler._date).toDate()
+                });
+
+                if(this.viewStack.length > 0) {
+                    $('#backButtonGroup').show();
+                } else {
+                    $('#backButtonGroup').hide();
+                }
+            },
+
+            // IMPORTANT Scheduler.onCellClick
+            onCellClick : function(x_ind, y_ind, x_val, y_val, e) {
+                if($(e.target).closest('.dhx_cal_event_line').length > 0) {
+                    return;
+                }
+                if(scheduler._mode == 'grid') return;
+                if(scheduler._mode.indexOf('minute') === 0) return;
+                var toMode, toDate;
+                if(scheduler._mode.indexOf('timeline') === 0) {
+                    toMode = 'minute' + scheduler._mode.substr('timeline'.length);
+                    toDate = moment(x_val).toDate();
+                    var startOf = moment(toDate).startOf('day');
+                    scheduler.matrix[toMode].x_start = moment(toDate).diff(startOf, 'minutes');
+                } else if(scheduler._mode == 'matrix') {
+                    toMode = 'overview' + Data.getMatrixSections()[y_ind].key;
+                    toDate = moment(scheduler._date).toDate();
+                } else {
+                    if(scheduler._mode.indexOf('order') === 0) {
+                        var section = scheduler.matrix[scheduler._mode].y_unit[y_ind];
+                        if(y_ind > 0 && section.key.length == 7) { // ex: room546
+                            if($(e.target).is('.hastaskinsameorder')) {
+                                var parts = scheduler._mode.split('step');
+                                var orderId = parts[0].substr('order'.length);
+                                var currentStep = parseInt(parts[1]);
+                                var order = Data.getOrderById(orderId);
+                                for(var i = 0; i < order.operation.length; i++) {
+                                    var op = order.operation[i];
+                                    if(op.step <= currentStep) continue;
+                                    var opRoomKey = 'room' + op.task.substr('task-'.length, 3);
+                                    if(opRoomKey != section.key) continue;
+                                    var xRange = moment.range(moment(x_val), moment(x_val).endOf('day'));
+                                    var opRange = moment.range(moment(op.start_date), moment(op.end_date));
+                                    if(xRange.overlaps(opRange)) {
+                                        this.onEventClick(op.id);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    var key = scheduler.matrix[scheduler._mode].y_unit[y_ind].key;
+                    var groupKey = 'group' + key.substr('room'.length, 3);
+                    toMode = 'timeline' + groupKey;
+                    toDate = moment(x_val).toDate();
+                }
+                console.log(toMode, toDate);
+                this.addViewStack();
+                scheduler.setCurrentView(toDate, toMode);
+            },
+
+            // IMPORTANT Scheduler.onZoomOut
+            onZoomOut : function() {
+                if(this.viewStack.length == 0) return;
+
+                var viewObj = this.viewStack.pop();
+                scheduler.setCurrentView(viewObj.startDate, viewObj.mode);
+
+                if(this.viewStack.length > 0) {
+                    $('#backButtonGroup').show();
+                } else {
+                    $('#backButtonGroup').hide();
+                    $('#loadToggleButton .active').removeClass('active');
+                    $('#loadToggleButton label').first().addClass('active');
+                    $('[name="matrixview"]').first().trigger('change');
+                }
+            },
+
+            // IMPORTANT Scheduler.openGridView
+            openGridView : function() {
+                this.addViewStack();
+                scheduler.setCurrentView(moment(scheduler._date).toDate(), 'grid');
+            },
+
+            // IMPORTANT Scheduler.onBackToRootView
+            onBackToRootView : function() {
+                if(this.viewStack.length == 0) return;
+
+                var viewObj = this.viewStack[0];
+                scheduler.setCurrentView(viewObj.startDate, viewObj.mode);
+
+                this.viewStack = [];
+                $('#loadToggleButton .active').removeClass('active');
+                $('#loadToggleButton label').first().addClass('active');
+                $('#backButtonGroup').hide();
+            },
+
+            // IMPORTANT Scheduler.goTo
+            goTo : function(obj) {
+                this.addViewStack();
+                var groupKey = 'group' + obj.task.substr('task-'.length, 3);
+                scheduler.setCurrentView(moment(obj.start_date).toDate(), 'timeline' + groupKey);
+            },
+
+            // IMPORTANT Scheduler.onViewChange
+            onViewChange : function(new_mode, new_date) {
+                if(new_mode != 'matrix' && new_mode != 'grid') {
+                    $('#loadToggleButton').stop(true, false).fadeOut('medium');
+                    $('#exceptions').css('right', 205);
+                } else {
+                    $('#loadToggleButton').stop(true, false).fadeIn('medium');
+                    $('#exceptions').css('right', 365);
+                }
+
+                if(new_mode != 'grid') {
+                    Data.setFilter('', '');
+                }
+
+                if(new_mode.indexOf('order') === 0) {
+                    var parts = new_mode.split('step');
+                    var showingOrderId = parts[0].substr('order'.length);
+                    var step = parseInt(parts[1]);
+                    var order = Data.getOrderById(showingOrderId);
+                    var showingGroupName = '';
+                    for(var i = 0; i < order.operation.length; i++) {
+                        if(order.operation[i].step == step) {
+                            showingGroupName = 'group' + order.operation[i].task.substr('task-'.length, 3);
+                            break;
+                        }
+                    }
+                    var groupStyleRule = [];
+                    var allSections = Data.getMatrixSections();
+                    for(var i = 0; i < allSections.length; i++) {
+                        if (allSections[i].key != showingGroupName) {
+                            groupStyleRule.push('.' + allSections[i].key + '{display:none;}');
+                        }
+                    }
+
+                    $('#activeStyle').replaceWith($('<style id="activeStyle" type="text/css">.' + parts[0] + '{ box-shadow:0 0 10px red; } ' + groupStyleRule.join(' ') + '</style>'));
+                }
+
+                this.commit();
+                this.render();
+
+                if(!WorkTime.isQueried(scheduler._date, scheduler._max_date)) {
+                    var visibleFrom = moment(scheduler._date).startOf('day').subtract(2, 'month').toDate();
+                    var visibleTo = moment(scheduler._max_date).startOf('day').add(4, 'month').toDate();
+                    WorkTime.doQueryOffHours(visibleFrom, visibleTo, function() {
+                        scheduler.update_view();
+                    });
+                }
+            },
+
+            // IMPORTANT Scheduler.onBeforeDrag
+            // prevent drag
+            onBeforeDrag : function(id, mode, e) {
+                if(!id) return false;
+
+                var ev = scheduler.getEvent(id);
+
+                if(ev.dataType == 'operation') {
+                    if (ev.status >= OP_STATUS_READY) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    if (ev.confirmations.length > 0) {
+                        return false;
+                    }
+                    if (ev.status >= GROUP_STATUS_PARTIAL_CONFIRMED) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+
+                var timeFence = null;
+                if(!isProposalMode) {
+                    timeFence = moment(Data.readTimestamp).add(4, 'hours').toDate();
+                } else {
+                    timeFence = moment(new Date(proposal.start * 1000)).add(2, 'hours').toDate();
+                }
+
+                var stagingTime = 0;
+                if(ev.dataType == 'operation') {
+                    stagingTime = ev.stagingTime;
+                } else {
+                    stagingTime = ev.staging_duration;
+                }
+                var plannedStartDate = moment(ev.start_date).add(stagingTime, 'minutes').toDate();
+                if(plannedStartDate.getTime() < timeFence.getTime()) {
+                    // TODO timefence
+                    return false;
+                }
+
+                return true;
+            },
+
+            // IMPORTANT Scheduler.onValidateDrag
+            // block when dragging
+            onValidateDrag : function(ev) {
+                var newStart = ev.start_date;
+
+                var timeFence = null;
+                if(!isProposalMode) {
+                    timeFence = moment(Data.readTimestamp).add(4, 'hours').toDate();
+                } else {
+                    timeFence = moment(new Date(proposal.start * 1000)).add(2, 'hours').toDate();
+                }
+
+                var stagingTime = 0;
+                if(ev.dataType == 'operation') {
+                    stagingTime = ev.stagingTime;
+                } else {
+                    stagingTime = ev.staging_duration;
+                }
+
+                var maxEnd = this.getMaxPreviousEndDate(ev);
+                if(maxEnd != null) {
+                    maxEnd = moment(maxEnd).add(stagingTime, 'minutes').toDate();
+                    if (newStart.getTime() < maxEnd.getTime()) {
+                        newStart = maxEnd;
+                    }
+                }
+
+                // TODO timefence
+                timeFence = moment(timeFence).add(stagingTime, 'minutes').toDate();
+                if(newStart.getTime() < timeFence.getTime()) {
+                    newStart = moment(timeFence).toDate();
+                }
+
+                if(newStart.getTime() != ev.start_date.getTime()) {
+                    var diff = moment(ev.start_date).diff(moment(newStart), 'minutes', true);
+                    ev.start_date = newStart;
+                    ev.end_date = moment(ev.end_date).subtract(diff, 'minutes').toDate();
+                }
+            },
+
+            markEventChange : function(ev) {
+                ev.changed = true;
+                if(ev.dataType == 'operation') {
+                    if (ev.refDoc && ev.refDoc.length > 0) {
+                        var order = Data.getOrderById(ev.refDoc[0]);
+                        if (order) {
+                            order.changed = true;
+                            if (order.status < PD_STATUS_PLANNED) {
+                                order.status = PD_STATUS_PLANNED;
+                            }
+                        }
+                    }
+                }
+                Front.blockBackButton();
+            },
+
+            // IMPORTANT Scheduler.onBeforeEventChanged
+            // rollback after drop
+            onBeforeEventChanged : function(ev, e, is_new, original) {
+                var o = this;
+                // if nothing changed, then no need to apply the change
+                if(original.start_date.getTime() == ev.start_date.getTime() && original.end_date.getTime() == ev.end_date.getTime() && ev.section_id == original.section_id) {
+                    return false;
+                }
+
+                // not allow changing section
+                if(ev.section_id.indexOf('room') == 0) {
+                    var prefix = ev.section_id.split('user')[0];
+                    var groupNumber = prefix.split('room')[1];
+                    var taskGroup = ev.task.substr('task-'.length).substr(0, 3);
+                    if(taskGroup != groupNumber) {
+                        return false;
+                    }
+                }
+
+                // you cannot assign task to user who does not have perm
+                if(ev.section_id.indexOf('user') != -1) {
+                    var userId = ev.section_id.split('user')[1];
+                    if(!users[userId]) return false;
+                    var taskNumber = ev.task.substr('task-'.length);
+                    if(users[userId].permissions.indexOf('task+write@' + taskNumber) == -1) return false;
+                }
+
+                // if assignee changed
+                if(original.section_id != ev.section_id) {
+                    this.setAssigneeFromSectionId(ev);
+                }
+
+                this.markEventChange(ev);
+
+                // user decision to allow off hour
+                this.moveOperation(ev);
+
+                return true;
+            },
+
+            // IMPORTANT Scheduler.getMaxPreviousEndDate
+            getMaxPreviousEndDate : function(ev) {
+                var maxEnd = null;
+                if(ev.dataType == 'operation') {
+                    if (ev.source.length > 0) {
+                        for (var i = 0; i < ev.source.length; i++) {
+                            var sourceEv = Data.getOperationById(ev.source[i]);
+                            var sourceGroup = Data.getGroupById(sourceEv.id);
+                            if(sourceGroup == null) {
+                                if (maxEnd == null || sourceEv.end_date.getTime() > maxEnd.getTime()) {
+                                    maxEnd = sourceEv.end_date;
+                                }
+                            } else {
+                                if (maxEnd == null || sourceGroup.end_date.getTime() > maxEnd.getTime()) {
+                                    maxEnd = sourceGroup.end_date;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    var ops = Data.getOperationsInGroup(ev._id);
+                    ops.forEach(function(op) {
+                        if(op.source.length > 0) {
+                            for (var i = 0; i < op.source.length; i++) {
+                                var sourceEv = Data.getOperationById(op.source[i]);
+                                var sourceGroup = Data.getGroupById(sourceEv.id);
+                                if(sourceGroup == null) {
+                                    if (maxEnd == null || sourceEv.end_date.getTime() > maxEnd.getTime()) {
+                                        maxEnd = sourceEv.end_date;
+                                    }
+                                } else {
+                                    if (maxEnd == null || sourceGroup.end_date.getTime() > maxEnd.getTime()) {
+                                        maxEnd = sourceGroup.end_date;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return maxEnd;
+            },
+
+            // IMPORTANT Scheduler.moveOperation
+            moveOperation : function(ev) {
+                var o = this;
+                var task = Front.getTask(ev.task);
+                var isContinueOnBreak = ev.dataType == 'group' || task.continue_on_break === 1;
+                var newStartEnd = WorkTime.getStartEnd(ev.start_date, ev.end_date, isContinueOnBreak);
+                if(newStartEnd.start.toDate().getTime() != ev.start_date.getTime() || newStartEnd.end.toDate().getTime() != ev.end_date.getTime()) {
+                    if(ev.dataType == 'operation') {
+                        Front.confirm('{% trans 'T_ALLOW_$TASK$_$START_DATE$_$END_DATE$_$DURATION$_OFF_HOURS_QUESTION_MESSAGE' %}'.replace('$TASK$', ev.text).replace('$START_DATE$', moment(ev.start_date).format('YYYY-MM-DD HH:mm')).replace('$END_DATE$', moment(ev.end_date).format('YYYY-MM-DD HH:mm')).replace('$DURATION$', displayDuration(ev.duration)),
+                                '{% trans 'BUTTON_WORK_ON_WORK_HOURS' %}',
+                                '{% trans 'BUTTON_WORK_ON_OFF_HOURS' %}',
+                                function() {
+                                    ev.end_date = moment(ev.start_date).add(ev.duration, 'minutes').toDate();
+                                    newStartEnd = WorkTime.getStartEnd(ev.start_date, ev.end_date, false);
+                                    ev.start_date = newStartEnd.start.toDate();
+                                    ev.end_date = newStartEnd.end.toDate();
+                                    o.markEventChange(ev);
+                                    o.pushRight([ev], false);
+                                },
+                                function() {
+                                    ev.end_date = moment(ev.start_date).add(ev.duration, 'minutes').toDate();
+                                    o.markEventChange(ev);
+                                    o.pushRight([ev], true);
+                                });
+                    } else { // batch, always allow offhour
+                        ev.end_date = moment(ev.start_date).add(ev.planned_duration, 'minutes').toDate();
+                        o.markEventChange(ev);
+                        o.pushRight([ev], true);
+                    }
+                } else {
+                    if(ev.dataType == 'group') {
+                        this.fitGroupMembers(ev);
+                    }
+                    this.markEventChange(ev);
+                    this.pushRight([ev], 'auto');
+                }
+            },
+
+            // IMPORTANT Scheduler.pushRight
+            pushRight : function(queue, isAllowOffHourForFirstObj) {
+                var thresholdTime = moment().add(30, 'days').toDate().getTime();
+
+                // queue can be either operation or group object
+                // stop when queue is empty
+                // console.log('queue length ' + queue.length);
+                if(queue.length == 0) {
+                    scheduler.render_view_data();
+                    return;
+                }
+
+                // pop out from queue
+                var obj = queue.shift();
+
+                console.log('pop out from queue', obj.task + ' ' + obj.dataType + ' (' + (obj.id || obj._id) + ') ' + moment(obj.start_date).format('YYYY-MM-DD HH:mm:ss') + ' - ' + moment(obj.end_date).format('YYYY-MM-DD HH:mm:ss'));
+
+                var allowOffHour = true;
+                if(isAllowOffHourForFirstObj == 'auto') {
+                    var task = Front.getTask(obj.task);
+                    if(task) {
+                        allowOffHour = obj.dataType != 'operation' || task.continue_on_break == 1;
+                    }
+                } else {
+                    allowOffHour = isAllowOffHourForFirstObj;
+                }
+
+                // check if obj is operation or operation group
+                var objId = '';
+                var duration = 0;
+                if(obj.dataType != 'operation') {
+                    objId = obj._id;
+                    duration = obj.planned_duration;
+                } else {
+                    objId = obj.id;
+                    duration = obj.duration;
+                }
+
+                // check if this obj has assignee
+                if(obj.assignee && obj.assignee.length > 3) {
+                    // check if this object conflict with same resource
+                    // TODO we can optimize performance here by only checking the subsequence task in array
+                    var siblings = Data.getObjectsByAssignee(obj.assignee);
+                    for(var i = 0; i < siblings.length; i++) {
+                        // skip checking with the same object
+                        if(siblings[i].id == objId || siblings[i]._id == objId) continue;
+                        var checkingRange = moment.range(moment(siblings[i].start_date), moment(siblings[i].end_date));
+                        // inclusive checking. Ex: range (11:00 - 12:00) so 12:00 does not count as contain
+                        if(!checkingRange.contains(obj.start_date, true)) continue;
+                        // if conflict, move it to the end of conflicted task
+                        var minuteOffset = moment(siblings[i].end_date).diff(moment(obj.start_date), 'minutes', true);
+                        obj.start_date = moment(obj.start_date).add(minuteOffset, 'minutes').toDate();
+                        obj.end_date = moment(obj.start_date).add(duration, 'minutes').toDate();
+                        var newRange = WorkTime.getStartEnd(obj.start_date, obj.end_date, allowOffHour);
+                        obj.start_date = newRange.start.toDate();
+                        obj.end_date = newRange.end.toDate();
+                        console.log(obj.task + ' ' + obj.dataType + '(' + (obj.id || obj._id) + ') is pushed (by conflict with same resource) to ' + moment(obj.start_date).format('YYYY-MM-DD HH:mm:ss') + ' - ' + moment(obj.end_date).format('YYYY-MM-DD HH:mm:ss'));
+
+                        // if status is 'open' and is too far away
+                        if(obj.status === 0 && obj.start_date.getTime() > thresholdTime) {
+                            obj.assignee = obj.task.substr('task-'.length, 3);
+                            obj.section_id = 'room' + obj.assignee;
+                            console.log(obj.task + ' is unassigned', obj.section_id);
+                        }
+
+                        this.markEventChange(obj);
+                        if(obj.dataType == 'group') {
+                            this.fitGroupMembers(obj);
+                        }
+                        break;
+                    }
+
+                    // check again if the obj still have assignee
+                    if(obj.assignee && obj.assignee.length > 3) {
+                        // check if this obj overlap with another task in the same resource
+                        var thisObjRange = moment.range(moment(obj.start_date), moment(obj.end_date));
+                        siblings = Data.getObjectsByAssignee(obj.assignee);
+                        for (var j = 0; j < siblings.length; j++) {
+                            // skip checking with the same object
+                            if (siblings[j].id == objId || siblings[j]._id == objId) continue;
+                            // this time we will check if other's start date fall into this obj range
+                            if (thisObjRange.contains(siblings[j].start_date, true)) {
+                                // add the first conflict to the queue
+                                queue.push(siblings[j]);
+                                // This line will cause MATHAFAKA bug that some tasks will be left out from checking overlap
+                                //break;
+                            }
+                        }
+                    }
+                }
+
+                var members = [];
+                if(obj.dataType == 'operation') {
+                    members = [ obj ];
+                } else {
+                    members = Data.getOperationsInGroup(objId);
+                }
+
+                // check immediate children
+                for(var k = 0; k < members.length; k++) {
+                    var immediateChildren = Data.getNextOperations(members[k].id);
+                    for(var i = 0; i < immediateChildren.length; i++) {
+                        var childDuration = 0;
+                        var childStagingTime = 0;
+                        if(immediateChildren[i].dataType == 'operation') {
+                            childDuration = immediateChildren[i].duration;
+                            childStagingTime = immediateChildren[i].stagingTime;
+                        } else {
+                            childDuration = immediateChildren[i].planned_duration;
+                            childStagingTime = immediateChildren[i].staging_duration;
+                        }
+                        var childExpectedStart = moment(immediateChildren[i].start_date).subtract(childStagingTime, 'minutes').toDate();
+                        // check if it conflict with this obj (obj.end > child.start - child.stagingTime)
+                        if(obj.end_date.getTime() > childExpectedStart.getTime()) {
+                            // if conflict, move it to the end of this obj + child.stagingTime
+                            var minuteOffset = moment(obj.end_date).diff(moment(childExpectedStart), 'minutes', true);
+                            immediateChildren[i].start_date = moment(immediateChildren[i].start_date).add(minuteOffset, 'minutes').toDate();
+                            immediateChildren[i].end_date = moment(immediateChildren[i].start_date).add(childDuration, 'minutes').toDate();
+                            var newRange = WorkTime.getStartEnd(immediateChildren[i].start_date, immediateChildren[i].end_date, 'auto');
+                            immediateChildren[i].start_date = newRange.start.toDate();
+                            immediateChildren[i].end_date = newRange.end.toDate();
+                            console.log(immediateChildren[i].task + ' ' + immediateChildren[i].dataType + '(' + (immediateChildren[i].id || immediateChildren[i]._id) + ') is pushed (by parent task) to ' + moment(immediateChildren[i].start_date).format('YYYY-MM-DD HH:mm:ss') + ' - ' + moment(immediateChildren[i].end_date).format('YYYY-MM-DD HH:mm:ss'));
+
+                            // if status is 'open' and is too far away
+                            if(immediateChildren[i].status === OP_STATUS_OPEN && immediateChildren[i].start_date.getTime() > thresholdTime) {
+                                immediateChildren[i].assignee = immediateChildren[i].task.substr('task-'.length, 3);
+                                immediateChildren[i].section_id = 'room' + immediateChildren[i].assignee;
+                                console.log(immediateChildren[i].task + ' is unassigned', immediateChildren[i].section_id);
+                            }
+
+                            this.markEventChange(immediateChildren[i]);
+                            if(immediateChildren[i].dataType == 'group') {
+                                this.fitGroupMembers(immediateChildren[i]);
+                            }
+
+                            // add conflicted child to queue
+                            queue.push(immediateChildren[i]);
+                        }
+                    }
+                }
+
+                // end cycle, recursive next cycle
+                this.pushRight(queue, 'auto');
+            },
+
+            fitGroupMembers : function(group) {
+                var sons = Data.getOperationsInGroup(group._id);
+                for(var i = 0; i < sons.length; i++) {
+                    var son = sons[i];
+                    son.start_date = moment(group.start_date).toDate();
+                    son.end_date = moment(group.end_date).toDate();
+                    son.assignee = group.assignee;
+                    this.markEventChange(son);
+                }
+            },
+
+            // IMPORTANT Scheduler.onDblClick
+            onDblClick : function(id, e) {
+                var ev = scheduler.getEvent(id);
+                if(ev.dataType == 'operation') {
+                    if (ev.refDoc && ev.refDoc.length > 0) {
+                        window.open(URL.production_order_edit(ev.refDoc[0]));
+                    } else {
+                        console.err('Task (' + ev.id + ') has no refDoc!');
+                    }
+                } else {
+                    console.info('Double Click on Batch', ev);
+                }
+            },
+
+            // IMPORTANT Scheduler.onContextMenu
+            onContextMenu : function(id, e) {
+                var o = this;
+
+                if(!this.onBeforeDrag(id, null, null)) {
+                    return true;
+                }
+
+                if(id) {
+                    var ev = scheduler.getEvent(id);
+                    var hasMenu = false;
+
+                    this.contextMenu.clearAll();
+                    this.contextMenu.detachAllEvents();
+                    if((ev.dataType == 'operation' && ev.status < OP_STATUS_READY) || (ev.dataType == 'group' && ev.status < GROUP_STATUS_CONFIRMED)) {
+                        // does not allow changing start time for ready, partial confirmed, confirmed, cancelled
+                        // does not allow changing start time for confirmed, cancelled batch group
+                        hasMenu = true;
+                        this.contextMenu.addNewChild(null, 0, 'move', '{% trans 'CONTEXT_MENU_CHANGE_START_TIME' %}');
+                    }
+                    if((ev.dataType == 'operation' && ev.status < OP_STATUS_CONFIRMED) || (ev.dataType == 'group' && ev.status < GROUP_STATUS_CONFIRMED)) {
+                        // does not allow changing assignee for confirmed, cancelled
+                        // does not allow changing assignee for confirmed, cancelled batch group
+                        if(ev.section_id.indexOf('room') == 0) {
+                            var prefix = ev.section_id.split('user')[0]; // room414
+                            var hasAssignMenu = false;
+
+                            this.contextMenu.addNewChild(null, 1, 'assign', '{% trans 'CONTEXT_MENU_ASSIGN_TASK_TO' %}');
+                            if(ev.assignee && ev.assignee.length > 3) {
+                                hasAssignMenu = true;
+                                this.contextMenu.addNewChild('assign', 0, 'assign:' + prefix, '{% trans 'CONTEXT_MENU_UNASSIGN' %}');
+                            }
+
+                            var alreadyAssignedUserNumber = ev.assignee;
+                            var pos = 1;
+                            var taskNumber = ev.task.substr('task-'.length);
+                            for(var id in users) {
+                                if(!users.hasOwnProperty(id)) continue;
+                                if(alreadyAssignedUserNumber == id) continue;
+                                if(users[id].permissions.indexOf('task+write@' + taskNumber) != -1) {
+                                    this.contextMenu.addNewChild('assign', pos++, 'assign:' + prefix + 'user' + id, displayName(users[id].first_name, users[id].last_name));
+                                    hasAssignMenu = true;
+                                }
+                            }
+
+                            if(!hasAssignMenu) {
+                                this.contextMenu.removeItem('assign');
+                            }
+
+                            hasMenu = hasMenu || hasAssignMenu;
+                        }
+                    }
+
+                    if(hasMenu) {
+                        this.contextMenu.attachEvent('onClick', function(menuId, zoneId, cas) {
+                            o.performContextMenu(ev, menuId);
+                        });
+
+                        var posx = 0;
+                        var posy = 0;
+                        if(e.pageX || e.pageY) {
+                            posx = e.pageX;
+                            posy = e.pageY;
+                        } else if (e.clientX || e.clientY) {
+                            posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                            posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                        }
+
+                        this.contextMenu.showContextMenu(posx, posy);
+                        return false; // prevent default action and propagation
+                    }
+				}
+				return true;
+            },
+
+            // IMPORTANT Scheduler.performContextMenu
+            performContextMenu : function(ev, menuId) {
+                var parts = menuId.split(':');
+                var cmd = parts[0];
+                var val = parts[1];
+                if(cmd == 'assign') {
+                    ev.section_id = val;
+                    this.setAssigneeFromSectionId(ev);
+                    if(ev.dataType == 'group') {
+                        this.fitGroupMembers(ev);
+                    }
+                    this.markEventChange(ev);
+                    this.pushRight([ev], 'auto');
+                } else if(cmd == 'move') {
+                    this.showMoveModal(ev);
+                }
+            },
+
+            // IMPORTANT Scheduler.initMoveModal
+            initMoveModal : function() {
+                var $modal = $('<div id="moveModal" class="modal fade move-modal">\
+                    <div class="modal-dialog modal-sm">\
+                        <div class="modal-content">\
+                            <div class="modal-body">\
+                                <div class="modal-body text-center">\
+                                    <p><input type="datetime-local" class="form-control req" /></p>\
+                                </div>\
+                                <div class="modal-footer" style="text-align: center;">\
+                                    <button type="button" class="btn btn-danger okbutton">{% trans 'BUTTON_OK' %}</button>\
+                                    <button type="button" data-dismiss="modal" class="btn cancelbutton">{% trans 'BUTTON_CANCEL' %}</button>\
+                                </div>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>');
+
+                $modal.appendTo('body');
+
+                $modal.on('shown.bs.modal', function() {
+                    $modal.find('[type="datetime-local"]').focus();
+                });
+            },
+
+            showMoveModal : function(ev) {
+                var o = this;
+                var $modal = $('#moveModal');
+                $modal.find('[type="datetime-local"]').val(moment(ev.start_date).format('YYYY-MM-DDTHH:mm'));
+                $modal.find('.okbutton').unbind('click').click(function() {
+                    if(common.autoValidate($modal.find('.req'))) {
+                        var dateVal = $modal.find('[type="datetime-local"]').val();
+                        var newStart = moment(dateVal).toDate();
+
+                        if(newStart.getTime() == ev.start_date.getTime()) {
+                            $modal.modal('hide');
+                            return;
+                        }
+
+                        var maxEnd = o.getMaxPreviousEndDate(ev);
+                        if(maxEnd != null && newStart.getTime() < maxEnd.getTime()) {
+                            Front.notify('danger', '{% trans 'NOTI_ERROR_403' %}', '{% trans 'ERROR_CANNOT_START_BEFORE_END_OF_PREVIOUS_OP' %} : ' + moment(maxEnd).format('YYYY-MM-DD HH:mm'));
+                            common.setInvalid($modal.find('[type="datetime-local"]'));
+                            return;
+                        }
+
+                        var timeFence = null;
+                        if(!isProposalMode) {
+                            timeFence = moment(Data.readTimestamp).add(4, 'hours').toDate();
+                        } else {
+                            timeFence = moment(new Date(proposal.start * 1000)).add(2, 'hours').toDate();
+                        }
+                        // TODO timefence
+                        if(newStart.getTime() < timeFence.getTime()) {
+                            Front.notify('danger', '{% trans 'NOTI_ERROR_403' %}', '{% trans 'ERROR_CANNOT_START_BEFORE_PLANNING_TIME_FENCE' %} : ' + moment(timeFence).format('YYYY-MM-DD HH:mm'));
+                            common.setInvalid($modal.find('[type="datetime-local"]'));
+                            return;
+                        }
+
+                        var diff = moment(newStart).diff(moment(ev.start_date), 'minutes', true);
+                        ev.start_date = newStart;
+                        ev.end_date = moment(ev.end_date).add(diff, 'minutes').toDate();
+                        o.moveOperation(ev);
+                        $modal.modal('hide');
+                    } else {
+                        $modal.find('[type="datetime-local"]').focus();
+                    }
+                });
+
+                $modal.modal('show');
+            },
+
+            // IMPORTANT Scheduler.setAssigneeFromSectionId
+            setAssigneeFromSectionId : function(op) {
+                if(op.section_id) {
+                    // group529
+                    // room529
+                    // room529user123
+                    if(op.section_id.indexOf('group') == 0) {
+                        // do nothing
+                    } else {
+                        if(op.section_id.indexOf('user') != -1) { // assigned
+                            op.assignee = op.section_id.split('user')[1];
+                        } else { // unassigned
+                            op.assignee = op.section_id.split('room')[1] + '';
+                        }
+                    }
+                }
+            },
+
+            // IMPORTANT Scheduler.commit
+            commit : function() {
+                Data.orders.forEach(function(order) {
+                    order.operation.forEach(function(op) {
+                        if(op.status >= OP_STATUS_CONFIRMED) return;
+                        if(op.start_date) {
+                            op.plannedStart = op.start_date;
+                        }
+                        if(op.end_date) {
+                            op.plannedEnd = op.end_date;
+                        }
+                    });
+                    order.plannedStart = order.getMinStart();
+                    order.plannedEnd = order.getMaxEnd();
+                });
+
+                Data.operationGroups.forEach(function(group) {
+                    if(group.status >= GROUP_STATUS_CONFIRMED) return;
+                    if(group.start_date) {
+                        group.planned_start = group.start_date.getTime() / 1000;
+                    }
+                    if(group.end_date) {
+                        group.planned_end = group.end_date.getTime() / 1000;
+                    }
+                });
+            },
+
+            // IMPORTANT Scheduler.render();
+            render : function() {
+                var data = null;
+                if(scheduler._mode == 'matrix') {
+                    data = Data.dataByRoom();
+                } else {
+                    data = Data.dataByResource();
+                }
+                scheduler.parse(data, 'json');
+            }
+        };
+
+        (function($) {
+            $(document).ready(function () {
+                $('.breadcrumb').closest('.row').remove();
+
+                common.blockUI($('#main-content'));
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                $.ajaxSetup({
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    }
+                });
+
+                var proposalParam = common.getParam(window.location.href, 'proposal');
+                if(proposalParam == 'true') {
+                    Front.removeParamFromAddressBar('proposal');
+                    if(!proposal) {
+                        isProposalMode = false;
+                    } else {
+                        isProposalMode = true;
+                        // PERMISSION can approve proposal
+                        var approveButton = '';
+                        if (Front.userCan('proposal+write@approve')) {
+                            approveButton = ' <button id="approveProposalButton" class="btn btn-xs btn-warning">{% trans 'BUTTON_APPROVE' %}</button>';
+                        }
+                        $('#proposalAlert .inner-msg').html('{% trans 'T_EXPIRE_ON' %} ' + moment(new Date(proposal.start * 1000)).format('HH:mm') + approveButton);
+                        $('#proposalAlert').show();
+                    }
+                }
+
+                var operation = common.getParam(window.location.href, 'op');
+                if(!common.isEmpty(operation)) {
+                    Front.removeParamFromAddressBar('op');
+                    if(operation == 'saved') {
+                        Front.notify('success', '{% trans 'NOTI_PLANNING_PROPOSAL_SAVED' %}', '{% trans 'NOTI_PLANNING_PROPOSAL_SAVED_MESSAGE' %}');
+                    } else if(operation == 'approved') {
+                        Front.notify('success', '{% trans 'NOTI_PRODUCTION_ORDER_SAVED' %}', '');
+                    }
+                }
+
+                prepareInititalData();
+            });
+
+            function prepareInititalData() {
+                setTimeout(function() {
+                    onReadyToUse();
+                }, 150);
+            }
+
+            function onReadyToUse() {
+                // IMPORTANT UI data based setup
+                common.unblockUI($('#main-content'));
+
+                Data.init();
+                ValidatorManager.init();
+                Scheduler.init();
+
+                Data.parseData();
+
+                if(!isProposalMode && proposal != null) {
+                    Front.confirm('{% trans 'T_SWITCH_TO_PROPOSAL_MESSAGE' %}',
+                        '{% trans 'BUTTON_VIEW_PROPOSAL' %}',
+                        '{% trans 'BUTTON_VIEW_PLAN' %}',
+                        function() {
+                            Front.unblockBackButton();
+                            var newUrl = common.addParam(URL.tool(), 'proposal', 'true');
+                            window.location = newUrl;
+                        });
+                }
+            }
+        })(jQuery);
+    </script>
+{% endblock %}

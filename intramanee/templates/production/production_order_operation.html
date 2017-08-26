@@ -1,0 +1,92 @@
+{% extends 'production/production_order_new.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load templatetags %}
+
+{% block pre_page %}
+    <div class="op-action-component" data-opid="{{ operation_id }}" data-poid="{{ order_id }}"></div>
+{% endblock %}
+
+{% block right_fields_area %}
+    <div id="designDetails" style="display: none;">
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">{% trans 'T_DESIGN_DOC' %}</label>
+                    <div class="col-sm-8">
+                        <p class="form-control-static" id="designDoc">&nbsp;</p>
+                    </div>
+                </div>
+                <table id="attachmentTable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>{% trans 'TH_FILE' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="col-sm-4">
+                <div class="designthumb"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extended_script %}
+    <script type="text/javascript">
+        var Extended = {
+
+            design : {{ design|jsonify }},
+
+            // IMPORTANT Extended.renderDesign
+            renderDesign : function() {
+                if(this.design == null) {
+                    $('#designDetails').remove();
+                    return;
+                }
+
+                $('#designDoc').html('<a href="' + URL.randd_design_edit(this.design._id) + '" target="_blank">' + this.design.code + '</a>');
+
+                var imageExt = ['.png', '.jpg', '.gif'];
+                var imageAttachments = this.design.attachments.filter(function(a) {
+                    if(this.design.thumbnail_id) {
+                        return a._id == this.design.thumbnail_id;
+                    } else {
+                        return imageExt.indexOf(a.file.substr(-4).toLowerCase()) != -1;
+                    }
+                }.bind(this));
+
+                if(imageAttachments.length > 0) {
+                    $('.designthumb').css({
+                        backgroundImage : 'url(\'{{ MEDIA_URL }}' + imageAttachments[0].file + '\')',
+                        cursor : 'pointer'
+                    }).click(function() {
+                        window.open('{{ MEDIA_URL }}' + imageAttachments[0].file);
+                    }.bind(this));
+                } else {
+                    $('.designthumb').remove();
+                }
+
+                if(this.design.attachments.length == 0) {
+                    $('#attachmentTable').remove();
+                } else {
+                    for(var i = 0; i < this.design.attachments.length; i++) {
+                        var $tr = $('<tr><td></td></tr>');
+                        var fileParts = this.design.attachments[i].file.split('/');
+                        var fname = fileParts[fileParts.length - 1];
+                        $tr.find('td').first().html('<a href="{{ MEDIA_URL }}' + this.design.attachments[i].file + '" target="_blank">' + fname + '</a>');
+                        $('#attachmentTable tbody').append($tr);
+                    }
+                }
+
+                $('#designDetails').show();
+            },
+
+            onReadyToUse : function() {
+                this.renderDesign();
+            }
+
+        };
+    </script>
+{% endblock %}

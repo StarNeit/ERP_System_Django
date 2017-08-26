@@ -1,0 +1,91 @@
+@page {
+  size: A5 portrait;
+  margin: 0cm;
+}
+
+body {
+  background: rgb(204,204,204);
+  font-size: 11px;
+}
+
+page {
+  background: white;
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 0.5cm;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.5);
+  page-break-after: always;
+
+  &[size="A4"] {
+    width: 21cm;
+    /*height: 29.7cm;*/
+  }
+
+  &[size="A5"] {
+    width: 14.8cm;
+    /*height: 21cm;*/
+    overflow: hidden;
+  }
+}
+
+@media print {
+  body, page {
+    margin: 0;
+    box-shadow: 0;
+  }
+
+  page[size="A5"] {
+    height: 20.9cm;
+  }
+}
+
+h1 {
+  margin: 0px 0px 0.3em 0px;
+  font-size: 14px;
+}
+
+.staging-form {
+  padding: 15px 0px;
+
+  table.entries {
+    margin-top: 10px;
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      border: 1px solid black;
+      padding: 0px 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: top;
+      font-size: 10px;
+      line-height: 13px;
+    }
+
+    .num {
+      width: 5%;
+      padding: 0px 0px;
+      text-align: center;
+    }
+    .task {
+      width: 10%;
+      text-align: center;
+      padding: 0px 0px;
+    }
+    .po {
+      width: 20%;
+    }
+    .uom {
+      width: 10%;
+      text-align: center;
+      padding: 0px 0px;
+    }
+    .quantity {
+      width: 16%;
+      text-align: center;
+      padding: 0px 0px;
+    }
+  }
+}

@@ -1,0 +1,188 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right">
+                <a id="createProductionOrderButton" class="btn btn-primary" href="{% url 'production:production_order_new' %}"><i class="fa fa-plus"></i><span class="hidden-xs"> {% trans 'BUTTON_NEW_PRODUCTION_ORDER' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+
+            <table id="orderTable" class="table table-hover general-table">
+                <thead>
+                <tr>
+                    <th>{% trans 'TH_DOC_NO' %}</th>
+                    <th>{% trans 'TH_REF_DOC' %}</th>
+                    <th>{% trans 'TH_PRODUCT' %}</th>
+                    <th class="text-right">{% trans 'TH_QUANTITY' %}</th>
+                    <th>{% trans 'TH_PLANNED_START' %}</th>
+                    <th>{% trans 'TH_PLANNED_END' %}</th>
+                    <th>{% trans 'TH_TYPE' %}</th>
+                    <th>{% trans 'TH_STATUS' %}</th>
+                    <th>{% trans 'TH_LAST_MODIFIED' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <div class="text-right paginationblock">
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/models/production-order.js' %}"></script>
+    <script type="text/javascript">
+        var List = {
+
+            PAGE_SIZE : 20,
+            pageIndex : 0,
+
+            init : function() {
+                var o = this;
+                $(document).on('click', '.pagination li a', function() {
+                    var index = $(this).data('index');
+                    if(index == o.pageIndex) return;
+                    o.pageIndex = index;
+                    $('.pagination li.active').removeClass('active');
+                    $('.paginationblock .pagination').each(function() {
+                        $(this).find('li').eq(o.pageIndex).addClass('active');
+                    });
+                    o.query();
+                });
+            },
+
+            query : function() {
+                var o  = this;
+                common.blockUI($('#orderTable').closest('.panel-body'));
+                api.crud.read('production_order', null, this.PAGE_SIZE, this.pageIndex, function(success, data) {
+                    $('#orderTable tbody > *').remove();
+                    common.unblockUI($('#orderTable').closest('.panel-body'));
+                    if(success) {
+                        data.forEach(function(obj) {
+                            var $renderer = o.renderOrderEntry(obj);
+                            $('#orderTable tbody').append($renderer);
+                        });
+
+                        $('#orderTable tbody .labelize').each(function() {
+                            Resolver.translate($(this));
+                        });
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            queryTotal : function() {
+                var o = this;
+                api.crud.count('production_order', null, function(success, data) {
+                    if(success) {
+                        $('.paginationblock').empty();
+                        if(data == 0) return;
+                        var pageCount = Math.ceil(data / o.PAGE_SIZE);
+                        if(pageCount > 1) {
+                            $('.paginationblock').append('<ul class="pagination"></ul>');
+                            for (var i = 1; i <= pageCount; i++) {
+                                $('.paginationblock .pagination').append('<li><a href="javascript:;" data-index="' + (i -1) + '">' + i + '</a></li>');
+                            }
+                            $('.paginationblock .pagination').each(function() {
+                                $(this).find('li').eq(o.pageIndex).addClass('active');
+                            });
+                        }
+                    } else {
+                        console.log(data);
+                    }
+                });
+            },
+
+            renderOrderEntry : function(obj) {
+                var url = URL.production_order_edit(obj._id);
+                var statusClass = 'primary';
+                var statusText = gettext('PRODUCTION_ORDER_STATUS_' + obj.status);
+                console.log(obj);
+
+                var editBy = '';
+                var editWhen = '';
+                if(obj.last_edited) {
+                    editBy = displayName(obj.last_edited.who.first_name, obj.last_edited.who.last_name);
+                    editWhen = moment(obj.last_edited.when * 1000).format('YYYY-MM-DD HH:mm');
+                }
+
+                switch(obj.status) {
+                    case PD_STATUS_PLANNED:
+                        statusClass = 'info';
+                        break;
+                    case PD_STATUS_RELEASED:
+                        statusClass = 'warning';
+                        break;
+                    case PD_STATUS_CONFIRMED:
+                        statusClass = 'success';
+                        break;
+                    case PD_STATUS_CLOSED:
+                    case PD_STATUS_CANCELLED:
+                        statusClass = 'default';
+                        break;
+                    case PD_STATUS_OPEN:
+                    default:
+                        statusClass = 'primary';
+                }
+
+                var materialLabel = obj.material.substr('stock-'.length);
+                if(!common.isEmpty(obj.size)) {
+                    materialLabel = materialLabel + ' [<span class="labelize" data-type="' + api.common.C.TRANS.LOV_SIZE + '" data-code="' + obj.size + '" data-pattern="{label}">' + obj.size + '</span>]';
+                }
+
+                var $r = $('<tr>\
+                    <td><a href="' + url + '">' + obj.doc_no + '</a></td>\
+                    <td>&nbsp;</td>\
+                    <td><a href="' + url + '">' + materialLabel + '</a></td>\
+                    <td class="text-right"><a href="' + url + '">' + obj.quantity.formatMoney(2) + '</a></td>\
+                    <td><a href="' + url + '">' + moment(obj.planned_start * 1000).format('YYYY-MM-DD HH:mm') + '</a></td>\
+                    <td><a href="' + url + '">' + moment(obj.planned_end * 1000).format('YYYY-MM-DD HH:mm') + '</a></td>\
+                    <td>' + gettext('PO_TYPE_' + obj.type) + '</td>\
+                    <td><span class="label label-' + statusClass + '">' + statusText + '</span></td>\
+                    <td>' + editWhen + ' {% trans 'T_BY' %} ' + editBy + '</td>\
+                </tr>');
+
+                /*api.common.idLookup(obj.material, 'material_master', function(success, data) {
+                    if(success) {
+                        $r.find('td').eq(2).html('<a href="' + URL.stock_material_edit(data[0].fullCode) + '">' + materialLabel + '</a>');
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });*/
+
+                if(!common.isEmpty(obj.ref_doc)) {
+                    api.crud.single('sales_order', obj.ref_doc, {}, function(success, data) {
+                        if(success) {
+                            $r.find('td').eq(1).html('<a href="' + URL.sales_order_edit(obj.ref_doc) + '">' + data.doc_no + '</a>');
+                        } else {
+                            Front.handleAjaxError(data);
+                        }
+                    });
+                }
+
+                return $r;
+            }
+
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                List.init();
+                List.query();
+                List.queryTotal();
+
+                // PERMISSION cannot write
+                if(!Front.userCan('production_order+write')) {
+                    $('#createProductionOrderButton').remove();
+                }
+            });
+        })(jQuery);
+    </script>
+{% endblock %}

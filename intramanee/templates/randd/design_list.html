@@ -1,0 +1,240 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right">
+                <a id="createDesignButton" class="btn btn-primary" href="{% url 'randd:design_new' %}"><i class="fa fa-plus"></i><span class="hidden-xs"> {% trans 'BUTTON_NEW_DESIGN' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+
+            <p class="text-right">
+                <input type="checkbox" id="showHideThumbnails" />
+                <label for="showHideThumbnails">{% trans 'T_SHOW_THUMBNAIL' %}</label>
+            </p>
+
+            <table id="designTable" class="table table-hover general-table">
+                <thead>
+                <tr>
+                    <th class="sortable">{% trans 'TH_CODE' %}</th>
+                    <th width="110" class="thumbnailCol">{% trans 'TH_THUMBNAIL' %}</th>
+                    <th>{% trans 'TH_CUSTOMER' %}</th>
+                    <th>{% trans 'TH_COLLECTION' %}</th>
+                    <th class="text-center" width="110">{% trans 'TH_STATUS' %}</th>
+                    <th class="text-center" width="150">&nbsp;</th>
+                    <th>{% trans 'TH_LAST_MODIFIED' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <div class="text-right paginationblock">
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/models/Design.js' %}"></script>
+    <script type="text/javascript">
+        var List = {
+
+            PAGE_SIZE : 20,
+            pageIndex : 0,
+
+            init : function() {
+                var o = this;
+                $(document).on('click', '.pagination li a', function() {
+                    var index = $(this).data('index');
+                    if(index == o.pageIndex) return;
+                    o.pageIndex = index;
+                    $('.pagination li.active').removeClass('active');
+                    $('.paginationblock .pagination').each(function() {
+                        $(this).find('li').eq(o.pageIndex).addClass('active');
+                    });
+                    o.query();
+                });
+
+                var isShowThumbnails = common.getCookie('design_show_thumbnails');
+                if(isShowThumbnails == 'yes') {
+                    $('#showHideThumbnails').prop('checked', true);
+                }
+
+                $('#showHideThumbnails').change(function() {
+                    var cookieValue = 'no';
+                    var isShow = $(this).prop('checked');
+                    if(isShow) {
+                        cookieValue = 'yes';
+                    }
+                    common.setCookie('design_show_thumbnails', cookieValue, 999);
+                    List.renderThumbnails();
+                });
+            },
+
+            query : function() {
+                var o  = this;
+                common.blockUI($('#designTable').closest('.panel-body'));
+                api.crud.read('design', {'latest_revision_only': 1, 'validate_errors': 1}, this.PAGE_SIZE, this.pageIndex, function(success, data) {
+                    $('#designTable tbody > *').remove();
+                    common.unblockUI($('#designTable').closest('.panel-body'));
+                    if(success) {
+                        data.forEach(function(obj) {
+                            var $renderer = o.renderDesignEntry(obj);
+                            $('#designTable tbody').append($renderer);
+                        });
+                        List.renderThumbnails();
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            queryTotal : function() {
+                var o = this;
+                api.crud.count('design', {'latest_revision_only': 1}, function(success, data) {
+                    if(success) {
+                        $('.paginationblock').empty();
+                        if(data == 0) return;
+                        var pageCount = Math.ceil(data / o.PAGE_SIZE);
+                        if(pageCount > 1) {
+                            $('.paginationblock').append('<ul class="pagination"></ul>');
+                            for (var i = 1; i <= pageCount; i++) {
+                                $('.paginationblock .pagination').append('<li><a href="javascript:;" data-index="' + (i -1) + '">' + i + '</a></li>');
+                            }
+                            $('.paginationblock .pagination').each(function() {
+                                $(this).find('li').eq(o.pageIndex).addClass('active');
+                            });
+                        }
+                    } else {
+                        console.log(data);
+                    }
+                });
+            },
+
+            renderDesignEntry : function(obj) {
+                var url = URL.randd_design_edit(obj._id);
+                var statusText = gettext('DESIGN_STATUS_' + obj.status);
+                var statusClass = 'primary';
+                console.log(obj);
+
+                switch(obj.status) {
+                    case Design.C.STATUS.WAIT_FOR_APPROVAL:
+                        statusClass = 'warning';
+                        break;
+                    case Design.C.STATUS.APPROVED:
+                        statusClass = 'success';
+                        break;
+                    case Design.C.STATUS.REJECTED:
+                        statusClass = 'danger';
+                        break;
+                }
+
+                var editBy = '';
+                var editWhen = '';
+                if(obj.last_edited && obj.last_edited.who) {
+                    editBy = displayName(obj.last_edited.who.first_name, obj.last_edited.who.last_name);
+                    editWhen = moment(obj.last_edited.when * 1000).format('YYYY-MM-DD HH:mm');
+                } else {
+                    editBy = '(Event object missing)';
+                    editWhen = '';
+                }
+
+                var designCodeLabel = '(not set)';
+                if(!common.isEmpty(obj.code)) {
+                    designCodeLabel = obj.code;
+                }
+                designCodeLabel = designCodeLabel + ' rev' + obj.rev_id;
+
+                var designThumbnail = '';
+                if(!common.isEmpty(obj.thumbnail_id)) {
+                    var thumbnail = obj.attachments.filter(function(a) {
+                        return a.id = obj.thumbnail_id;
+                    });
+                    if(thumbnail.length > 0) {
+                        thumbnail = thumbnail.shift();
+                        designThumbnail = '<a href="javascript:;" class="designthumb" style="background-image:url(\'{{ MEDIA_URL }}' + thumbnail.file + '\');"></a>';
+                    }
+                }
+
+                var $r = $('<tr>\
+                    <td class="codeCol"><a href="' + url + '">' + designCodeLabel + '</a></td>\
+                    <td class="thumbnailCol">' + designThumbnail + '</td>\
+                    <td class="customer"><a href="' + url + '"></a></td>\
+                    <td class="collection"><a href="' + url + '"></a></td>\
+                    <td class="text-center"><span class="label label-' + statusClass + '">' + statusText + '</span></td>\
+                    <td class="text-center">\
+                        <span class="status-box drawing"></span>\
+                        <span class="status-box mastermodeling"></span>\
+                        <span class="status-box production"></span>\
+                        <span class="status-box pricing"></span>\
+                    </td>\
+                    <td>' + editWhen + ' {% trans 'T_BY' %} ' + editBy + '</td>\
+                </tr>');
+
+                if(!common.isEmpty(obj.customer)) {
+                    $r.find('.customer a').append(Resolver.labelize(api.common.C.TRANS.TYPED_CODES, obj.customer, '<span>{label}</span>'));
+                }
+                if(!common.isEmpty(obj.collection_name)) {
+                    $r.find('.collection a').html(obj.collection_name);
+                }
+
+                for(var i = 0; i < 4; i++) {
+                    var key = '';
+                    switch(i) {
+                        case 0: key = 'drawing'; break;
+                        case 1: key = 'masterModeling'; break;
+                        case 2: key = 'production'; break;
+                        case 3: key = 'pricing'; break;
+                    }
+                    var $statBox = $r.find('.status-box.' + key.toLowerCase());
+                    if(obj.errors[i].length == 0) {
+                        $statBox.addClass('done');
+                    }
+                    $statBox.tooltip({
+                        position : 'top',
+                        title : gettext('DESIGN_PROGRESS_' + key),
+                        trigger : 'hover'
+                    });
+                }
+
+                if(obj.errors.length == 5 && obj.errors[4].length > 0) {
+                    $r.find('.codeCol a').addClass('text-danger').tooltip({
+                        position : 'top',
+                        title : common.nl2br(obj.errors[4].join('<br/>')),
+                        html : true,
+                        trigger : 'hover'
+                    });
+                }
+
+                return $r;
+            },
+
+            renderThumbnails : function() {
+                var isShow = $('#showHideThumbnails').prop('checked');
+                if(isShow) {
+                    $('#designTable .thumbnailCol').show();
+                } else {
+                    $('#designTable .thumbnailCol').hide();
+                }
+            }
+
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                List.init();
+                List.query();
+                List.queryTotal();
+
+                // PERMISSION cannot write
+                if(!Front.userCan('design+write')) {
+                    $('#createDesignButton').remove();
+                }
+            });
+        })(jQuery);
+    </script>
+{% endblock %}

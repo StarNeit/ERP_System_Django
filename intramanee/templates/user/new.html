@@ -1,0 +1,85 @@
+{% extends 'user/edit.html' %}
+{% load i18n %}
+{% block block_one %}
+    <section class="panel">
+        <header class="panel-heading">{% trans 'PANEL_TITLE_EDIT_USER_INFO' %}</header>
+        <div class="panel-body">
+            {% csrf_token %}
+            <div class="form-group {% if form.code.errors %} has-error {% endif %}">
+                <label for="{{ form.code.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.code.label }}</label>
+                <div class="col-lg-9">
+                    {{ form.code }}
+                    {% for error in form.code.errors %}
+                        <p><span class="help-block text-danger">{{ error }}</span></p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group {% if form.first_name.errors %} has-error {% endif %}">
+                <label for="{{ form.first_name.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.first_name.label }}</label>
+                <div class="col-lg-9">
+                    {{ form.first_name }}
+                    {% for error in form.first_name.errors %}
+                        <p><span class="help-block text-danger">{{ error }}</span></p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group {% if form.last_name.errors %} has-error {% endif %}">
+                <label for="{{ form.last_name.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.last_name.label }}</label>
+                <div class="col-lg-9">
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}
+                        <p><span class="help-block text-danger">{{ error }}</span></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block block_two %}
+    <section class="panel">
+        <header class="panel-heading">{% trans 'PANEL_TITLE_PASSWORD' %}</header>
+        <div class="panel-body">
+            <div class="form-group {% if form.password.errors %} has-error {% endif %}">
+                <label for="{{ form.password.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.password.label }}</label>
+                <div class="col-lg-9">
+                    {{ form.password }}
+                    {% for error in form.password.errors %}
+                        <p><span class="help-block text-danger">{{ error }}</span></p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group {% if form.confirm_password.errors %} has-error {% endif %}">
+                <label for="{{ form.confirm_password.id_for_label }}" class="col-lg-3 col-sm-2 control-label">{{ form.confirm_password.label }}</label>
+                <div class="col-lg-9">
+                    {{ form.confirm_password }}
+                    {% for error in form.confirm_password.errors %}
+                        <p><span class="help-block text-danger">{{ error }}</span></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript">
+        (function($) {
+            $(document).ready(function() {
+                $('.submitaction').click(function() {
+                    var valid = common.autoValidate($('form input'));
+                    var password = $('input[name="password"]').val();
+                    var confPass = $('input[name="confirm_password"]').val();
+                    if(valid && password != confPass) {
+                        valid = false;
+                        common.setInvalid($('input[name="confirm_password"]'));
+                    }
+
+                    if(valid) {
+                        $('form').submit();
+                    }
+                });
+            });
+        })(jQuery);
+    </script>
+{% endblock %}

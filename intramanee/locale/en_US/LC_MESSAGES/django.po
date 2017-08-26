@@ -1,0 +1,3058 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-07-11 16:24+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Picha Mahakittikun <picha@syllistudio.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: middleware.py:28
+msgid "MENU_TASKS"
+msgstr "Tasks"
+
+#: middleware.py:33
+msgid "MENU_SALES"
+msgstr "Sales"
+
+#: middleware.py:39
+msgid "MENU_SALES_ORDERS"
+msgstr "Sales Orders"
+
+#: middleware.py:45
+msgid "MENU_SALES_ORDER_EDIT"
+msgstr "Edit Sales Order"
+
+#: middleware.py:54
+msgid "MENU_SALES_ORDER_CREATE"
+msgstr "New Sales Order"
+
+#: middleware.py:62
+msgid "MENU_RANDD"
+msgstr "R & D"
+
+#: middleware.py:73
+msgid "MENU_RANDD_DESIGNS"
+msgstr "Designs"
+
+#: middleware.py:79
+msgid "MENU_RANDD_DESIGN_EDIT"
+msgstr "Edit Design"
+
+#: middleware.py:88
+msgid "MENU_RANDD_DESIGN_CREATE"
+msgstr "New Design"
+
+#: middleware.py:96
+msgid "MENU_MATERIAL"
+msgstr "Material"
+
+#: middleware.py:102
+msgid "MENU_MATERIALS"
+msgstr "Materials"
+
+#: middleware.py:108
+msgid "MENU_MATERIAL_EDIT"
+msgstr "Edit Material"
+
+#: middleware.py:117
+msgid "MENU_MATERIAL_CREATE"
+msgstr "New Material"
+
+#: middleware.py:125
+msgid "MENU_PRODUCTION"
+msgstr "Production"
+
+#: middleware.py:131
+msgid "MENU_DASHBOARD_5340"
+msgstr "Dashboard : Forming"
+
+#: middleware.py:137
+msgid "MENU_DASHBOARD_5390"
+msgstr "Dashboard : Finishing Machines"
+
+#: middleware.py:143
+msgid "MENU_DASHBOARD_5400"
+msgstr "Dashboard : Polishing"
+
+#: middleware.py:149
+msgid "MENU_DASHBOARD_5430"
+msgstr "Dashboard : Handcrafting"
+
+#: middleware.py:155
+msgid "MENU_PRODUCTION_ORDERS"
+msgstr "Production Orders"
+
+#: middleware.py:161
+msgid "MENU_PRODUCTION_ORDER_EDIT"
+msgstr "Edit Production Order"
+
+#: middleware.py:168
+msgid "MENU_PRODUCTION_ORDER_OPERATION"
+msgstr "Operation"
+
+#: middleware.py:177
+msgid "MENU_PRODUCTION_ORDER_CREATE"
+msgstr "New Production Order"
+
+#: middleware.py:183
+msgid "MENU_PLANNING_TOOL"
+msgstr "Planning Tool"
+
+#: middleware.py:189
+msgid "MENU_STOCK_REQUIREMENT"
+msgstr "Stock Requirement"
+
+#: middleware.py:195
+msgid "MENU_MRP"
+msgstr "MRP"
+
+#: middleware.py:201
+msgid "MENU_OPERATION_GROUP_MANAGER"
+msgstr "Op. Group Manager"
+
+#: middleware.py:208
+msgid "MENU_QUALITY_CONTROL"
+msgstr "Quality Control"
+
+#: middleware.py:214 middleware.py:227
+msgid "MENU_DASHBOARD"
+msgstr "Dashboard"
+
+#: middleware.py:222
+msgid "MENU_INVENTORY"
+msgstr "Inventory"
+
+#: middleware.py:233
+msgid "MENU_MOVEMENT"
+msgstr "Material Movement"
+
+#: middleware.py:240
+msgid "MENU_MOVEMENT_CREATE"
+msgstr "New Material Movement"
+
+#: middleware.py:246
+msgid "MENU_MATERIAL_REQUISITION_FORM"
+msgstr "Material Requisition"
+
+#: middleware.py:251
+msgid "MENU_STAGING_FORM"
+msgstr "Staging Form"
+
+#: middleware.py:259
+msgid "MENU_PURCHASING"
+msgstr "Purchasing"
+
+#: middleware.py:265
+msgid "MENU_PURCHASE_REQUISITIONS"
+msgstr "Purchase Requisitions"
+
+#: middleware.py:270
+msgid "MENU_PURCHASE_REQUISITION"
+msgstr "Purchase Requisition"
+
+#: middleware.py:282
+msgid "MENU_TRACKING"
+msgstr "Tracking"
+
+#: middleware.py:288
+msgid "MENU_KPI"
+msgstr "KPI"
+
+#: middleware.py:294
+msgid "MENU_ORGANIZATION"
+msgstr "Organization"
+
+#: middleware.py:300
+msgid "MENU_USERS"
+msgstr "Users"
+
+#: middleware.py:305
+msgid "MENU_USERS_LIST"
+msgstr "All Users"
+
+#: middleware.py:310
+msgid "MENU_USERS_EDIT"
+msgstr "Edit User"
+
+#: middleware.py:378
+msgid "OVERRIDE PERMISSION IS NOT REQUESTED FOR THIS USER"
+msgstr "Override Permission is not requested for this user."
+
+#: models.py:120
+msgid "ERR_BAD_USAGE_OF_USER_CAN_API"
+msgstr "Bad usage of user can API."
+
+#: models.py:128
+#, python-format
+msgid "ERR_INSUFFICIENT_PERMISSION: %(action)s arg=%(arg)s"
+msgstr "Insufficient Permission for action %(action)s arg=%(arg)s"
+
+#: common/authentication.py:43
+#, python-format
+msgid ""
+"ERR_AUTHENTICATE_USER_DOES_NOT_HAVE_TARGET_PERMISSION: %(target_permissions)s"
+msgstr "Insufficient Permission for action %(target_permissions)s"
+
+#: common/authentication.py:49
+msgid "ERR_AUTHENTICATION_FAILED"
+msgstr "Authentication Failed."
+
+#: common/documents.py:267
+#, python-format
+msgid "ERR_SUPPORTED_DOCUMENT_PREFIX: %(doc_no)s"
+msgstr "Unsupported document prefix: %(doc_no)s"
+
+#: common/documents.py:270
+#, python-format
+msgid "ERR_INVALID_DOCUMENT_NUMBER: %(doc_no)s"
+msgstr "Invalid document number: %(doc_no)s"
+
+#: common/documents.py:686
+msgid "ERR_CANNOT_DESERIALIZED_NONE_VALUE_FOR_NON_NULLABLE_FIELD"
+msgstr "Cannot deserialize none value for non nullable field."
+
+#: common/documents.py:722
+#, python-format
+msgid "ERR_UNABLE_TO_INTERPRET_SUCH_VALUE_AS_ANY_DOC: %(value)s"
+msgstr "Unable to interpret such value as any document: %(value)s"
+
+#: common/documents.py:1222
+msgid "Unable to check permission against non-modeled document"
+msgstr "Unable to check permission against non-modeled document"
+
+#: common/documents.py:1316
+msgid "EVENT_TYPE_UNDEFINED"
+msgstr "Unknown"
+
+#: common/documents.py:1317
+msgid "EVENT_TYPE_CREATED"
+msgstr "Created"
+
+#: common/documents.py:1318
+msgid "EVENT_TYPE_UPDATED"
+msgstr "Updated"
+
+#: common/documents.py:1319
+msgid "EVENT_TYPE_DELETED"
+msgstr "Deleted"
+
+#: common/documents.py:1320
+msgid "EVENT_SUBMIT_FOR_APPROVAL"
+msgstr "Submitted for Approval"
+
+#: common/documents.py:1321
+msgid "EVENT_TYPE_REJECTED"
+msgstr "Rejected"
+
+#: common/documents.py:1322
+msgid "EVENT_TYPE_APPROVED"
+msgstr "Approved"
+
+#: common/documents.py:1323
+msgid "EVENT_TYPE_CANCELLED"
+msgstr "Cancelled"
+
+#: common/documents.py:1324
+msgid "EVENT_TYPE_FINISHED"
+msgstr "Finished"
+
+#: common/documents.py:1398
+msgid "APPROVAL_STATUS_NEW"
+msgstr "New"
+
+#: common/documents.py:1399
+msgid "APPROVAL_STATUS_EDITED"
+msgstr "Edited"
+
+#: common/documents.py:1400
+msgid "APPROVAL_STATUS_APPROVED"
+msgstr "Approved"
+
+#: common/documents.py:1401
+msgid "APPROVAL_STATUS_REJECTED"
+msgstr "Rejected"
+
+#: common/documents.py:1402
+msgid "APPROVAL_STATUS_WAITING_FOR_APPROVAL"
+msgstr "Pending for Approval"
+
+#: common/errors.py:80
+#, python-format
+msgid "ERR_PARAMETER_IS_REQUIRED: %(parameter_name)s"
+msgstr "Require %(parameter_name)s."
+
+#: common/errors.py:93
+#, python-format
+msgid "ERR_REQUIRED_CLASS: %(class_spec)s"
+msgstr "Require class: %(class_spec)s"
+
+#: common/resource.py:11
+msgid "RESOURCE_STATUS_AVAILABLE"
+msgstr "Available"
+
+#: common/resource.py:12
+msgid "RESOURCE_STATUS_UNAVAILABLE"
+msgstr "Unavailable"
+
+#: common/codes/__init__.py:487
+msgid "MOLD_CLASS_MA"
+msgstr "พิมพ์แม่"
+
+#: common/codes/__init__.py:488
+msgid "MOLD_CLASS_GRAND_MA"
+msgstr "พิมพ์ยาย"
+
+#: common/codes/__init__.py:527
+msgid "CODE_COMPONENT_RUNNING_NUMBER"
+msgstr "Number"
+
+#: common/codes/__init__.py:848
+msgid "ERR_CANNOT_CREATE_WIP_CODE_FROM_UNCOMPLETED_CODE"
+msgstr "Cannot create WIP code from incomplete code."
+
+#: common/codes/__init__.py:852
+msgid "ERR_CANNOT_CREATE_WIP_CODE_BAD_NEXT_OPERATION_CODE"
+msgstr "Cannot create WIP code: Bad Next Operation Code"
+
+#: common/codes/__init__.py:864
+msgid "ERR_CANNOT_CREATE_WIP_CODE_FROM_NON_180_STOCK_CODE"
+msgstr "Cannot create WIP code from non-180 stock code."
+
+#: common/codes/__init__.py:868
+#, python-format
+msgid "ERR_FAILED_TO_CREATE_PROPER_CODE: %(reason)s"
+msgstr "Failed to create proper code: %(reason)s"
+
+#: common/codes/__init__.py:875
+#, python-format
+msgid "ERR_FAILED_TO_CREATE_COMPLETED_WIP_CODE: %(generated_code)s"
+msgstr "Failed to create completed WIP code: %(generated_code)s"
+
+#: production/ajax.py:39
+msgid "ERR_UNABLE_TO_IDENTIFY_ROOM"
+msgstr "Unable to identify room."
+
+#: production/ajax.py:63
+#, python-format
+msgid "ERR_UNKNOWN_PRODUCTION_ORDER: %(doc_no)s"
+msgstr "Unknown Production Order: %(doc_no)s"
+
+#: production/ajax.py:95
+#, python-format
+msgid "ERR_UNKNOWN_PRODUCTION_ORDER_OPERATION_DOC_NO: %(doc_no)s"
+msgstr "Unknown Operation Doc No.: %(doc_no)s"
+
+#: production/ajax.py:101
+#, python-format
+msgid "ERR_UNABLE_TO_UPDATE_UNCONFIRMED_OPERATION_TO_DELIVERED: %(doc_no)s"
+msgstr "Unable to update unconfirmed operation to delivered: %(doc_no)s"
+
+#: production/ajax.py:112
+#, python-format
+msgid "ERR_UNSUPPORTED_ACTION: %(action)s"
+msgstr "Unsupported action: %(action)s"
+
+#: production/ajax.py:196
+msgid "ERR_USER_CODE_REQUIRED"
+msgstr "Require user code."
+
+#: production/ajax.py:209
+msgid "ERR_ACTIVITY_NOT_YET_STARTED"
+msgstr "Activity not started."
+
+#: production/ajax.py:232
+msgid "ERR_INVALID_OPERATION"
+msgstr "Invalid Operation."
+
+#: production/ajax.py:240
+msgid "ERR_FAILED_TO_IDENTIFY_AUXILIARY_TASKS"
+msgstr "Unable to identify auxiliary tasks."
+
+#: production/ajax.py:280
+#, python-format
+msgid "ERR_UNKNOWN_DOCUMENT_ID: %(document_id)s"
+msgstr "Unknown Document ID: %(document_id)s"
+
+#: production/ajax.py:285
+#, python-format
+msgid "ERR_CANNOT_REVERT_TASK: %(task_type)s"
+msgstr "Cannot revert task: %(task_type)s"
+
+#: production/ajax.py:291
+#, python-format
+msgid "ERR_INVALID_ACTION: %(action)s"
+msgstr "Invalid action: %(action)s"
+
+#: production/documents.py:40
+msgid "ERROR_FIRST_4_DIGITS_MUST_BE_TASK_CODE"
+msgstr "First 4 digits must be task code."
+
+#: production/documents.py:157
+msgid "OPERATION_STATUS_OPEN"
+msgstr "Open"
+
+#: production/documents.py:158
+msgid "OPERATION_STATUS_RELEASED"
+msgstr "Released"
+
+#: production/documents.py:159
+msgid "OPERATION_STATUS_READY"
+msgstr "Ready"
+
+#: production/documents.py:160
+msgid "OPERATION_STATUS_STARTED"
+msgstr "Started"
+
+#: production/documents.py:161
+msgid "OPERATION_STATUS_PARTIAL_CONFIRMED"
+msgstr "Partially Confirmed"
+
+#: production/documents.py:162
+msgid "OPERATION_STATUS_CONFIRMED"
+msgstr "Confirmed"
+
+#: production/documents.py:163
+msgid "OPERATION_STATUS_DELIVERED"
+msgstr "Delivered"
+
+#: production/documents.py:164
+msgid "OPERATION_STATUS_CANCELLED"
+msgstr "Cancelled"
+
+#: production/documents.py:171
+msgid "OPERATION_CONTROL_INTERNAL"
+msgstr "Internal"
+
+#: production/documents.py:172
+msgid "OPERATION_CONTROL_EXTERNAL"
+msgstr "External"
+
+#: production/documents.py:201
+msgid "ERROR_OPERATION_ALREADY_ASSIGNED_TO_GROUP"
+msgstr "Operation is already assigned to a group."
+
+#: production/documents.py:207
+msgid "ERROR_OPERATION_IS_NOT_IN_GROUP"
+msgstr "Operation is not in group."
+
+#: production/documents.py:213
+msgid "ERROR_OPERATION_IS_ALREADY_CANCELLED"
+msgstr "Operation is already cancelled."
+
+#: production/documents.py:244
+#, python-format
+msgid "ERR_TASK_REQUIRED_MATERIALS_BUT_NONE_IS_STAGED: %(task)s"
+msgstr "No staged materials found for %(task)s."
+
+#: production/documents.py:296
+msgid "ERROR_CONFIRMATION_MUST_BE_PRODUCTION_CONFIRMATION"
+msgstr "Confirmation must be instance of ProductionConfirmation."
+
+#: production/documents.py:312
+#, python-format
+msgid "ERROR_CONFIRMATION_YIELD_SCRAP_EXCEED: %(quantity)s"
+msgstr "Yield + Scrap quantity exceed production quantity: %(quantity)s"
+
+#: production/documents.py:319
+msgid "ERROR_POSTING_QTY_EXCEED"
+msgstr "Posting quantity exceed production open quantity."
+
+#: production/documents.py:322
+msgid "ERROR_NEGATIVE_POSTING_QTY"
+msgstr "Posting quantity must be more than 0."
+
+#: production/documents.py:430
+#, python-format
+msgid "ERROR_CONFIRMATION: Confirmation index %(index)s does not exist"
+msgstr "Confirmation index %(index)s does not exist."
+
+#: production/documents.py:433
+#, python-format
+msgid "ERROR_CONFIRMATION: Confirmation index %(index)s is already cancelled"
+msgstr "Confirmation index %(index)s is already cancelled."
+
+#: production/documents.py:440
+#, python-format
+msgid ""
+"ERROR_NEXT_OP_CONFIRMED: Next Task %(task)s is already confirmed %(nx_conf)s "
+"qty"
+msgstr "Next task (%(task)s) is already confirmed with %(nx_conf)s quantity."
+
+#: production/documents.py:479
+#, python-format
+msgid "ERR_CANNOT_COMPARE_OPERATION_INVALID_TYPE: %(type)s"
+msgstr "Cannot compare operation invalid type: %(type)s"
+
+#: production/documents.py:540 production/documents.py:561
+#, python-format
+msgid ""
+"ERR_OPERATION_DOES_NOT_CONTAIN_IDENTICAL_OPERATION_FOOTPRINT: %(a)s %(b)s"
+msgstr "Operation does not contain identical operation footprint: %(a)s %(b)s"
+
+#: production/documents.py:547
+#, python-format
+msgid "ERR_CANNOT_IDENTIFY_CLOSURE_OF_BATCH_GROUP: %(group_key)s"
+msgstr "Cannot identify closure of batch group: %(group_key)s"
+
+#: production/documents.py:554
+msgid "ERR_OPEN_GROUP_BATCH_CANNOT_HANDLE_PARALLEL_SCHEMATIC"
+msgstr "Open group batch cannot handle parallel schematic."
+
+#: production/documents.py:624
+msgid "GROUP_OPERATION_STATUS_OPEN"
+msgstr "Open"
+
+#: production/documents.py:625
+msgid "GROUP_OPERATION_STATUS_PARTIALLY_CONFIRMED"
+msgstr "Partially Confirmed"
+
+#: production/documents.py:626
+msgid "GROUP_OPERATION_STATUS_CONFIRMED"
+msgstr "Confirmed"
+
+#: production/documents.py:627
+msgid "GROUP_OPERATION_STATUS_CANCELLED"
+msgstr "Cancelled"
+
+#: production/documents.py:634
+msgid "GROUP_TYPE_PLAN"
+msgstr "Plan"
+
+#: production/documents.py:635
+msgid "GROUP_TYPE_ACTUAL"
+msgstr "Actual"
+
+#: production/documents.py:760
+#, python-format
+msgid "ERROR_TASK_NOT_SUPPORT_BATCH: %(taskcode)s: %(tasklabel)s"
+msgstr "Unsupported task batch: %(taskcode)s: %(tasklabel)s"
+
+#: production/documents.py:780
+msgid "ERROR_GROUP_MUST_BE_OF_THE_SAME_TASK"
+msgstr "Group can only contain the same task."
+
+#: production/documents.py:791
+msgid "ERROR_GROUP_MUST_BE_IN_THE_SAME_DATE"
+msgstr "Group must be in the same date."
+
+#: production/documents.py:809
+#, python-format
+msgid "ERROR_FIRST_OP_EXCEED_MAX_BATCH: Max: %(maxbatch)s"
+msgstr "First task exceed max batch: %(maxbatch)s"
+
+#: production/documents.py:817
+msgid "ERROR_TYPE_DOES_NOT_EXIST"
+msgstr "Require type."
+
+#: production/documents.py:886
+msgid "Operations are required"
+msgstr "Require operations."
+
+#: production/documents.py:922
+msgid "ERROR_GROUP_IS_ALREADY_CANCELLED"
+msgstr "Group is already cancelled."
+
+#: production/documents.py:925
+msgid "ERROR_GROUP_IS_ALREADY_CONFIRMED"
+msgstr "Group is already confirmed."
+
+#: production/documents.py:1041
+msgid "PRODUCTION_ORDER_STATUS_OPEN"
+msgstr "Open"
+
+#: production/documents.py:1042
+msgid "PRODUCTION_ORDER_STATUS_PLANNED"
+msgstr "Planned"
+
+#: production/documents.py:1043
+msgid "PRODUCTION_ORDER_STATUS_RELEASED"
+msgstr "Released"
+
+#: production/documents.py:1044
+msgid "PRODUCTION_ORDER_STATUS_CONFIRMED"
+msgstr "Confirmed"
+
+#: production/documents.py:1045
+msgid "PRODUCTION_ORDER_STATUS_CLOSED"
+msgstr "Closed"
+
+#: production/documents.py:1046
+msgid "PRODUCTION_ORDER_STATUS_CANCELLED"
+msgstr "Cancelled"
+
+#: production/documents.py:1053
+msgid "PRODUCTION_ORDER_TYPE_STANDARD"
+msgstr "Standard"
+
+#: production/documents.py:1054
+msgid "PRODUCTION_ORDER_TYPE_REWORK"
+msgstr "Rework"
+
+#: production/documents.py:1123
+msgid "ERROR_PLANNED_START_IS_REQUIRED"
+msgstr "Require Planned Start."
+
+#: production/documents.py:1126
+msgid "ERROR_PLANNED_END_IS_REQUIRED"
+msgstr "Require batch."
+
+#: production/documents.py:1243
+msgid "ERROR_ONLY_OPEN_ORDER_CAN_REREAD_BOM"
+msgstr "Only open order can re-read BOM."
+
+#: production/documents.py:1327
+msgid "ERROR_ORDER_IS_ALREADY_CANCELLED"
+msgstr "Production Order is already cancelled."
+
+#: production/documents.py:1330
+msgid "ERROR_UNABLE_TO_CANCEL_ORDER_CONFIRMED"
+msgstr "Unable to cancel confirmed order."
+
+#: production/documents.py:1344
+#, python-format
+msgid ""
+"ERROR_PROCUREMENT_TYPE: %(material)s procurement type has to be I but it is "
+"%(procurementtype)s"
+msgstr ""
+"Cannot produce %(material)s because its procurement type is <strong>"
+"%(procurementtype)s</strong>."
+
+#: production/documents.py:1347
+#, python-format
+msgid "ERROR_NO_SCHEMATIC: %(material)s does not have schematic"
+msgstr "No schematic: %(material)s does not have schematic"
+
+#: production/documents.py:1353
+#, python-format
+msgid "ERROR_UOM_DOES_NOT_MATCH: %(material)s based UoM is %(uom)s"
+msgstr "UoM does not match: %(material)s baed UoM is %(uom)s"
+
+#: production/documents.py:1364
+#, python-format
+msgid ""
+"ERROR_REVISION_DOES_NOT_EXIST: revision %(material)s only has revision "
+"%(revisionlist)s request revision=%(rev)s"
+msgstr ""
+"Revision does not exist: %(material)s only has revision %(revisionlist)s but "
+"request for %(rev)s"
+
+#: production/documents.py:1368
+#, python-format
+msgid ""
+"ERROR_SIZE_DOES_NOT_EXIST: %(material)s revision %(materialrevision)s only "
+"has size %(sizelist)s"
+msgstr ""
+"Size does not exist: %(material)s revision %(materialrevision)s only has "
+"size %(sizelist)s"
+
+#: production/documents.py:1431
+msgid "ERROR_PROD_ALREADY_RELEASED:"
+msgstr "Production Order has already released."
+
+#: production/documents.py:1435
+msgid "ERROR_OPERATION_NOT_ASSIGNED"
+msgstr "Operation is not assigned."
+
+#: production/documents.py:1557
+#, python-format
+msgid ""
+"ERR_CANNOT_CREATE_CONFIRMATION: %(confirmation_class)s#create() %(key_error)s"
+msgstr ""
+"Cannot create confirmation: %(confirmation_class)s#create() %(key_error)s"
+
+#: production/documents.py:1562
+#, python-format
+msgid ""
+"ERR_CANNOT_CREATE_CONFIRMATION: %(confirmation_class)s#create() %(error)s "
+"%(details)s"
+msgstr ""
+"Cannot create confirmation: %(confirmation_class)s#create() %(error)s "
+"%(details)s"
+
+#: production/documents.py:1625
+#, python-format
+msgid "ERR_INVALID_DATA_TYPE: %(type)s"
+msgstr "Invalid data type: %(type)s"
+
+#: production/documents.py:1632
+#, python-format
+msgid "ERR_OPERATION_IN_PROGRESS: %(operation)s"
+msgstr "Operation in progress: %(operation)s"
+
+#: production/documents.py:1641
+msgid "ERR_FLAG_ALLOW_RESTART_IS_NOT_SUPPORTED"
+msgstr "Flag allow restart is not supported."
+
+#: production/documents.py:1644
+#, python-format
+msgid "ERR_OPERATION_IS_NOT_READY_TO_START: %(operation)s %(status)s"
+msgstr "Operation is not ready to start: %(operation)s %(status)s"
+
+#: production/documents.py:1654
+msgid "ERR_UNMATCHED_ASSIGNEE"
+msgstr "Unmatched Assignee"
+
+#: production/views.py:17
+msgid "PAGE_TITLE_PRODUCTION_ORDERS"
+msgstr "Production Orders"
+
+#: production/views.py:23
+msgid "ROOM_TITLE_5340"
+msgstr "Forming"
+
+#: production/views.py:24
+msgid "ROOM_TITLE_5390"
+msgstr "Finishing Machines"
+
+#: production/views.py:25
+msgid "ROOM_TITLE_5400"
+msgstr "Polishing"
+
+#: production/views.py:26
+msgid "ROOM_TITLE_5430"
+msgstr "Handcrafting"
+
+#: production/views.py:27 quality/views.py:17
+msgid "PAGE_TITLE_DASHBOARD"
+msgstr "Dashboard"
+
+#: production/views.py:27
+msgid "ROOM_TITLE_"
+msgstr ""
+
+#: production/views.py:34
+msgid "PAGE_TITLE_CREATE_PRODUCTION_ORDER"
+msgstr "New Production Order"
+
+#: production/views.py:41
+msgid "PAGE_TITLE_EDIT_PRODUCTION_ORDER"
+msgstr "Edit Production Order"
+
+#: production/views.py:55
+msgid "PAGE_TITLE_OPERATION"
+msgstr "Operation"
+
+#: production/views.py:78 templates/production/staging_form_print.html:13
+msgid "PAGE_TITLE_STAGING_FORM"
+msgstr "Staging Form"
+
+#: production/views.py:85
+msgid "PAGE_TITLE_OPERATION_GROUP_MANAGER"
+msgstr "Operation Group Manager"
+
+#: production/views.py:141
+msgid "PAGE_TITLE_PLANNING"
+msgstr "Planning"
+
+#: production/views.py:146
+msgid "PAGE_TITLE_STOCK_REQUIREMENT"
+msgstr "Stock Requirement"
+
+#: production/views.py:151
+msgid "PAGE_TITLE_MRP"
+msgstr "MRP"
+
+#: purchasing/documents.py:32 sales/documents.py:30
+msgid "THB_LABEL"
+msgstr "Thai Baht"
+
+#: purchasing/documents.py:33 sales/documents.py:31
+msgid "US_LABEL"
+msgstr "US Dollar"
+
+#: purchasing/documents.py:42
+msgid "PURCHASING_STATUS_OPEN"
+msgstr "Open"
+
+#: purchasing/documents.py:43
+msgid "PURCHASING_STATUS_APPROVED"
+msgstr "Approved"
+
+#: purchasing/documents.py:44
+msgid "PURCHASING_STATUS_CLOSED"
+msgstr "Closed"
+
+#: purchasing/documents.py:45
+msgid "PURCHASING_STATUS_CANCELLED"
+msgstr "Cancelled"
+
+#: purchasing/documents.py:58
+msgid "ERROR_CANNOT_CANCEL_CLOSED_PR"
+msgstr "Cannot cancel closed procurement."
+
+#: purchasing/documents.py:61
+msgid "ERROR_PR_ALREADY_CANCELLED"
+msgstr "Procurement is already cancelled."
+
+#: purchasing/documents.py:84
+msgid "PR_TYPE_MRP"
+msgstr "MRP"
+
+#: purchasing/documents.py:85
+msgid "PR_TYPE_MANUAL"
+msgstr "Manual"
+
+#: purchasing/documents.py:95
+msgid "PR_STATUS_OPEN"
+msgstr "Open"
+
+#: purchasing/documents.py:96
+msgid "PR_STATUS_APPROVED"
+msgstr "Approved"
+
+#: purchasing/documents.py:97
+msgid "PR_STATUS_PARTIAL_CONVERTED"
+msgstr "Partially Converted"
+
+#: purchasing/documents.py:98
+msgid "PR_STATUS_CONVERTED"
+msgstr "Converted"
+
+#: purchasing/documents.py:99
+msgid "PR_STATUS_CANCELLED"
+msgstr "Cancelled"
+
+#: purchasing/documents.py:111
+msgid "ERROR_OPEN_QTY_MORE_THAN_QTY"
+msgstr "Open quantity is more than quantity."
+
+#: purchasing/views.py:12
+msgid "PAGE_TITLE_PURCHASE_REQUISITIONS"
+msgstr "Purchase Requisitions"
+
+#: purchasing/views.py:17
+msgid "PAGE_TITLE_PURCHASE_REQUISITION"
+msgstr "Purchase Requisition"
+
+#: randd/documents.py:77 randd/test_documents.py:99
+msgid "ERROR_TASK_STOPPER_MUST_BE_LAST_PROCESS"
+msgstr "Task stopper must be last process."
+
+#: randd/documents.py:110 randd/test_documents.py:88
+#: randd/test_documents.py:105
+msgid "ERROR_UNABLE_TO_IDENTIFY_MASTER_MODEL"
+msgstr "Unable to identify master model."
+
+#: randd/documents.py:189
+msgid "ERROR_DESIGN_UID_MISMATCHED"
+msgstr "Identification does not match design code."
+
+#: randd/documents.py:194
+msgid "ERROR_DESIGN_UID_ALREADY_IN_USED"
+msgstr "Design Code is already taken."
+
+#: randd/documents.py:319 randd/test_documents.py:74
+msgid "ERROR_REQUIRE_COMPLETE_PRODUCT_CODE"
+msgstr "Design code is not completed."
+
+#: randd/documents.py:331 randd/test_documents.py:70
+msgid "ERROR_REQUIRE_ATTACHMENT"
+msgstr "Require at least 1 attachment."
+
+#: randd/documents.py:350 randd/test_documents.py:71
+#: randd/test_documents.py:72
+msgid "ERROR_REQUIRE_THREE_PROCESSES"
+msgstr "Require at least 3 processes."
+
+#: randd/documents.py:353
+msgid "ERROR_REQUIRE_DURATION"
+msgstr "Require standard time for all processes."
+
+#: randd/documents.py:356
+msgid "ERROR_REQUIRE_STAGING_DURATION"
+msgstr "Require staging duration."
+
+#: randd/documents.py:359
+msgid "ERROR_REQUIRE_EQUAL_SIZE_OF_STAGING_DURATION_AND_DURATION"
+msgstr "Require equal array size of staging duration and duration."
+
+#: randd/documents.py:362
+msgid "ERROR_REQUIRE_NON_WILDCARD_CODE"
+msgstr "All materials must not contain wildcard (#)."
+
+#: randd/documents.py:367
+msgid "ERROR_REQUIRE_COMPLETED_CODE"
+msgstr "All materials must be completed code."
+
+#: randd/documents.py:376
+msgid "ERROR_REQUIRE_QTY_UOM"
+msgstr "Require quantity and counter for all materials."
+
+#: randd/documents.py:394 randd/test_documents.py:120
+#: randd/test_documents.py:130
+#, python-format
+msgid "ERROR_BAD_UOM %(material)s"
+msgstr "Unmatched UoM (Counter) : %(material)s."
+
+#: randd/documents.py:408
+msgid "ERROR_CANNOT_CREATE_BACKWARD_PROCESS"
+msgstr "Cannot create backward process."
+
+#: randd/documents.py:419
+msgid "ERROR_NO_MAKE"
+msgstr "Require 'Make' for last process."
+
+#: randd/documents.py:437 randd/test_documents.py:73
+msgid "ERROR_REQUIRE_COST"
+msgstr "Require costing."
+
+#: randd/documents.py:529
+msgid "ERR_CANNOT_NORMALIZE_MASTER_MODEL_CODE_SHOULD_BE_STOCK_CODE"
+msgstr "Cannot normalize master model: code should be stock code."
+
+#: randd/documents.py:563 randd/documents.py:602
+msgid "EM_SCHEMATIC_UPDATED_FROM_DESIGN"
+msgstr "Schematic updated from design."
+
+#: randd/documents.py:583
+msgid "ERR_EMPTY_PRODUCTION_SCHEMATIC"
+msgstr "Empty production schematic."
+
+#: randd/views.py:12
+msgid "PAGE_TITLE_TASKS"
+msgstr "Tasks"
+
+#: randd/views.py:17
+msgid "PAGE_TITLE_DESIGNS"
+msgstr "Designs"
+
+#: randd/views.py:24
+msgid "PAGE_TITLE_CREATE_DESIGN"
+msgstr "New Design"
+
+#: randd/views.py:31
+msgid "PAGE_TITLE_EDIT_DESIGN"
+msgstr "Edit Design"
+
+#: sales/documents.py:37
+msgid "SALES_ORDER_STATUS_OPEN"
+msgstr "Open"
+
+#: sales/documents.py:38
+msgid "SALES_ORDER_STATUS_CLOSED"
+msgstr "Closed"
+
+#: sales/documents.py:65
+#, python-format
+msgid ""
+"ERROR_REVISION_DOES_NOT_EXIST: %(material)s in item %(itemnumber)s only has "
+"revision %(revisionlist)s"
+msgstr ""
+"Revision does not exist: %(material)s in item %(itemnumber)s only has "
+"revision %(revisionlist)s."
+
+#: sales/documents.py:69
+#, python-format
+msgid ""
+"ERROR_SIZE_DOES_NOT_EXIST: %(material)s revision %(materialrevision)s in "
+"item %(itemnumber)s only has size %(sizelist)s"
+msgstr ""
+"Size does not exist: %(material)s revision %(materialrevision)s in item "
+"%(itemnumber)s only has %(sizelist)s."
+
+#: sales/views.py:10
+msgid "PAGE_TITLE_SALES_ORDERS"
+msgstr "Sales Orders"
+
+#: sales/views.py:15
+msgid "PAGE_TITLE_CREATE_SALES_ORDER"
+msgstr "New Sales Order"
+
+#: sales/views.py:20
+msgid "PAGE_TITLE_EDIT_SALES_ORDER"
+msgstr "Edit Sales Order"
+
+#: stock/documents.py:82
+#, python-format
+msgid ""
+"ERR_FAILED_TO_ALLOCATE_MATERIAL_TRANSFER_PAIR: %(material)s "
+"%(from_location)s %(to_location)s"
+msgstr "Not enough stock: %(material)s %(from_location)s %(to_location)s"
+
+#: stock/documents.py:128
+msgid "GOOD_RECEIVED_PRODUCTION_ORDER"
+msgstr "GR Production Order"
+
+#: stock/documents.py:129
+msgid "GOOD_RECEIVED_BY_PRODUCT"
+msgstr "GR By Product"
+
+#: stock/documents.py:130
+msgid "GOOD_RECEIVED_PURCHASE_ORDER"
+msgstr "GR Purchase Order"
+
+#: stock/documents.py:131
+msgid "GOOD_RECEIVED_LOST_AND_FOUND"
+msgstr "GR Lost &amp; Found"
+
+#: stock/documents.py:132
+msgid "GOOD_ISSUED_PRODUCTION_ORDER"
+msgstr "GI Production Order"
+
+#: stock/documents.py:133
+msgid "GOOD_ISSUED_SALES_ORDER"
+msgstr "GI Sales Order"
+
+#: stock/documents.py:134
+msgid "GOOD_ISSUED_SCRAP"
+msgstr "GI Scrap"
+
+#: stock/documents.py:135
+msgid "GOOD_ISSUED_COST_CENTER"
+msgstr "GI Cost Center"
+
+#: stock/documents.py:136
+msgid "STOCK_TRANSFER_LOCATION_TO_LOCATION"
+msgstr "ST Location"
+
+#: stock/documents.py:137
+msgid "STOCK_TRANSFER_LOCATION_TO_PRODUCTION"
+msgstr "ST Location to Production"
+
+#: stock/documents.py:138
+msgid "STOCK_TRANSFER_LOST_AND_FOUND"
+msgstr "ST Lost &amp; Found"
+
+#: stock/documents.py:139
+msgid "STOCK_TRANSFER_PRODUCTION_TO_LOCATION"
+msgstr "ST Production to Location"
+
+#: stock/documents.py:140
+msgid "STOCK_TRANSFER_MATERIAL_TO_MATERIAL"
+msgstr "ST Material"
+
+#: stock/documents.py:141
+msgid "STOCK_ADJUSTMENT"
+msgstr "SA"
+
+#: stock/documents.py:202
+msgid "ERROR_BATCH_IS_REQUIRED"
+msgstr "Require batch."
+
+#: stock/documents.py:206
+msgid "ERROR_GOOD_ISSUE_QUANTITY_MUST_BE_NEGATIVE"
+msgstr "Good Issue quantity must be negative."
+
+#: stock/documents.py:208
+msgid "ERROR_CANCELLED_GOOD_ISSUE_QUANTITY_MUST_BE_POSITIVE"
+msgstr "Cancelled Good Issue quantity must be positive."
+
+#: stock/documents.py:212
+msgid "ERROR_TRANSFER_MUST_HAVE_EVEN_NUMBER_OF_ITEMS"
+msgstr "Number of items is not balanced."
+
+#: stock/documents.py:261
+msgid "MATERIAL_MOVEMENT_IS_NOT_EDITABLE"
+msgstr "Material Movement is not editable."
+
+#: stock/documents.py:307
+#, python-format
+msgid ""
+"ERROR_INSUFFICIENT_QUANTITY: %(content_signature)s %(content_quantity)s + "
+"%(additional_quantity)s < 0"
+msgstr ""
+"Insufficient quantity: %(content_signature)s %(content_quantity)s + "
+"%(additional_quantity)s < 0"
+
+#: stock/documents.py:317
+msgid "ERROR_UNBALANCE_WEIGHT"
+msgstr "Unbalance Weight."
+
+#: stock/documents.py:441
+#, python-format
+msgid "ERR_QUERY_CONTENT_CANNOT_INTERPRET_PARAMETER: %(parameter)s %(type)s"
+msgstr "Query content cannot intepret parameter: %(parameter)s, type: %(type)s"
+
+#: stock/documents.py:477
+msgid "ERR_NORMALIZE_SCHEMATIC_ENTRY_FAILED_MATERIAL_QUANTITY_SIZE_INDEX_OUT_OF_RANGE"
+msgstr ""
+"Normalize schematic entry failed: material quantity size index out of range."
+
+#: stock/documents.py:551
+#, python-format
+msgid "ERR_CANNOT_PROPAGATE_MATERIAL_SIZES: %(material)s"
+msgstr "Cannot propagate material sizes: %(material)s."
+
+#: stock/documents.py:596
+msgid "ERR_NORMALIZE_SCHEMATIC_ENTRY_FAILED_DURATION_SIZE_INDEX_OUT_OF_RANGE"
+msgstr "Normalize schematic entry failed: duration size index out of range."
+
+#: stock/documents.py:598
+msgid "ERR_NORMALIZE_SCHEMATIC_ENTRY_FAILED_STAGING_DURATION_SIZE_INDEX_OUT_OF_RANGE"
+msgstr ""
+"Normalize schematic entry failed: staging duration size index out of range."
+
+#: stock/documents.py:725
+msgid "MRP_TYPE_MRP"
+msgstr "MRP"
+
+#: stock/documents.py:726
+msgid "MRP_TYPE_NO_MRP"
+msgstr "No MRP"
+
+#: stock/documents.py:727
+msgid "MRP_TYPE_REORDER"
+msgstr "Reorder"
+
+#: stock/documents.py:733
+msgid "PROCUREMENT_TYPE_EXTERNAL"
+msgstr "External"
+
+#: stock/documents.py:734
+msgid "PROCUREMENT_TYPE_INTERNAL"
+msgstr "Internal"
+
+#: stock/documents.py:744
+msgid "LOT_SIZE_LOT_FOR_LOT"
+msgstr "Lot for Lot"
+
+#: stock/documents.py:745
+msgid "LOT_SIZE_DAILY"
+msgstr "Daily"
+
+#: stock/documents.py:746
+msgid "LOT_SIZE_WEEKLY"
+msgstr "Weekly"
+
+#: stock/documents.py:747
+msgid "LOT_SIZE_MONTHLY"
+msgstr "Monthly"
+
+#: stock/documents.py:748
+msgid "LOT_SIZE_MAX_STOCK_LEVEL"
+msgstr "Max Stock Level"
+
+#: stock/documents.py:767
+msgid "PLANT_STATUS_AVAILABLE"
+msgstr "Available"
+
+#: stock/documents.py:768
+msgid "PLANT_STATUS_BLOCKED"
+msgstr "Blocked"
+
+#: stock/documents.py:859
+#, python-format
+msgid "ERROR_UNKNOWN_MATERIAL %(material_code)s"
+msgstr "Unknown Material : %(material_code)s."
+
+#: stock/service.py:38
+msgid "ERR_INVALID_PRODUCTION_ORDER_OPERATION_STATUS"
+msgstr "Invalid Operation Status."
+
+#: stock/service.py:119
+#, python-format
+msgid "ERR_INVALID_DOCUMENT_STATUS: %(doc_no)s"
+msgstr "Invalid document status: %(doc_no)s"
+
+#: stock/service.py:125
+#, python-format
+msgid "ERR_INVALID_STATE_TASK_IN_PROGRESS: %(doc_no)s"
+msgstr "Cannot return material from running operation: %(doc_no)s"
+
+#: stock/service.py:162
+#, python-format
+msgid "ERR_UNKNOWN_PARENT_TASK_FOR: %(doc_no)s"
+msgstr "Unknown parent operation for %(doc_no)s"
+
+#: stock/service.py:180 stock/service.py:224
+#, python-format
+msgid "ERR_UNSUPPORTED_DOCUMENT_TYPE: %(document_type)s"
+msgstr "Unsupported document type: %(document_type)s"
+
+#: stock/service.py:231
+#, python-format
+msgid "ERR_UNEQUAL_SIZE_OF_RETURN_LIST: %(expected_size)s != $(actual_size)s"
+msgstr ""
+"Unequal size of return list. Expected %(expected_size)s, found "
+"$(actual_size)s"
+
+#: stock/views.py:12
+msgid "PAGE_TITLE_MATERIALS"
+msgstr "Materials"
+
+#: stock/views.py:19
+msgid "PAGE_TITLE_CREATE_MATERIAL"
+msgstr "New Material"
+
+#: stock/views.py:26
+msgid "PAGE_TITLE_EDIT_MATERIAL"
+msgstr "Edit Material"
+
+#: stock/views.py:33
+msgid "PAGE_TITLE_INVENTORY_DASHBOARD"
+msgstr "Inventory Dashboard"
+
+#: stock/views.py:39
+msgid "PAGE_TITLE_CREATE_MOVEMENT"
+msgstr "New Material Movement"
+
+#: stock/views.py:45
+msgid "PAGE_TITLE_MOVEMENT"
+msgstr "Material Movement"
+
+#: stock/views.py:57
+msgid "PAGE_TITLE_MATERIAL_REQUISITION"
+msgstr "Material Requisition"
+
+#: task/ajax.py:30
+#, python-format
+msgid "ERR_INVALID_STORE_AUX_TASK: %(id)s"
+msgstr "Invalid store auxiliary task: %(id)s"
+
+#: task/documents.py:74
+msgid "ERROR_TASK_IS_REQUIRED"
+msgstr "Require task."
+
+#: task/documents.py:88
+#, python-format
+msgid "ERR_INVALID_ASSIGNEE: %(user)s %(task_code)s"
+msgstr "Invalid Assignee: %(user)s %(task_code)s"
+
+#: task/documents.py:94
+#, python-format
+msgid "ERR_INVALID_ASSIGNEE: %(group)s %(task_code)s"
+msgstr "Invalid Assignee: %(group)s %(task_code)s"
+
+#: task/documents.py:106
+msgid "ERROR_TASK_IS_ALREADY_CANCELLED"
+msgstr "Task is already cancelled."
+
+#: task/documents.py:118
+msgid "ERROR_CONFIRMATION_MUST_BE_INSTANCE_OF_CONFIRMATION"
+msgstr "Confirmation must be instance of ProductionConfirmation."
+
+#: task/documents.py:206
+#, python-format
+msgid "ERR_CANNOT_TRANSUMTE: %(input_class)s to %(output_class)s"
+msgstr "Cannot transmute: %(input_class)s to %(output_class)s"
+
+#: task/documents.py:250 task/documents.py:461
+msgid "STATUS_OPEN"
+msgstr "Open"
+
+#: task/documents.py:251 task/documents.py:462
+msgid "STATUS_CONFIRMED"
+msgstr "Confirmed"
+
+#: task/documents.py:343
+#, python-format
+msgid "ERROR_TASK_STATUS_CANT_CONFIRM: %(status)s"
+msgstr "Status cannot confirm: %(status)s"
+
+#: task/documents.py:346
+msgid "ERROR_CONFIRMATION_IS_REQUIRED"
+msgstr "Require confirmation."
+
+#: task/documents.py:349
+msgid "ERROR_CONFIRMATION_MUST_BE_AUX_TASK_CONFIRMATION"
+msgstr "Confirmation must be instance of Auxiliary Task Confirmation."
+
+#: task/documents.py:352
+msgid "ERROR_MATERIAL_IS_REQUIRED"
+msgstr "Require material."
+
+#: task/documents.py:390 task/documents.py:482
+#, python-format
+msgid "ERR_INVALID_DATA_STATE: %(reason)s"
+msgstr "Invalid data state: %(reason)s"
+
+#: task/documents.py:463
+msgid "STATUS_DELIVERED"
+msgstr "Delivered"
+
+#: task/documents.py:488
+#, python-format
+msgid "ERROR_STORE_TASK_MUST_BE_CONFIRMED: %(status)s"
+msgstr ""
+"Store Task must be confirmed before transferring materials. Status: <strong>"
+"%(status)s</strong>"
+
+#: task/documents.py:491
+msgid "ERROR_TASK_STATUS_CANT_DELIVERED: %(status)s"
+msgstr "Material(s) is already delivered."
+
+#: task/documents.py:521
+#, python-format
+msgid "ERR_CANNOT_REVERT_DELIVERED_TASK: %(task_doc_no)s"
+msgstr "Cannot revert operation that is already delivered: %(task_doc_no)s"
+
+#: templates/common/head.html:11
+msgid "APP_NAME"
+msgstr "Intramanee"
+
+#: templates/common/lock_screen.html:43 user/forms.py:11 user/forms.py:13
+msgid "USER_FIELD_USERNAME"
+msgstr "First Name"
+
+#: templates/common/lock_screen.html:51 user/forms.py:17 user/forms.py:19
+#: user/forms.py:41 user/forms.py:43 user/forms.py:92 user/forms.py:94
+msgid "USER_FIELD_PASSWORD"
+msgstr "Password"
+
+#: templates/production/batch.html:10 templates/randd/design_new.html:123
+msgid "T_TILES"
+msgstr "Tiles"
+
+#: templates/production/batch.html:13
+msgid "T_LIST"
+msgstr "List"
+
+#: templates/production/batch.html:20
+msgid "BUTTON_CREATE_NEW_GROUP"
+msgstr "Create new group"
+
+#: templates/production/batch.html:24
+msgid "BUTTON_CREATE"
+msgstr "Create"
+
+#: templates/production/batch.html:25 templates/production/dashboard.html:64
+#: templates/production/production_order_new.html:667
+#: templates/production/tool.html:1307 templates/production/tool.html:2176
+#: templates/randd/design_new.html:476 templates/randd/design_new.html:487
+#: templates/stock/dashboard.html:144 templates/stock/dashboard.html.py:172
+#: templates/stock/dashboard.html:201 templates/stock/dashboard.html.py:893
+#: templates/stock/movement_new.html:186 templates/stock/movement_new.html:375
+msgid "BUTTON_CANCEL"
+msgstr "Cancel"
+
+#: templates/production/batch.html:87
+msgid "T_CANCEL_GROUP"
+msgstr "Cancel Group"
+
+#: templates/production/dashboard.html:11
+msgid "BUTTON_SCAN_JOB_TAG"
+msgstr "Scan Job Tag"
+
+#: templates/production/dashboard.html:14
+msgid "BUTTON_RECEIVE_MATERIALS"
+msgstr "Stage Material"
+
+#: templates/production/dashboard.html:18
+msgid "BUTTON_PAUSE"
+msgstr "Pause"
+
+#: templates/production/dashboard.html:19
+msgid "BUTTON_RESUME"
+msgstr "Resume"
+
+#: templates/production/dashboard.html:30
+msgid "PANEL_TITLE_TASK_QUEUE"
+msgstr "Task Queue"
+
+#: templates/production/dashboard.html:34
+#: templates/production/dashboard.html:45
+msgid "T_NO_TASK"
+msgstr "No task"
+
+#: templates/production/dashboard.html:43
+msgid "PANEL_TITLE_ONGOING_TASKS"
+msgstr "Ongoing Tasks"
+
+#: templates/production/dashboard.html:57
+msgid "T_DELIVERABLE_OPERATIONS"
+msgstr "Deliverable"
+
+#: templates/production/dashboard.html:60
+msgid "T_DELIVERABLE_OPERATIONS_MESSAGE"
+msgstr ""
+"Please select previous operation that you are receiving materials from."
+
+#: templates/production/dashboard.html:115
+msgid "BARCODE_PLEASE_SCAN_JOB_TAG"
+msgstr "Please scan job tag"
+
+#: templates/production/dashboard.html:116
+msgid "PLACEHOLDER_JOB_TAG"
+msgstr "Job Tag / Production Order No."
+
+#: templates/production/dashboard.html:128
+msgid "ERROR_NO_DELIVERABLE_OPERATIONS"
+msgstr "No deliverable operations for this production order."
+
+#: templates/production/dashboard.html:153
+msgid "NOTI_MATERIAL_RECEIVED"
+msgstr "Material received from production."
+
+#: templates/production/dashboard.html:260 templates/production/tool.html:1352
+#: templates/stock/dashboard.html:836 templates/stock/dashboard.html:1359
+msgid "T_FROM"
+msgstr "from"
+
+#: templates/production/dashboard.html:323
+msgid "T_MATERIAL_RECEIVED_FROM_STORE"
+msgstr "Store"
+
+#: templates/production/dashboard.html:495 templates/stock/dashboard.html:328
+msgid "ERROR_TASK_IS_ALREADY_STARTED"
+msgstr "Task is already started."
+
+#: templates/production/dashboard.html:552
+msgid "ERROR_TASK_IS_ALREADY_PAUSED"
+msgstr "Task is already paused."
+
+#: templates/production/job_tags.html:13
+msgid "PAGE_TITLE_JOB_TAGS"
+msgstr "Job Tags"
+
+#: templates/production/job_tags.html:205
+msgid "TH_PREV"
+msgstr "Prev"
+
+#: templates/production/job_tags.html:206
+#: templates/production/staging_form.html:31
+#: templates/production/staging_form_print.html:103
+#: templates/production/tool.html:1183
+msgid "TH_TASK"
+msgstr "Task"
+
+#: templates/production/job_tags.html:207
+#: templates/production/production_order_new.html:1021
+#: templates/randd/design_new.html:1261 templates/stock/material_new.html:750
+msgid "TH_MATERIALS"
+msgstr "Materials"
+
+#: templates/production/job_tags.html:208
+#: templates/production/production_order_new.html:1027
+msgid "TH_DURATION"
+msgstr "Duration"
+
+#: templates/production/job_tags.html:245
+#: templates/production/staging_form_print.html:125
+#: templates/stock/material_tag.html:115
+msgid "T_PRINTED"
+msgstr "Printed"
+
+#: templates/production/mrp.html:12
+msgid "OPT_SELECT_MRP_OPTION"
+msgstr "--- Select MRP option to run ---"
+
+#: templates/production/mrp.html:13
+msgid "OPT_RUN_ALL_MATERIALS"
+msgstr "Run all materials"
+
+#: templates/production/mrp.html:14
+msgid "OPT_RUN_ONE_MATERIAL"
+msgstr "Run one material"
+
+#: templates/production/mrp.html:20
+#: templates/production/production_order_new.html:65
+#: templates/production/stock_requirement.html:11
+msgid "T_MATERIAL"
+msgstr "Material"
+
+#: templates/production/mrp.html:26
+#: templates/production/production_order_new.html:71
+#: templates/production/stock_requirement.html:17
+#: templates/randd/design_new.html:93 templates/stock/material_new.html:228
+msgid "T_REVISION"
+msgstr "Revision"
+
+#: templates/production/mrp.html:32
+#: templates/production/production_order_new.html:77
+#: templates/production/stock_requirement.html:23
+msgid "T_SIZE"
+msgstr "Size"
+
+#: templates/production/mrp.html:37
+msgid "BUTTON_START_MRP"
+msgstr "Start MRP"
+
+#: templates/production/mrp.html:48
+msgid "TH_STARTED"
+msgstr "Started"
+
+#: templates/production/mrp.html:49
+msgid "TH_ENDED"
+msgstr "Ended"
+
+#: templates/production/mrp.html:50
+msgid "TH_MRP_OPTION"
+msgstr "MRP Option"
+
+#: templates/production/mrp.html:51
+#: templates/production/production_order_list.html:24
+#: templates/production/tool.html:1196 templates/purchasing/pr_list.html:17
+#: templates/randd/design_list.html:26
+#: templates/sales/sales_order_list.html:19
+msgid "TH_STATUS"
+msgstr "Status"
+
+#: templates/production/mrp.html:52
+#: templates/production/production_order_new.html:1028
+#: templates/randd/design_new.html:1271
+#: templates/sales/sales_order_new.html:111
+#: templates/stock/material_new.html:757
+msgid "TH_REMARK"
+msgstr "Remark"
+
+#: templates/production/mrp.html:240
+msgid "T_ALL_MATERIALS"
+msgstr "All Materials"
+
+#: templates/production/mrp.html:256
+msgid "T_MRP_SESSION_STATUS_RUNNING"
+msgstr "Running"
+
+#: templates/production/mrp.html:259
+msgid "T_MRP_SESSION_STATUS_ERROR"
+msgstr "Error"
+
+#: templates/production/mrp.html:261
+msgid "T_MRP_SESSION_STATUS_FINISHED"
+msgstr "Finished"
+
+#: templates/production/production_order_list.html:9
+msgid "BUTTON_NEW_PRODUCTION_ORDER"
+msgstr "New Production Order"
+
+#: templates/production/production_order_list.html:17
+#: templates/purchasing/pr_list.html:14
+#: templates/sales/sales_order_list.html:17 templates/stock/dashboard.html:68
+msgid "TH_DOC_NO"
+msgstr "Doc No."
+
+#: templates/production/production_order_list.html:18
+#: templates/stock/material_new.html:211
+msgid "TH_REF_DOC"
+msgstr "Ref Doc"
+
+#: templates/production/production_order_list.html:19
+msgid "TH_PRODUCT"
+msgstr "Product"
+
+#: templates/production/production_order_list.html:20
+#: templates/production/production_order_new.html:1023
+#: templates/production/staging_form.html:34
+#: templates/production/staging_form_print.html:106
+#: templates/purchasing/pr_view.html:86 templates/randd/design_new.html:1263
+#: templates/sales/sales_order_new.html:108 templates/stock/dashboard.html:96
+#: templates/stock/dashboard.html.py:162 templates/stock/dashboard.html:192
+#: templates/stock/material_new.html:204 templates/stock/material_new.html:752
+#: templates/stock/movement_new.html:72
+#: templates/stock/requisition_new.html:42
+msgid "TH_QUANTITY"
+msgstr "Quantity"
+
+#: templates/production/production_order_list.html:21
+#: templates/production/tool.html:1222
+msgid "TH_PLANNED_START"
+msgstr "Planned Start"
+
+#: templates/production/production_order_list.html:22
+#: templates/production/tool.html:1230
+msgid "TH_PLANNED_END"
+msgstr "Planned End"
+
+#: templates/production/production_order_list.html:23
+#: templates/purchasing/pr_list.html:15 templates/stock/dashboard.html:67
+msgid "TH_TYPE"
+msgstr "Type"
+
+#: templates/production/production_order_list.html:25
+#: templates/purchasing/pr_list.html:18 templates/randd/design_list.html:28
+#: templates/sales/sales_order_list.html:22
+#: templates/stock/material_list.html:18
+msgid "TH_LAST_MODIFIED"
+msgstr "Last Modified"
+
+#: templates/production/production_order_list.html:145
+#: templates/production/production_order_new.html:848
+#: templates/purchasing/pr_list.html:135 templates/purchasing/pr_view.html:168
+#: templates/randd/design_list.html:175 templates/randd/design_new.html:36
+#: templates/randd/design_new.html:812
+#: templates/sales/sales_order_list.html:119
+#: templates/sales/sales_order_new.html:366
+#: templates/stock/material_list.html:117
+#: templates/stock/material_new.html:492 templates/stock/movement_new.html:329
+msgid "T_BY"
+msgstr "by"
+
+#: templates/production/production_order_new.html:12
+msgid "PAGE_TITLE_PRODUCTION_ORDER"
+msgstr "Production Order"
+
+#: templates/production/production_order_new.html:15
+msgid "BUTTON_PRINT_JOB_TAG"
+msgstr "Print Job Tag"
+
+#: templates/production/production_order_new.html:16
+#: templates/stock/movement_new.html:11
+msgid "BUTTON_CANCEL_THIS_DOC"
+msgstr "Cancel this document"
+
+#: templates/production/production_order_new.html:17
+#: templates/production/tool.html:13 templates/randd/design_new.html:16
+#: templates/sales/sales_order_new.html:11
+#: templates/stock/material_new.html:19
+msgid "BUTTON_SAVE"
+msgstr "Save"
+
+#: templates/production/production_order_new.html:20
+#: templates/purchasing/pr_view.html:11 templates/randd/design_new.html:24
+#: templates/sales/sales_order_new.html:14
+#: templates/stock/material_new.html:18
+msgid "BUTTON_VIEW_HISTORY"
+msgstr "View History"
+
+#: templates/production/production_order_new.html:30
+#: templates/purchasing/pr_view.html:20
+#: templates/sales/sales_order_new.html:22
+#: templates/stock/movement_new.html:20
+msgid "T_DOC_NO"
+msgstr "Doc No."
+
+#: templates/production/production_order_new.html:38
+#: templates/purchasing/pr_view.html:28 templates/randd/design_new.html:36
+#: templates/sales/sales_order_new.html:64
+#: templates/stock/material_new.html:44
+msgid "T_LAST_MODIFIED"
+msgstr "Last Modified"
+
+#: templates/production/production_order_new.html:48
+msgid "T_SALES_DOC"
+msgstr "Sales Doc"
+
+#: templates/production/production_order_new.html:83
+#: templates/randd/design_new.html:74
+msgid "T_QUANTITY"
+msgstr "Quantity"
+
+#: templates/production/production_order_new.html:92
+#: templates/sales/sales_order_new.html:87
+msgid "T_REMARK"
+msgstr "Remark"
+
+#: templates/production/production_order_new.html:103
+#: templates/production/tool.html:1370 templates/production/tool.html:1377
+#: templates/production/tool.html:1407 templates/purchasing/pr_view.html:56
+#: templates/sales/sales_order_new.html:70
+msgid "T_STATUS"
+msgstr "Status"
+
+#: templates/production/production_order_new.html:107
+#: templates/purchasing/pr_view.html:60 templates/stock/movement_new.html:26
+msgid "T_TYPE"
+msgstr "Type"
+
+#: templates/production/production_order_new.html:113
+#: templates/production/tool.html:1364
+msgid "T_PLANNED_START"
+msgstr "Planned Start"
+
+#: templates/production/production_order_new.html:122
+#: templates/production/tool.html:1365
+msgid "T_PLANNED_END"
+msgstr "Planned End"
+
+#: templates/production/production_order_new.html:139
+msgid "BUTTON_OPTIMIZE_TASKS"
+msgstr "Optimize Tasks"
+
+#: templates/production/production_order_new.html:142
+#: templates/randd/design_new.html:126 templates/stock/material_new.html:235
+msgid "T_TABLE"
+msgstr "Table"
+
+#: templates/production/production_order_new.html:145
+#: templates/randd/design_new.html:129 templates/stock/material_new.html:238
+msgid "T_GANTT"
+msgstr "Gantt"
+
+#: templates/production/production_order_new.html:363
+msgid "T_CANCEL_PRODUCTION_ORDER_MESSAGE"
+msgstr ""
+"This action will cancel the production order. Do you want to reschedule the "
+"plan?"
+
+#: templates/production/production_order_new.html:364
+#: templates/production/production_order_new.html:387
+#: templates/production/tool.html:799 templates/randd/design_new.html:442
+#: templates/randd/design_new.html:453
+msgid "BUTTON_YES"
+msgstr "Yes"
+
+#: templates/production/production_order_new.html:365
+#: templates/production/production_order_new.html:388
+#: templates/production/tool.html:800 templates/production/tool.html.py:812
+#: templates/randd/design_new.html:442 templates/randd/design_new.html:453
+msgid "BUTTON_NO"
+msgstr "No"
+
+#: templates/production/production_order_new.html:386
+msgid "T_CONFIRM_RESCHEDULE_MESSAGE"
+msgstr "Do you want to reschedule the plan?"
+
+#: templates/production/production_order_new.html:412
+msgid "T_START_OR_END_WARN_WARNING"
+msgstr ""
+"Only start time or end time can be set. Do you want to clear other value?"
+
+#: templates/production/production_order_new.html:667
+msgid "T_CONFIRM_RESET_SCHEMATIC_MESSAGE"
+msgstr ""
+"You are changing producing material which have its own operations. Do you "
+"want to replace your current operations?"
+
+#: templates/production/production_order_new.html:667
+#: templates/production/tool.html:2175 templates/stock/movement_new.html:375
+msgid "BUTTON_OK"
+msgstr "Ok"
+
+#: templates/production/production_order_new.html:892
+#: templates/sales/sales_order_new.html:379 templates/user/edit.html:110
+msgid "ERROR_EMPTY_REQUIRED_FIELDS"
+msgstr "Please fill in all required fields."
+
+#: templates/production/production_order_new.html:1018
+#: templates/randd/design_new.html:1258 templates/stock/material_new.html:747
+msgid "TH_STEP_NO"
+msgstr "Step #"
+
+#: templates/production/production_order_new.html:1019
+#: templates/randd/design_new.html:1259 templates/stock/material_new.html:748
+msgid "TH_PROCESS"
+msgstr "Process"
+
+#: templates/production/production_order_new.html:1022
+#: templates/purchasing/pr_view.html:84
+#: templates/sales/sales_order_new.html:106 templates/stock/dashboard.html:95
+#: templates/stock/dashboard.html.py:161 templates/stock/dashboard.html:190
+#: templates/stock/requisition_new.html:40
+msgid "TH_REVISION"
+msgstr "Revision"
+
+#: templates/production/production_order_new.html:1024
+#: templates/production/staging_form.html:35
+#: templates/production/staging_form_print.html:107
+#: templates/purchasing/pr_view.html:88 templates/randd/design_new.html:1264
+#: templates/sales/sales_order_new.html:109 templates/stock/dashboard.html:97
+#: templates/stock/dashboard.html.py:163 templates/stock/dashboard.html:193
+#: templates/stock/material_new.html:205 templates/stock/material_new.html:753
+#: templates/stock/movement_new.html:73
+#: templates/stock/requisition_new.html:43
+msgid "TH_COUNTER"
+msgstr "Counter"
+
+#: templates/production/production_order_new.html:1025
+#: templates/randd/design_new.html:1265 templates/stock/material_new.html:754
+msgid "TH_PREVIOUS_STEPS"
+msgstr "Prev"
+
+#: templates/production/production_order_new.html:1026
+#: templates/randd/design_new.html:1266 templates/stock/material_new.html:755
+msgid "TH_STAGING_TIME"
+msgstr "Staging Time"
+
+#: templates/production/production_order_new.html:1054
+#: templates/production/production_order_new.html:1302
+#: templates/randd/design_new.html:1307 templates/randd/design_new.html:1547
+#: templates/stock/material_new.html:869
+msgid "T_CONSUME"
+msgstr "Take"
+
+#: templates/production/production_order_new.html:1055
+#: templates/production/production_order_new.html:1300
+#: templates/randd/design_new.html:1308 templates/randd/design_new.html:1545
+#: templates/stock/material_new.html:867
+msgid "T_PRODUCE"
+msgstr "Make"
+
+#: templates/production/production_order_new.html:1056
+#: templates/production/production_order_new.html:1304
+#: templates/randd/design_new.html:1309 templates/randd/design_new.html:1549
+#: templates/stock/material_new.html:871
+msgid "T_BORROW"
+msgstr "Borrow"
+
+#: templates/production/production_order_new.html:1361
+msgid "ERROR_EMPTY_OPERATIONS"
+msgstr "Require at least one operation."
+
+#: templates/production/production_order_new.html:1365
+msgid "ERROR_EMPTY_DURATION"
+msgstr "Require standard time for operation."
+
+#: templates/production/production_order_new.html:1369
+#: templates/sales/sales_order_new.html:701
+#: templates/stock/movement_new.html:1146
+#: templates/stock/requisition_new.html:302
+msgid "ERROR_EMPTY_QUANTITY"
+msgstr "Require Quantity."
+
+#: templates/production/production_order_new.html:1697
+#: templates/randd/design_new.html:1698 templates/stock/material_new.html:977
+msgid "T_NOT_ENOUGH_TO_DISPLAY"
+msgstr "There is not enough data to display."
+
+#: templates/production/production_order_new.html:1894
+msgid "NOTI_PRODUCTION_ORDER_CREATED"
+msgstr "Production Order created"
+
+#: templates/production/production_order_new.html:1896
+#: templates/production/tool.html:2336
+msgid "NOTI_PRODUCTION_ORDER_SAVED"
+msgstr "Production Order saved"
+
+#: templates/production/production_order_new.html:1941
+msgid "NOTI_READY_TO_RELEASE"
+msgstr "Ready"
+
+#: templates/production/production_order_new.html:1941
+msgid "NOTI_READY_TO_RELEASE_MESSAGE"
+msgstr "This production order is ready to release."
+
+#: templates/production/production_order_new.html:1941
+msgid "BUTTON_RELEASE"
+msgstr "Release"
+
+#: templates/production/production_order_operation.html:15
+msgid "T_DESIGN_DOC"
+msgstr "Design Doc"
+
+#: templates/production/production_order_operation.html:23
+#: templates/randd/design_new.html:54
+msgid "TH_FILE"
+msgstr "File"
+
+#: templates/production/staging_form.html:11
+#: templates/production/tool.html:811 templates/stock/dashboard.html:17
+#: templates/stock/dashboard.html.py:109 templates/stock/dashboard.html:173
+#: templates/stock/dashboard.html.py:202
+#: templates/stock/requisition_new.html:11
+msgid "BUTTON_CONFIRM"
+msgstr "Confirm"
+
+#: templates/production/staging_form.html:18
+msgid "T_MATERIAL_TAG"
+msgstr "Material Tag"
+
+#: templates/production/staging_form.html:21
+msgid "T_SCAN_MATERIAL_TAG_HELP_TEXT"
+msgstr "Please scan material tag and press 'Enter'"
+
+#: templates/production/staging_form.html:32
+msgid "TH_PRODUCTION_ORDER"
+msgstr "Production Order"
+
+#: templates/production/staging_form.html:33
+#: templates/production/staging_form_print.html:105
+#: templates/purchasing/pr_view.html:83
+#: templates/sales/sales_order_new.html:105 templates/stock/dashboard.html:94
+#: templates/stock/dashboard.html.py:160 templates/stock/dashboard.html:189
+#: templates/stock/material_new.html:203 templates/stock/movement_new.html:71
+#: templates/stock/requisition_new.html:39
+msgid "TH_MATERIAL"
+msgstr "Material"
+
+#: templates/production/staging_form.html:36
+msgid "TH_CONFIRM"
+msgstr "Confirm"
+
+#: templates/production/staging_form.html:148
+msgid "ERROR_REQUIRE_AT_LEAST_ONE_CONFIRMATION"
+msgstr "Require at least one confirmation."
+
+#: templates/production/staging_form.html:203
+msgid "ERROR_INVALID_MATERIAL_TAG"
+msgstr "This staging form does not contain this material tag."
+
+#: templates/production/staging_form_print.html:92
+msgid "T_STAGING_FORM"
+msgstr "Staging Form"
+
+#: templates/production/staging_form_print.html:104
+msgid "TH_ORDER_NO"
+msgstr "Order No."
+
+#: templates/production/stock_requirement.html:30
+msgid "BUTTON_VIEW_DATA"
+msgstr "View Data"
+
+#: templates/production/stock_requirement.html:45
+msgid "TH_DATE"
+msgstr "Date"
+
+#: templates/production/stock_requirement.html:46
+#: templates/production/stock_requirement.html:342
+msgid "TH_DEMAND"
+msgstr "Demand"
+
+#: templates/production/stock_requirement.html:47
+#: templates/production/stock_requirement.html:349
+msgid "TH_SUPPLY"
+msgstr "Supply"
+
+#: templates/production/stock_requirement.html:48
+#: templates/production/stock_requirement.html:356
+msgid "TH_BALANCE"
+msgstr "Balance"
+
+#: templates/production/stock_requirement.html:283
+msgid "T_INITIAL"
+msgstr "Initial"
+
+#: templates/production/stock_requirement.html:285
+#: templates/stock/material_new.html:125
+msgid "T_SAFETY_STOCK"
+msgstr "Safety Stock"
+
+#: templates/production/tool.html:15 templates/stock/dashboard.html:125
+msgid "BUTTON_BACK"
+msgstr "Back"
+
+#: templates/production/tool.html:18
+msgid "BUTTON_BACK_TO_ROOT_VIEW"
+msgstr "Back to first view"
+
+#: templates/production/tool.html:22
+msgid "T_NOTI_PROPOSAL"
+msgstr "Proposal"
+
+#: templates/production/tool.html:38
+msgid "BUTTON_LOAD"
+msgstr "Load"
+
+#: templates/production/tool.html:41
+msgid "BUTTON_TASK_COUNT"
+msgstr "Task Count"
+
+#: templates/production/tool.html:44
+msgid "BUTTON_GRID"
+msgstr "Grid"
+
+#: templates/production/tool.html:233 templates/production/tool.html.py:252
+msgid "T_VIEW_TASK"
+msgstr "view task"
+
+#: templates/production/tool.html:798
+msgid "T_CONFIRM_OVERRIDE_PROPOSAL_MESSAGE"
+msgstr ""
+"There is a previous version of planning proposal.<br/>Are you sure to "
+"overwrite it?"
+
+#: templates/production/tool.html:810
+msgid "T_CONFIRM_ACTION"
+msgstr "Please confirm your action."
+
+#: templates/production/tool.html:1155
+msgid "TH_PO_DOC_NO"
+msgstr "Production Order"
+
+#: templates/production/tool.html:1208
+msgid "TH_ASSIGNEE"
+msgstr "Assignee"
+
+#: templates/production/tool.html:1302
+msgid "T_SEARCH"
+msgstr "Search"
+
+#: templates/production/tool.html:1306
+msgid "BUTTON_APPLY"
+msgstr "Apply"
+
+#: templates/production/tool.html:1352 templates/production/tool.html:1402
+#: templates/stock/dashboard.html:407
+msgid "T_OF"
+msgstr "of"
+
+#: templates/production/tool.html:1363 templates/production/tool.html:1373
+msgid "T_TASK"
+msgstr "Task"
+
+#: templates/production/tool.html:1366
+msgid "T_PLANNED_DURATION"
+msgstr "Planned Duration"
+
+#: templates/production/tool.html:1367
+msgid "T_STARTED"
+msgstr "Started"
+
+#: templates/production/tool.html:1368
+msgid "T_ENDED"
+msgstr "Ended"
+
+#: templates/production/tool.html:1369
+msgid "T_ACTUAL_DURATION"
+msgstr "Actual Duration"
+
+#: templates/production/tool.html:1374 templates/production/tool.html:1403
+msgid "T_START"
+msgstr "Start"
+
+#: templates/production/tool.html:1375 templates/production/tool.html:1404
+msgid "T_END"
+msgstr "End"
+
+#: templates/production/tool.html:1376 templates/production/tool.html:1405
+msgid "T_DURATION"
+msgstr "Duration"
+
+#: templates/production/tool.html:1381
+msgid "T_PLANNED_BATCH"
+msgstr "Planned batch"
+
+#: templates/production/tool.html:1383
+msgid "T_ACTUAL_BATCH"
+msgstr "Actual batch"
+
+#: templates/production/tool.html:1872
+msgid ""
+"T_ALLOW_$TASK$_$START_DATE$_$END_DATE$_$DURATION$_OFF_HOURS_QUESTION_MESSAGE"
+msgstr ""
+"<p>Task $TASK$ is overlapping off hours.</p><p><strong>Start:</strong> "
+"$START_DATE$<br/><strong>End:</strong> $END_DATE$</br><strong>Duration:</"
+"strong> $DURATION$</p><p>Do you want to allow working off hours?</p>"
+
+#: templates/production/tool.html:1873
+msgid "BUTTON_WORK_ON_WORK_HOURS"
+msgstr "Not Allow"
+
+#: templates/production/tool.html:1874
+msgid "BUTTON_WORK_ON_OFF_HOURS"
+msgstr "Allow"
+
+#: templates/production/tool.html:2090
+msgid "CONTEXT_MENU_CHANGE_START_TIME"
+msgstr "change start time"
+
+#: templates/production/tool.html:2099
+msgid "CONTEXT_MENU_ASSIGN_TASK_TO"
+msgstr "assign to..."
+
+#: templates/production/tool.html:2102
+msgid "CONTEXT_MENU_UNASSIGN"
+msgstr "Nobody"
+
+#: templates/production/tool.html:2206 templates/production/tool.html:2219
+msgid "NOTI_ERROR_403"
+msgstr "Validation Error"
+
+#: templates/production/tool.html:2206
+msgid "ERROR_CANNOT_START_BEFORE_END_OF_PREVIOUS_OP"
+msgstr "Cannot start before end of previous operation"
+
+#: templates/production/tool.html:2219
+msgid "ERROR_CANNOT_START_BEFORE_PLANNING_TIME_FENCE"
+msgstr "Cannot start before planning time fence"
+
+#: templates/production/tool.html:2323 templates/randd/design_new.html:486
+#: templates/randd/design_new.html:1962
+msgid "BUTTON_APPROVE"
+msgstr "Approve"
+
+#: templates/production/tool.html:2325
+msgid "T_EXPIRE_ON"
+msgstr "expire on"
+
+#: templates/production/tool.html:2334
+msgid "NOTI_PLANNING_PROPOSAL_SAVED"
+msgstr "Planning Proposal saved."
+
+#: templates/production/tool.html:2334
+msgid "NOTI_PLANNING_PROPOSAL_SAVED_MESSAGE"
+msgstr "Expire in 4 hours."
+
+#: templates/production/tool.html:2360
+msgid "T_SWITCH_TO_PROPOSAL_MESSAGE"
+msgstr "There is pending proposal.<br/>Do you want to view it?"
+
+#: templates/production/tool.html:2361
+msgid "BUTTON_VIEW_PROPOSAL"
+msgstr "View Proposal"
+
+#: templates/production/tool.html:2362
+msgid "BUTTON_VIEW_PLAN"
+msgstr "View Current Plan"
+
+#: templates/purchasing/pr_list.html:16
+msgid "TH_TOTAL_PRICE"
+msgstr "Total Price"
+
+#: templates/purchasing/pr_view.html:38
+msgid "T_VENDOR"
+msgstr "Vendor"
+
+#: templates/purchasing/pr_view.html:46
+#: templates/sales/sales_order_new.html:76
+msgid "T_CURRENCY"
+msgstr "Currency"
+
+#: templates/purchasing/pr_view.html:66
+msgid "T_MRP_SESSION"
+msgstr "MRP Session"
+
+#: templates/purchasing/pr_view.html:78 templates/purchasing/pr_view.html:97
+#: templates/sales/sales_order_new.html:100
+#: templates/sales/sales_order_new.html:117 templates/stock/dashboard.html:104
+#: templates/stock/movement_new.html:65 templates/stock/movement_new.html:85
+#: templates/stock/requisition_new.html:49
+msgid "BUTTON_ADD_ROW"
+msgstr "Add Item"
+
+#: templates/purchasing/pr_view.html:85
+#: templates/sales/sales_order_new.html:107 templates/stock/dashboard.html:191
+#: templates/stock/requisition_new.html:41
+msgid "TH_SIZE"
+msgstr "Size"
+
+#: templates/purchasing/pr_view.html:87
+msgid "TH_OPEN_QUANTITY"
+msgstr "Open Quantity"
+
+#: templates/purchasing/pr_view.html:89
+#: templates/sales/sales_order_new.html:110
+msgid "TH_NET_PRICE"
+msgstr "Net Price"
+
+#: templates/purchasing/pr_view.html:90 templates/stock/material_new.html:209
+#: templates/stock/movement_new.html:77
+msgid "TH_LOCATION"
+msgstr "Location"
+
+#: templates/purchasing/pr_view.html:91
+#: templates/sales/sales_order_list.html:18
+msgid "TH_DELIVERY_DATE"
+msgstr "Delivery Date"
+
+#: templates/purchasing/pr_view.html:230
+#: templates/sales/sales_order_new.html:453 templates/stock/dashboard.html:440
+#: templates/stock/movement_new.html:804
+#: templates/stock/requisition_new.html:118
+msgid "T_DELETE_ROW"
+msgstr "Remove Item"
+
+#: templates/purchasing/pr_view.html:304 templates/randd/design_new.html:268
+#: templates/sales/sales_order_new.html:177
+#: templates/stock/material_new.html:530 templates/stock/movement_new.html:128
+msgid "DATEPICKER_LOCALE"
+msgstr "th"
+
+#: templates/randd/design_list.html:9
+msgid "BUTTON_NEW_DESIGN"
+msgstr "New Design"
+
+#: templates/randd/design_list.html:16
+msgid "T_SHOW_THUMBNAIL"
+msgstr "Show Thumbnails"
+
+#: templates/randd/design_list.html:22 templates/stock/material_list.html:17
+msgid "TH_CODE"
+msgstr "Code"
+
+#: templates/randd/design_list.html:23
+msgid "TH_THUMBNAIL"
+msgstr "Thumbnail"
+
+#: templates/randd/design_list.html:24
+#: templates/sales/sales_order_list.html:20
+msgid "TH_CUSTOMER"
+msgstr "Customer"
+
+#: templates/randd/design_list.html:25
+msgid "TH_COLLECTION"
+msgstr "Collection"
+
+#: templates/randd/design_new.html:13
+msgid "BUTTON_SUBMIT_FOR_APPROVAL"
+msgstr "Submit for Approval"
+
+#: templates/randd/design_new.html:14
+msgid "T_COPY"
+msgstr "Copy"
+
+#: templates/randd/design_new.html:19
+msgid "BUTTON_SAVE_AS_NEW_REVISION"
+msgstr "Save as New Revision"
+
+#: templates/randd/design_new.html:39
+msgid "BUTTON_UPLOAD"
+msgstr "Upload"
+
+#: templates/randd/design_new.html:66
+msgid "T_SAMPLE_CREATION_INFO"
+msgstr "Sample Creation Info"
+
+#: templates/randd/design_new.html:70
+msgid "T_DUE_DATE"
+msgstr "Due Date"
+
+#: templates/randd/design_new.html:81
+msgid "T_DESIGN_NO"
+msgstr "Design #"
+
+#: templates/randd/design_new.html:89
+msgid "T_DESIGN_CODE"
+msgstr "Design Code"
+
+#: templates/randd/design_new.html:99 templates/sales/sales_order_new.html:28
+msgid "T_CUSTOMER"
+msgstr "Customer"
+
+#: templates/randd/design_new.html:103
+msgid "T_COLLECTION"
+msgstr "Collection"
+
+#: templates/randd/design_new.html:107 templates/stock/material_new.html:50
+msgid "T_BASE_UOM"
+msgstr "Base UoM"
+
+#: templates/randd/design_new.html:118 templates/stock/material_new.html:231
+msgid "T_VIEW_ON_SIZE"
+msgstr "Details of Size"
+
+#: templates/randd/design_new.html:120
+msgid "BUTTON_READJUST_TASKS"
+msgstr "Auto Snap Process"
+
+#: templates/randd/design_new.html:139
+msgid "T_IDENTIFICATION"
+msgstr "Identification"
+
+#: templates/randd/design_new.html:142
+msgid "METALS"
+msgstr "Metals"
+
+#: templates/randd/design_new.html:147
+msgid "STYLE"
+msgstr "Style"
+
+#: templates/randd/design_new.html:152
+msgid "STONES"
+msgstr "Stones"
+
+#: templates/randd/design_new.html:156
+msgid "FINISHES"
+msgstr "Finishes"
+
+#: templates/randd/design_new.html:160
+msgid "PLATINGS"
+msgstr "Platings"
+
+#: templates/randd/design_new.html:164
+msgid "T_SPECIFICATION"
+msgstr "Specification"
+
+#: templates/randd/design_new.html:167
+msgid "METAL_COMPONENTS"
+msgstr "Metal Comp."
+
+#: templates/randd/design_new.html:172
+msgid "OTHER_COMPONENTS"
+msgstr "Other Comp."
+
+#: templates/randd/design_new.html:177
+msgid "STAMPING"
+msgstr "Stamping"
+
+#: templates/randd/design_new.html:181
+msgid "SIZE"
+msgstr "Size"
+
+#: templates/randd/design_new.html:187
+msgid "T_MISCELLANEOUS"
+msgstr "Miscellaneous"
+
+#: templates/randd/design_new.html:333
+#: templates/sales/sales_order_new.html:238
+msgid "T_ADD_$"
+msgstr "Add '$'"
+
+#: templates/randd/design_new.html:395 templates/randd/design_new.html:909
+#: templates/randd/design_new.html:922 templates/randd/design_new.html:935
+#: templates/randd/design_new.html:948 templates/randd/design_new.html:961
+#: templates/randd/design_new.html:975 templates/randd/design_new.html:987
+#: templates/randd/design_new.html:1001 templates/randd/design_new.html:1015
+msgid "T_ERROR"
+msgstr "Error"
+
+#: templates/randd/design_new.html:395
+msgid "ERROR_UPLOADING_FAILED"
+msgstr "Uploading failed.<br/>Please contact administrator."
+
+#: templates/randd/design_new.html:411
+msgid "ALERT_DELETE_ATTACHMENT"
+msgstr "Delete this file?"
+
+#: templates/randd/design_new.html:441
+msgid "T_UPDATE_DESIGN_REVISION_WARNING"
+msgstr ""
+"This action will overwrite current revision.<br/>Are you sure to do this?"
+
+#: templates/randd/design_new.html:452
+msgid "T_CREATE_DESIGN_REVISION_WARNING"
+msgstr "This action will create new revision.<br/>Are you sure to do this?"
+
+#: templates/randd/design_new.html:474
+msgid "T_SUBMIT_FOR_APPROVAL_WARNING"
+msgstr ""
+"After design is submitted, it will be uneditable until it is approved or "
+"rejected.<br/>Please confirm your action."
+
+#: templates/randd/design_new.html:475 templates/stock/movement_new.html:12
+#: templates/user/edit.html:50 templates/user/edit.html.py:79
+msgid "BUTTON_SUBMIT"
+msgstr "Submit"
+
+#: templates/randd/design_new.html:485
+msgid "T_APPROVE_WARNING"
+msgstr "Please confirm your action."
+
+#: templates/randd/design_new.html:576
+msgid "T_GENERIC"
+msgstr "Generic"
+
+#: templates/randd/design_new.html:620 templates/randd/design_new.html:1849
+msgid "NOTI_DESIGN_SAVED"
+msgstr "Design saved"
+
+#: templates/randd/design_new.html:736
+msgid "ERROR_EMPTY_UOM"
+msgstr "Require Base Unit of Measure."
+
+#: templates/randd/design_new.html:742
+msgid "ERROR_DESIGN_NUMBER_MUST_BE_FOUR_DIGITS"
+msgstr "Design Number must be 4 digits."
+
+#: templates/randd/design_new.html:747
+msgid "ERROR_DESIGN_CODE_CANNOT_BE_CHANGED"
+msgstr "Identification does not match approved design code."
+
+#: templates/randd/design_new.html:747
+msgid "BUTTON_CREATE_AS_NEW_DESIGN"
+msgstr "Create as New Design"
+
+#: templates/randd/design_new.html:763
+msgid "ERROR_DESIGN_UNCONNECTED_PROCESS"
+msgstr "There is an unconnected process in sample creation."
+
+#: templates/randd/design_new.html:1027
+msgid "T_WARNING"
+msgstr "Warning"
+
+#: templates/randd/design_new.html:1262 templates/stock/material_new.html:751
+msgid "TH_IS_CONFIGURABLE"
+msgstr "Config."
+
+#: templates/randd/design_new.html:1267 templates/stock/material_new.html:756
+msgid "TH_STANDARD_TIME"
+msgstr "Standard Time"
+
+#: templates/randd/design_new.html:1268
+msgid "TH_MATERIAL_COST_EST"
+msgstr "Material Cost Est."
+
+#: templates/randd/design_new.html:1269
+msgid "TH_LABOUR_COST_EST"
+msgstr "Labor Cost Est."
+
+#: templates/randd/design_new.html:1270
+msgid "TH_MARKUP"
+msgstr "Markup"
+
+#: templates/randd/design_new.html:1845
+msgid "NOTI_DESIGN_CREATED"
+msgstr "Design created"
+
+#: templates/randd/design_new.html:1847
+msgid "NOTI_DESIGN_REVISION_CREATED"
+msgstr "New revision created"
+
+#: templates/randd/design_new.html:1958
+msgid "NOTI_PENDING_FOR_APPROVAL_MESSAGE"
+msgstr "This design is in review process."
+
+#: templates/randd/design_new.html:1964
+msgid "NOTI_PENDING_FOR_APPROVAL"
+msgstr "Pending for Approval"
+
+#: templates/randd/design_new.html:1967
+msgid "NOTI_APPROVED"
+msgstr "Approved"
+
+#: templates/randd/design_new.html:1967
+msgid "NOTI_APPROVED_MESSAGE"
+msgstr "This design is approved."
+
+#: templates/randd/design_new.html:1973
+msgid "NOTI_EDITED"
+msgstr "Previously Approved"
+
+#: templates/randd/design_new.html:1973
+msgid "NOTI_EDITED_MESSAGE"
+msgstr "This design was approved but has been edited."
+
+#: templates/sales/sales_order_list.html:9
+msgid "BUTTON_NEW_SALES_ORDER"
+msgstr "New Sales Orders"
+
+#: templates/sales/sales_order_list.html:21
+msgid "TH_SALES_REP"
+msgstr "Sales Rep."
+
+#: templates/sales/sales_order_new.html:34
+msgid "T_SALES_REPRESENTATIVE"
+msgstr "Sales Rep."
+
+#: templates/sales/sales_order_new.html:43
+msgid "T_DELIVERY_DATE"
+msgstr "Delivery Date"
+
+#: templates/sales/sales_order_new.html:49
+msgid "T_CUSTOMER_PO"
+msgstr "Customer PO No."
+
+#: templates/sales/sales_order_new.html:55
+msgid "T_CUSTOMER_PO_DATE"
+msgstr "Customer PO Date"
+
+#: templates/sales/sales_order_new.html:384
+msgid "ERROR_EMPTY_DUE_DATE"
+msgstr "Require Due Date."
+
+#: templates/sales/sales_order_new.html:411
+msgid "NOTI_SALES_ORDER_SAVED"
+msgstr "Sales Order saved"
+
+#: templates/sales/sales_order_new.html:696
+#: templates/stock/movement_new.html:1134
+#: templates/stock/requisition_new.html:297
+msgid "ERROR_EMPTY_MATERIAL"
+msgstr "Require Material Code."
+
+#: templates/sales/sales_order_new.html:706
+msgid "ERROR_EMPTY_NET_PRICE"
+msgstr "Require Price."
+
+#: templates/sales/sales_order_new.html:715
+#: templates/stock/movement_new.html:1196
+#: templates/stock/requisition_new.html:311
+msgid "ERROR_EMPTY_ITEMS"
+msgstr "Require at least one item."
+
+#: templates/sales/sales_order_new.html:777
+msgid "NOTI_SALES_ORDER_CREATED"
+msgstr "Sales Order created"
+
+#: templates/stock/dashboard.html:11
+msgid "TOOLTIP_SCAN_STAGING_FORM"
+msgstr "Scan Staging Form"
+
+#: templates/stock/dashboard.html:12
+msgid "BUTTON_RETURN_MATERIAL"
+msgstr "Return Material"
+
+#: templates/stock/dashboard.html:16
+msgid "TOOLTIP_START_PREPARE"
+msgstr "Start Preparing"
+
+#: templates/stock/dashboard.html:22
+msgid "TOOLTIP_PRINT_MATERIAL_TAG"
+msgstr "Print Material Tag"
+
+#: templates/stock/dashboard.html:33
+msgid "PANEL_TITLE_MATERIAL_REQUEST"
+msgstr "Request"
+
+#: templates/stock/dashboard.html:36
+msgid "T_MATERIAL_FILTER"
+msgstr "Material Filter"
+
+#: templates/stock/dashboard.html:40
+msgid "T_NO_REQUEST_NOW"
+msgstr "No request at the moment."
+
+#: templates/stock/dashboard.html:49
+msgid "PANEL_TITLE_CONFIRMED"
+msgstr "Confirmed"
+
+#: templates/stock/dashboard.html:53
+msgid "T_NO_RECORDS"
+msgstr "No records."
+
+#: templates/stock/dashboard.html:61
+msgid "PANEL_TITLE_RECENT_MOVEMENT"
+msgstr "Recent"
+
+#: templates/stock/dashboard.html:69
+msgid "TH_TIME"
+msgstr "Time"
+
+#: templates/stock/dashboard.html:85
+msgid "T_CONFIRM_MATERIAL_PREPARATION"
+msgstr "Confirm Material Preparation"
+
+#: templates/stock/dashboard.html:98 templates/stock/dashboard.html.py:165
+#: templates/stock/dashboard.html:194 templates/stock/material_new.html:206
+#: templates/stock/movement_new.html:74
+msgid "TH_WEIGHT"
+msgstr "Weight"
+
+#: templates/stock/dashboard.html:107
+msgid "BUTTON_PREV"
+msgstr "Previous"
+
+#: templates/stock/dashboard.html:108
+msgid "BUTTON_NEXT"
+msgstr "Next"
+
+#: templates/stock/dashboard.html:119
+msgid "T_CANCEL_MATERIAL_PREPARATION"
+msgstr "Cancel Preparation"
+
+#: templates/stock/dashboard.html:122
+msgid "T_CANCEL_MATERIAL_PREPARATION_MESSAGE"
+msgstr "Please confirm your action to cancel this material preparation."
+
+#: templates/stock/dashboard.html:126 templates/stock/movement_new.html:185
+msgid "BUTTON_PROCEED"
+msgstr "Proceed"
+
+#: templates/stock/dashboard.html:137
+msgid "T_WIP_FROM_OPERATIONS"
+msgstr "WIP From Operation"
+
+#: templates/stock/dashboard.html:140
+msgid "T_WIP_FROM_OPERATIONS_MESSAGE"
+msgstr "Please choose the operation this WIP came from"
+
+#: templates/stock/dashboard.html:154
+msgid "T_RETURN_STAGED_MATERIALS"
+msgstr "Return Staged Materials"
+
+#: templates/stock/dashboard.html:164
+msgid "TH_EXPECTED_WEIGHT"
+msgstr "Expected Weight"
+
+#: templates/stock/dashboard.html:183
+msgid "T_RETURN_WIP"
+msgstr "Return WIP"
+
+#: templates/stock/dashboard.html:377
+msgid "ERROR_ONLY_STARTED_TASK_CAN_BE_CONFIRMED"
+msgstr "Only started tasks can be confirmed."
+
+#: templates/stock/dashboard.html:998
+msgid "BARCODE_PLEASE_SCAN_STAGING_FORM"
+msgstr "Please scan staging form"
+
+#: templates/stock/dashboard.html:999
+msgid "PLACEHOLDER_STAGING_FORM"
+msgstr "Staging Form"
+
+#: templates/stock/dashboard.html:1006
+msgid "ERROR_INVALID_STAGING_FORM_NO"
+msgstr "Invalid Staging Form Number."
+
+#: templates/stock/dashboard.html:1034
+msgid "NOTI_PREPARATION_CANCELLED"
+msgstr "Cancel Preparation"
+
+#: templates/stock/dashboard.html:1126
+msgid "T_NO_RECENT_MOVEMENT"
+msgstr "No activities"
+
+#: templates/stock/dashboard.html:1211
+msgid "PLACEHOLDER_RETURN_MATERIAL_BARCODE"
+msgstr "Material Tag / Job Tag"
+
+#: templates/stock/dashboard.html:1261
+msgid "ERROR_NO_MATERIAL_TO_RETURN"
+msgstr "There is no material to return."
+
+#: templates/stock/dashboard.html:1454
+msgid "NOTI_MATERIALS_RETURNED"
+msgstr "Materials/WIP is successfully returned."
+
+#: templates/stock/material_list.html:9
+msgid "BUTTON_NEW_MATERIAL"
+msgstr "New Material"
+
+#: templates/stock/material_new.html:12
+msgid "T_BASIC"
+msgstr "Basic"
+
+#: templates/stock/material_new.html:13
+msgid "T_MRP"
+msgstr "MRP"
+
+#: templates/stock/material_new.html:14
+msgid "T_INVENTORY"
+msgstr "Inventory"
+
+#: templates/stock/material_new.html:29
+msgid "T_CODE"
+msgstr "Code"
+
+#: templates/stock/material_new.html:35
+msgid "T_DESCRIPTION"
+msgstr "Description"
+
+#: templates/stock/material_new.html:55
+msgid "T_PLANT_STATUS"
+msgstr "Plant Status"
+
+#: templates/stock/material_new.html:63
+msgid "T_GROSS_WEIGHT"
+msgstr "Gross Weight"
+
+#: templates/stock/material_new.html:68
+msgid "T_NET_WEIGHT"
+msgstr "Net Weight"
+
+#: templates/stock/material_new.html:74
+msgid "T_STORAGE_LOCATION"
+msgstr "Storage Loc."
+
+#: templates/stock/material_new.html:88
+msgid "T_MRP_TYPE"
+msgstr "MRP Type"
+
+#: templates/stock/material_new.html:94
+msgid "T_REORDER_POINT"
+msgstr "Reorder Point"
+
+#: templates/stock/material_new.html:100
+msgid "T_PLANNING_TIME_FENCE"
+msgstr "Planning Time Fence (Day)"
+
+#: templates/stock/material_new.html:106
+msgid "T_GR_PROCESSING_TIME"
+msgstr "GR Processing Time (Day)"
+
+#: templates/stock/material_new.html:112
+msgid "T_PLANNED_DELIVERY_TIME"
+msgstr "Planned Delivery Time (Day)"
+
+#: templates/stock/material_new.html:121
+msgid "T_PROCUREMENT_TYPE"
+msgstr "Procurement Type"
+
+#: templates/stock/material_new.html:131
+msgid "T_LOT_SIZE"
+msgstr "Lot Size"
+
+#: templates/stock/material_new.html:135
+msgid "T_FIXED_LOT_SIZE"
+msgstr "Fixed Lot Size"
+
+#: templates/stock/material_new.html:136
+msgid "T_DAILY_LOT_SIZE"
+msgstr "Daily Lot Size"
+
+#: templates/stock/material_new.html:137
+msgid "T_WEEKLY_LOT_SIZE"
+msgstr "Weekly Lot Size"
+
+#: templates/stock/material_new.html:140
+msgid "T_LOT_SIZE_ARG"
+msgstr "Lot Size Arg"
+
+#: templates/stock/material_new.html:146
+msgid "T_MIN_LOT_SIZE"
+msgstr "Min Lot Size"
+
+#: templates/stock/material_new.html:150
+msgid "T_MAX_LOT_SIZE"
+msgstr "Max Lot Size"
+
+#: templates/stock/material_new.html:156
+msgid "T_DEPRECATED_DATE"
+msgstr "Deprecated Date"
+
+#: templates/stock/material_new.html:160
+msgid "T_SCRAP_PERCENTAGE"
+msgstr "Scrap Percentage"
+
+#: templates/stock/material_new.html:166
+msgid "T_DEPRECATED_REPLACEMENT"
+msgstr "Replacement"
+
+#: templates/stock/material_new.html:180
+msgid "T_ENABLE_CYCLING_COUNTING"
+msgstr "Enable Cycling Counting"
+
+#: templates/stock/material_new.html:190
+msgid "T_ABC_INDICATOR"
+msgstr "ABC Indicator"
+
+#: templates/stock/material_new.html:207 templates/stock/movement_new.html:75
+msgid "TH_UNIT_PRICE"
+msgstr "Unit Price"
+
+#: templates/stock/material_new.html:208 templates/stock/movement_new.html:76
+msgid "TH_VALUE"
+msgstr "Value"
+
+#: templates/stock/material_new.html:210 templates/stock/movement_new.html:78
+msgid "TH_BATCH"
+msgstr "Batch"
+
+#: templates/stock/material_new.html:217
+msgid "BUTTON_VIEW_MOVEMENT_HISTORY"
+msgstr "View Movement History"
+
+#: templates/stock/material_new.html:255
+msgid "PANEL_TITLE_BOM"
+msgstr "Bill of Materials (BOM)"
+
+#: templates/stock/material_new.html:277
+msgid "PANEL_TITLE_ROUTING"
+msgstr "Routing"
+
+#: templates/stock/material_new.html:423
+#: templates/stock/material_new.html:1120
+msgid "NOTI_MATERIAL_SAVED"
+msgstr "Material saved"
+
+#: templates/stock/material_new.html:665
+msgid "T_TOTAL"
+msgstr "Total"
+
+#: templates/stock/material_new.html:1118
+msgid "NOTI_MATERIAL_CREATED"
+msgstr "Material created"
+
+#: templates/stock/material_tag.html:13
+msgid "PAGE_TITLE_MATERIAL_TAGS"
+msgstr "Material Tags"
+
+#: templates/stock/movement_new.html:36
+msgid "T_POSTING_DATE"
+msgstr "Posting Date"
+
+#: templates/stock/movement_new.html:45
+msgid "T_CREATED"
+msgstr "Created"
+
+#: templates/stock/movement_new.html:51
+msgid "T_REF"
+msgstr "Ref"
+
+#: templates/stock/movement_new.html:79
+msgid "TH_REASON"
+msgstr "Reason"
+
+#: templates/stock/movement_new.html:181
+msgid "T_CANCEL_MOVEMENT_MESSAGE"
+msgstr "To <strong>cancel</strong> this document, please specify the reason:"
+
+#: templates/stock/movement_new.html:205 templates/stock/movement_new.html:949
+msgid "T_USE_$"
+msgstr "Use '$'"
+
+#: templates/stock/movement_new.html:261
+msgid "ERROR_EMPTY_POSTING_DATE"
+msgstr "Require Posting Date."
+
+#: templates/stock/movement_new.html:265
+msgid "ERROR_EMPTY_TYPE"
+msgstr "Require Type."
+
+#: templates/stock/movement_new.html:273
+msgid "ERROR_EMPTY_DOC_REF"
+msgstr "Require Reference Document."
+
+#: templates/stock/movement_new.html:374
+msgid "T_ITEMS_WILL_BE_CLEARED"
+msgstr "All items will be cleared. Proceed?"
+
+#: templates/stock/movement_new.html:434 templates/stock/movement_new.html:447
+msgid "T_PRODUCTION_ORDER"
+msgstr "Production Order"
+
+#: templates/stock/movement_new.html:437
+msgid "T_PURCHASE_REQUISITION"
+msgstr "Purchase Requisition"
+
+#: templates/stock/movement_new.html:440
+msgid "T_SALES_ORDER"
+msgstr "Sales Orders"
+
+#: templates/stock/movement_new.html:444
+msgid "T_DEPARTMENT"
+msgstr "Department"
+
+#: templates/stock/movement_new.html:700 templates/stock/movement_new.html:714
+msgid "T_NEW_BATCH"
+msgstr "<< New Batch >>"
+
+#: templates/stock/movement_new.html:1140
+msgid "ERROR_TRANSFER_TO_SAME_MATERIAL"
+msgstr "Cannot transfer to same material."
+
+#: templates/stock/movement_new.html:1149
+msgid "ERROR_INVALID_QUANTITY"
+msgstr "Invalid Quantity."
+
+#: templates/stock/movement_new.html:1154
+msgid "ERROR_EMPTY_WEIGHT"
+msgstr "Require Weight."
+
+#: templates/stock/movement_new.html:1157
+msgid "ERROR_INVALID_WEIGHT"
+msgstr "Invalid Weight."
+
+#: templates/stock/movement_new.html:1161
+msgid "ERROR_EMPTY_VALUE"
+msgstr "Require Value."
+
+#: templates/stock/movement_new.html:1164
+msgid "ERROR_INVALID_VALUE"
+msgstr "Invalid Value."
+
+#: templates/stock/movement_new.html:1168
+msgid "ERROR_EMPTY_LOCATION"
+msgstr "Require Location."
+
+#: templates/stock/movement_new.html:1174
+msgid "ERROR_GOOD_RECEIVE_MUST_USE_NEW_BATCH"
+msgstr "Good receive must be new batch."
+
+#: templates/stock/movement_new.html:1179
+msgid "ERROR_EMPTY_BATCH"
+msgstr "Require Batch Number."
+
+#: templates/stock/movement_new.html:1186
+msgid "ERROR_EMPTY_REASON"
+msgstr "Require Reason."
+
+#: templates/stock/movement_new.html:1198
+msgid "ERROR_EMPTY_TRANSFER_ITEM"
+msgstr "Require transfer item."
+
+#: templates/stock/movement_new.html:1246
+msgid "NOTI_MOVEMENT_CREATED"
+msgstr "Material Movement created"
+
+#: templates/stock/movement_new.html:1307
+msgid "NOTI_MOVEMENT_CANCELLED"
+msgstr "Cancelled"
+
+#: templates/stock/movement_new.html:1307
+msgid "NOTI_MOVEMENT_CANCELLED_MESSAGE"
+msgstr "This document is cancelled by $."
+
+#: templates/stock/movement_new.html:1309
+msgid "NOTI_MOVEMENT_CANCEL_DOCUMENT_MESSAGE"
+msgstr "This document is a <strong>cancellation</strong> of $."
+
+#: templates/stock/requisition_new.html:19
+msgid "T_REQUISITION_FOR_GENERAL"
+msgstr "For general purpose"
+
+#: templates/stock/requisition_new.html:22
+msgid "PLACEHOLDER_COST_CENTER"
+msgstr "Cost Center"
+
+#: templates/stock/requisition_new.html:27
+msgid "T_REQUISITION_FOR_TASK"
+msgstr "For production operation"
+
+#: templates/stock/requisition_new.html:30
+msgid "PLACEHOLDER_OPERATION_DOC_NO"
+msgstr "Operation No."
+
+#: templates/stock/requisition_new.html:280
+msgid "ERROR_EMPTY_OPERATION_DOC_NO"
+msgstr "Require Operation Document No."
+
+#: templates/stock/requisition_new.html:397
+msgid "NOTI_MATERIAL_REQUESTED"
+msgstr "Material requested."
+
+#: templates/user/edit.html:15 templates/user/new.html:5
+msgid "PANEL_TITLE_EDIT_USER_INFO"
+msgstr "Info"
+
+#: templates/user/edit.html:20 templates/user/list.html:10 user/forms.py:76
+#: user/forms.py:78
+msgid "USER_FIELD_CODE"
+msgstr "Code"
+
+#: templates/user/edit.html:56
+msgid "PANEL_TITLE_USER_PERMISSION"
+msgstr "Permissions"
+
+#: templates/user/edit.html:61
+msgid "TH_MODEL"
+msgstr "Model"
+
+#: templates/user/edit.html:62
+msgid "TH_READ"
+msgstr "Read"
+
+#: templates/user/edit.html:63
+msgid "TH_WRITE"
+msgstr "Write"
+
+#: templates/user/edit.html:64
+msgid "TH_DELETE"
+msgstr "Delete"
+
+#: templates/user/edit.html:120
+msgid "ERROR_EMPTY_NEW_PASSWORD"
+msgstr "Please enter new password."
+
+#: templates/user/edit.html:125
+msgid "ERROR_EMPTY_CONFIRM_PASSWORD"
+msgstr "Please confirm new password."
+
+#: templates/user/edit.html:130
+msgid "ERROR_PASSWORD_MISMATCH"
+msgstr "Passwords do not match."
+
+#: templates/user/list.html:5
+msgid "PANEL_TITLE_USER_LIST"
+msgstr "Users"
+
+#: templates/user/list.html:11
+msgid "FIELD_NAME"
+msgstr "Name"
+
+#: templates/user/list.html:13
+msgid "USER_FIELD_LAST_LOGGED_IN"
+msgstr "Last Logged In"
+
+#: templates/user/new.html:41
+msgid "PANEL_TITLE_PASSWORD"
+msgstr "Password"
+
+#: user/forms.py:31 user/forms.py:33 user/forms.py:82 user/forms.py:84
+msgid "USER_FIELD_FIRST_NAME"
+msgstr "First Name"
+
+#: user/forms.py:36 user/forms.py:38 user/forms.py:87 user/forms.py:89
+msgid "USER_FIELD_LAST_NAME"
+msgstr "Last Name"
+
+#: user/forms.py:47 user/forms.py:49
+msgid "FIELD_NEW_PASSWORD"
+msgstr "New Password"
+
+#: user/forms.py:53 user/forms.py:55 user/forms.py:98 user/forms.py:100
+msgid "FIELD_CONFIRM_PASSWORD"
+msgstr "Confirm Password"
+
+#: user/views.py:34
+msgid "ERROR_USER_DISABLED"
+msgstr "User is disabled."
+
+#: user/views.py:45
+msgid "ERROR_USERNAME_PASSWORD_INCORRECT"
+msgstr "Invalid username or password."
+
+#: user/views.py:47
+msgid "PAGE_TITLE_LOGIN"
+msgstr "Login"
+
+#: user/views.py:57
+msgid "PAGE_TITLE_USER_LIST"
+msgstr "Users"
+
+#: user/views.py:72
+msgid "PAGE_TITLE_EDIT_USER"
+msgstr "Edit User"
+
+#: user/views.py:92
+msgid "PAGE_TITLE_CREATE_USER"
+msgstr "New User"
+
+#~ msgid "TOOLTIP_SCAN_JOB_TAG"
+#~ msgstr "Scan Job Tag"
+
+#~ msgid "TOOLTIP_PAUSE_ALL"
+#~ msgstr "Pause All"
+
+#~ msgid "TOOLTIP_RESUME_ALL"
+#~ msgstr "Resume All"
+
+#~ msgid "Bad usage of User.can API"
+#~ msgstr "Bad usage of User.can API"
+
+#~ msgid "ERR_AUTHENTICATION_TOKEN_INVALID_MAY_BE_EXPIRED: %(action)s"
+#~ msgstr ""
+#~ "Invalid Authentication Token or expired. Attempt to perform action "
+#~ "<strong>%(action)s</strong>"
+
+#~ msgid "ERR_AUTHENTICATION_TOKEN_INVALID_UNMATCHED_ACTION: %(action)s"
+#~ msgstr "Invalid Authentication Token due to unmatched action: %(action)s"
+
+#~ msgid "Insufficient permission to perform %(action)s arg=%(arg)s"
+#~ msgstr "Insufficient permission to perform %(action)s arg=%(arg)s"
+
+#~ msgid "NOTI_OP_READY"
+#~ msgstr "Material received from previous operation."
+
+#~ msgid "T_MATERIAL_RECEIVED_FROM_PREVIOUS_OP"
+#~ msgstr "Prev Op."
+
+#~ msgid "OPERATION_STATUS_STAGED"
+#~ msgstr "Staged"
+
+#~ msgid "ERROR_INSUFFICIENT_QUANTITY"
+#~ msgstr "Cannot apply material movement due to insufficient quantity."
+
+#~ msgid "ERROR_MATERIAL_QTY_EXCEEDED: %(material)s"
+#~ msgstr "Exceed quantity : %(material)s."
+
+#~ msgid "T_WEIGHT"
+#~ msgstr "Weight"
+
+#~ msgid ""
+#~ "ERR_CANNOT_CREATE_CONFIRMATION: %(confirmation_class)s#create() inputs "
+#~ "missing"
+#~ msgstr "Cannot create confirmation: %(confirmation_class)s#create() inputs"
+
+#~ msgid "ERR_REQUIRED_FIELD_YIELD_or_SCRAP"
+#~ msgstr "Require yield or scrap."
+
+#~ msgid "T_PURCHASE_ORDER"
+#~ msgstr "Purchase Order"
+
+#~ msgid "PURCHASING_STATUS_RELEASED"
+#~ msgstr "Released"
+
+#~ msgid "TH_PROGRESS"
+#~ msgstr "Progress"
+
+#~ msgid "T_COMPLETE"
+#~ msgstr "Complete"
+
+#~ msgid "T_ELAPSED_TIME"
+#~ msgstr "Elapsed Time"
+
+#~ msgid "T_LAST_RUN"
+#~ msgstr "Last run"
+
+#~ msgid "BUTTON_ZOOM_OUT"
+#~ msgstr "Zoom Out"
+
+#~ msgid "T_DETACH_GROUP_WARNING"
+#~ msgstr ""
+#~ "This production order contains one or more batch tasks. Updating it will "
+#~ "detach all of them from their groups.<br/>Please confirm your action."
+
+#~ msgid "T_SCHEDULER_RESOURCES"
+#~ msgstr "Resources"
+
+#~ msgid "UNIT_TASK_SINGULAR"
+#~ msgstr "task"
+
+#~ msgid "UNIT_TASK_PLURAL"
+#~ msgstr "tasks"
+
+#~ msgid "T_PRODUCTION_OR_SALES"
+#~ msgstr "Production or Sales"
+
+#~ msgid "ERROR_PASSWORD_NOT_MATCH"
+#~ msgstr "Passwords do not match."

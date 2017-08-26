@@ -1,0 +1,142 @@
+{% extends 'common/blank.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% block page %}
+    <section class="panel">
+        <header class="panel-heading withtools">
+            {{ page_title }}
+            <span class="tools pull-right">
+                <a id="createSalesOrderButton" class="btn btn-primary" href="{% url 'sales:sales_order_new' %}"><i class="fa fa-plus"></i><span class="hidden-xs"> {% trans 'BUTTON_NEW_SALES_ORDER' %}</span></a>
+            </span>
+        </header>
+        <div class="panel-body">
+
+            <table id="orderTable" class="table table-hover general-table">
+                <thead>
+                <tr>
+                    <th>{% trans 'TH_DOC_NO' %}</th>
+                    <th>{% trans 'TH_DELIVERY_DATE' %}</th>
+                    <th>{% trans 'TH_STATUS' %}</th>
+                    <th>{% trans 'TH_CUSTOMER' %}</th>
+                    <th>{% trans 'TH_SALES_REP' %}</th>
+                    <th>{% trans 'TH_LAST_MODIFIED' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <div class="text-right paginationblock">
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block end_of_body %}
+    <script type="text/javascript" src="{% static 'js/models/sales-order.js' %}"></script>
+    <script type="text/javascript">
+        var List = {
+
+            PAGE_SIZE : 20,
+            pageIndex : 0,
+
+            init : function() {
+                var o = this;
+                $(document).on('click', '.pagination li a', function() {
+                    var index = $(this).data('index');
+                    if(index == o.pageIndex) return;
+                    o.pageIndex = index;
+                    $('.pagination li.active').removeClass('active');
+                    $('.paginationblock .pagination').each(function() {
+                        $(this).find('li').eq(o.pageIndex).addClass('active');
+                    });
+                    o.query();
+                });
+            },
+
+            query : function() {
+                var o  = this;
+                common.blockUI($('#orderTable').closest('.panel-body'));
+                api.crud.read('sales_order', null, this.PAGE_SIZE, this.pageIndex, function(success, data) {
+                    $('#orderTable tbody > *').remove();
+                    common.unblockUI($('#orderTable').closest('.panel-body'));
+                    if(success) {
+                        data.forEach(function(obj) {
+                            var $renderer = o.renderOrderEntry(obj);
+                            $('#orderTable tbody').append($renderer);
+                        });
+                    } else {
+                        Front.handleAjaxError(data);
+                    }
+                });
+            },
+
+            queryTotal : function() {
+                var o = this;
+                api.crud.count('sales_order', null, function(success, data) {
+                    if(success) {
+                        $('.paginationblock').empty();
+                        if(data == 0) return;
+                        var pageCount = Math.ceil(data / o.PAGE_SIZE);
+                        if(pageCount > 1) {
+                            $('.paginationblock').append('<ul class="pagination"></ul>');
+                            for (var i = 1; i <= pageCount; i++) {
+                                $('.paginationblock .pagination').append('<li><a href="javascript:;" data-index="' + (i -1) + '">' + i + '</a></li>');
+                            }
+                            $('.paginationblock .pagination').each(function() {
+                                $(this).find('li').eq(o.pageIndex).addClass('active');
+                            });
+                        }
+                    } else {
+                        console.log(data);
+                    }
+                });
+            },
+
+            renderOrderEntry : function(obj) {
+                var url = URL.sales_order_edit(obj._id);
+                var statusClass = 'primary';
+                var statusText = gettext('SALES_ORDER_STATUS_' + obj.status);
+                console.log(obj);
+
+                var editBy = '';
+                var editWhen = '';
+                if(obj.last_edited) {
+                    editBy = displayName(obj.last_edited.who.first_name, obj.last_edited.who.last_name);
+                    editWhen = moment(obj.last_edited.when * 1000).format('YYYY-MM-DD HH:mm');
+                }
+
+                if(obj.status == 'CLOSED') {
+                    statusClass = 'default';
+                }
+
+                var $r = $('<tr>\
+                    <td><a href="' + url + '">' + obj.doc_no + '</a></td>\
+                    <td><a href="' + url + '">' + moment(obj.delivery_date * 1000).format('YYYY-MM-DD') + '</a></td>\
+                    <td><span class="label label-' + statusClass + '">' + statusText + '</span></td>\
+                    <td class="customercol"><a href="' + url + '"></a></td>\
+                    <td class="salesrepcol"><a href="' + url + '">' + displayName(obj.sales_rep.first_name, obj.sales_rep.last_name) + '</a></td>\
+                    <td>' + editWhen + ' {% trans 'T_BY' %} ' + editBy + '</td>\
+                </tr>');
+
+                $r.find('.customercol a').append(Resolver.labelize(api.common.C.TRANS.TYPED_CODES, obj.customer, '<span>{label}</span>'));
+
+                return $r;
+            }
+
+        };
+
+        (function($) {
+            $(document).ready(function() {
+                List.init();
+                List.query();
+                List.queryTotal();
+
+                // PERMISSION cannot write
+                if(!Front.userCan('material_master+write')) {
+                    $('#createSalesOrderButton').remove();
+                }
+            });
+        })(jQuery);
+    </script>
+{% endblock %}
